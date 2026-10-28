@@ -1,45 +1,45 @@
 + uv python install 3.12
 Downloading cpython-3.12.16-macos-x86_64-none (download) (23.6MiB)
  Downloaded cpython-3.12.16-macos-x86_64-none (download)
-Installed Python 3.12.16 in 2.60s
+Installed Python 3.12.16 in 4.75s
  + cpython-3.12.16-macos-x86_64-none (python3.12)
 Python: /Users/runner/.local/share/uv/python/cpython-3.12.16-macos-x86_64-none/bin/python3.12 -> /Users/runner/.local/share/uv/python/cpython-3.12.16-macos-x86_64-none
 + uv pip install --python /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools/python/bin/python3 --break-system-packages --no-progress -r /Users/runner/work/chris-architools/chris-architools/requirements.txt
 Using Python 3.12.16 environment at: dist/ChrisArchItools/python
-Resolved 100 packages in 476ms
+Resolved 100 packages in 518ms
    Building pymupdf==2.0
-Downloading pyogrio (24.9MiB)
-Downloading pandas (11.1MiB)
+Downloading fonttools (2.5MiB)
+Downloading numpy (6.5MiB)
+Downloading onnxruntime (18.3MiB)
+Downloading pygments (1.2MiB)
 Downloading pyobjc-core (6.1MiB)
 Downloading ezdwg (2.9MiB)
-Downloading pygments (1.2MiB)
-Downloading sympy (6.0MiB)
-Downloading shapely (1.7MiB)
-Downloading numpy (6.5MiB)
-Downloading networkx (2.0MiB)
-Downloading onnxruntime (18.3MiB)
-Downloading scipy (22.0MiB)
-Downloading pillow (5.3MiB)
-Downloading matplotlib (9.0MiB)
-Downloading ezdxf (3.0MiB)
-Downloading pyproj (5.8MiB)
-Downloading rasterio (23.9MiB)
-Downloading pydantic-core (2.1MiB)
-Downloading fonttools (2.5MiB)
 Downloading nicegui (8.1MiB)
+Downloading matplotlib (9.0MiB)
+Downloading shapely (1.7MiB)
+Downloading pyogrio (24.9MiB)
+Downloading scipy (22.0MiB)
+Downloading pandas (11.1MiB)
+Downloading pillow (5.3MiB)
+Downloading pydantic-core (2.1MiB)
+Downloading pyproj (5.8MiB)
+Downloading networkx (2.0MiB)
+Downloading sympy (6.0MiB)
+Downloading ezdxf (3.0MiB)
+Downloading rasterio (23.9MiB)
 Downloading ifcopenshell (43.3MiB)
  Downloaded pygments
  Downloaded shapely
- Downloaded pydantic-core
  Downloaded networkx
+ Downloaded pydantic-core
  Downloaded fonttools
- Downloaded ezdwg
  Downloaded ezdxf
+ Downloaded ezdwg
  Downloaded pillow
  Downloaded pyproj
  Downloaded pyobjc-core
- Downloaded numpy
  Downloaded sympy
+ Downloaded numpy
  Downloaded nicegui
  Downloaded matplotlib
  Downloaded pandas
@@ -52,7 +52,7 @@ error: Failed to download and build `pymupdf==2.0`
   cause: Package metadata name `pymupdf-lite` does not match given name `pymupdf`
 uv pip hat nicht geklappt - versuche pip
 + /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools/python/bin/python3 -m ensurepip --upgrade
-Looking in links: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/tmp0quiawme
+Looking in links: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/tmpg5y33mnc
 Requirement already satisfied: pip in ./dist/ChrisArchItools/python/lib/python3.12/site-packages (26.2.2)
 + /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools/python/bin/python3 -m pip install --prefer-binary -r /Users/runner/work/chris-architools/chris-architools/requirements.txt
 Collecting numpy (from -r /Users/runner/work/chris-architools/chris-architools/requirements.txt (line 1))
@@ -238,51 +238,51 @@ Collecting watchfiles>=0.20 (from uvicorn[standard]>=0.22.0->nicegui<4,>=3->-r /
 Collecting websockets>=13.0 (from uvicorn[standard]>=0.22.0->nicegui<4,>=3->-r /Users/runner/work/chris-architools/chris-architools/requirements.txt (line 19))
   Downloading websockets-17.3-cp312-cp312-macosx_10_13_x86_64.whl.metadata (6.3 kB)
 Downloading nicegui-3.18.0-py3-none-any.whl (8.5 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.5/8.5 MB 22.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.5/8.5 MB 75.5 MB/s  0:00:00
 Downloading pywebview-6.2.1-py3-none-any.whl (525 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 525.5/525.5 kB 6.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 525.5/525.5 kB 7.1 MB/s  0:00:00
 Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
 Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
 Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 24.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 33.5 MB/s  0:00:00
 Downloading tinycss2-1.5.1-py3-none-any.whl (28 kB)
 Downloading numpy-2.5.4-cp312-cp312-macosx_14_0_x86_64.whl (6.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.8/6.8 MB 45.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.8/6.8 MB 23.0 MB/s  0:00:00
 Downloading scipy-1.18.1-cp312-cp312-macosx_14_0_x86_64.whl (23.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.1/23.1 MB 20.0 MB/s  0:00:01
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.1/23.1 MB 79.8 MB/s  0:00:00
 Downloading shapely-2.2.0-cp312-cp312-macosx_10_13_x86_64.whl (1.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 22.8 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 9.2 MB/s  0:00:00
 Downloading rasterio-1.5.2-cp312-cp312-macosx_15_0_x86_64.whl (25.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 25.1/25.1 MB 47.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 25.1/25.1 MB 53.9 MB/s  0:00:00
 Downloading pyogrio-0.13.0-cp311-abi3-macosx_12_0_x86_64.whl (26.1 MB)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 26.1/26.1 MB 80.2 MB/s  0:00:00
 Downloading contourpy-1.4.0-cp312-cp312-macosx_10_13_x86_64.whl (297 kB)
 Downloading matplotlib-3.11.2-cp312-cp312-macosx_10_13_x86_64.whl (9.5 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.5/9.5 MB 91.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.5/9.5 MB 119.7 MB/s  0:00:00
 Downloading trimesh-5.2.0-py3-none-any.whl (751 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 751.5/751.5 kB 8.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 751.5/751.5 kB 13.9 MB/s  0:00:00
 Downloading mapbox_earcut-2.1.0-cp312-cp312-macosx_10_13_x86_64.whl (69 kB)
 Downloading ezdxf-1.4.5-cp312-cp312-macosx_10_13_x86_64.whl (3.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.1/3.1 MB 28.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.1/3.1 MB 91.3 MB/s  0:00:00
 Downloading ezdwg-0.17.1-cp310-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl (3.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.1/3.1 MB 63.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.1/3.1 MB 74.0 MB/s  0:00:00
 Downloading pymupdf-1.28.2-cp310-abi3-macosx_10_15_x86_64.whl (24.6 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.6/24.6 MB 94.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.6/24.6 MB 100.9 MB/s  0:00:00
 Downloading pandas-3.1.0-cp312-cp312-macosx_10_13_x86_64.whl (11.6 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.6/11.6 MB 66.3 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.6/11.6 MB 80.0 MB/s  0:00:00
 Downloading pyproj-3.8.0-cp312-cp312-macosx_15_0_x86_64.whl (6.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.1/6.1 MB 62.9 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.1/6.1 MB 71.4 MB/s  0:00:00
 Downloading truststore-0.10.5-py3-none-any.whl (19 kB)
 Downloading svgelements-1.9.6-py2.py3-none-any.whl (137 kB)
 Downloading pillow-13.0.0-cp312-cp312-macosx_10_13_x86_64.whl (5.6 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.6/5.6 MB 76.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.6/5.6 MB 95.3 MB/s  0:00:00
 Downloading ifcopenshell-0.9.0.post1-py312-none-macosx_10_15_x86_64.whl (45.4 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.4/45.4 MB 90.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.4/45.4 MB 88.5 MB/s  0:00:00
 Downloading manifold3d-3.5.4-cp312-cp312-macosx_10_14_x86_64.whl (1.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 8.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 8.6 MB/s  0:00:00
 Downloading aiofiles-25.1.0-py3-none-any.whl (14 kB)
 Downloading aiohttp-3.14.5-cp312-cp312-macosx_10_13_x86_64.whl (549 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 549.5/549.5 kB 16.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 549.5/549.5 kB 16.6 MB/s  0:00:00
 Downloading multidict-7.2.1-cp312-cp312-macosx_10_13_x86_64.whl (98 kB)
 Downloading yarl-1.25.1-cp312-cp312-macosx_10_13_x86_64.whl (104 kB)
 Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
@@ -293,11 +293,11 @@ Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
 Downloading click-8.5.0-py3-none-any.whl (125 kB)
 Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
 Downloading docutils-0.23-py3-none-any.whl (634 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 634.7/634.7 kB 26.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 634.7/634.7 kB 30.0 MB/s  0:00:00
 Downloading fastapi-0.162.0-py3-none-any.whl (148 kB)
 Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
 Downloading fonttools-4.68.0-cp312-cp312-macosx_10_13_x86_64.whl (2.6 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.6/2.6 MB 76.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.6/2.6 MB 87.0 MB/s  0:00:00
 Downloading frozenlist-1.8.0-cp312-cp312-macosx_10_13_x86_64.whl (50 kB)
 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
 Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
@@ -313,10 +313,10 @@ Downloading packaging-26.3-py3-none-any.whl (129 kB)
 Downloading propcache-0.5.4-cp312-cp312-macosx_10_13_x86_64.whl (50 kB)
 Downloading pydantic-2.14.1-py3-none-any.whl (488 kB)
 Downloading pydantic_core-2.50.1-cp312-cp312-macosx_10_12_x86_64.whl (2.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 73.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 67.9 MB/s  0:00:00
 Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
 Downloading pyobjc_core-12.2.2-cp312-cp312-macosx_10_13_universal2.whl (6.4 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.4/6.4 MB 110.3 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.4/6.4 MB 68.1 MB/s  0:00:00
 Downloading pyobjc_framework_cocoa-12.2.2-cp312-cp312-macosx_10_13_universal2.whl (388 kB)
 Downloading pyobjc_framework_quartz-12.2.2-cp312-cp312-macosx_10_13_universal2.whl (219 kB)
 Downloading pyobjc_framework_security-12.2.2-cp312-cp312-macosx_10_13_universal2.whl (41 kB)
@@ -338,7 +338,7 @@ Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
 Downloading httptools-0.9.0-cp312-cp312-macosx_11_0_x86_64.whl (115 kB)
 Downloading pyyaml-6.0.3-cp312-cp312-macosx_10_13_x86_64.whl (182 kB)
 Downloading uvloop-0.23.0-cp312-cp312-macosx_10_13_x86_64.whl (768 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 768.9/768.9 kB 7.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 768.9/768.9 kB 30.0 MB/s  0:00:00
 Downloading watchfiles-1.3.0-cp310-abi3-macosx_10_12_x86_64.whl (399 kB)
 Downloading webencodings-0.6.1-py3-none-any.whl (8.7 kB)
 Downloading websockets-17.3-cp312-cp312-macosx_10_13_x86_64.whl (215 kB)
@@ -351,13 +351,13 @@ Downloading wsproto-1.3.2-py3-none-any.whl (24 kB)
 Building wheels for collected packages: proxy_tools
   Building wheel for proxy_tools (pyproject.toml): started
   Building wheel for proxy_tools (pyproject.toml): finished with status 'done'
-  Created wheel for proxy_tools: filename=proxy_tools-0.1.0-py3-none-any.whl size=2935 sha256=232f2e96dbecd4bd1ea383e646f05bd31235e7d7e82202a86505cbb439d5c666
+  Created wheel for proxy_tools: filename=proxy_tools-0.1.0-py3-none-any.whl size=2935 sha256=f842849cc4e605002dd4f70ce68480de866d7fbec624c17e365d7033cc73475b
   Stored in directory: /Users/runner/Library/Caches/pip/wheels/07/37/12/f3390260c831aa68c3835d6ec2e10d8da094b5fc0ac32feb14
 Successfully built proxy_tools
 Installing collected packages: svgelements, proxy_tools, ifaddr, bottle, websockets, webencodings, uvloop, tzdata, typing-extensions, truststore, six, pyyaml, python-multipart, python-dotenv, pyparsing, pyobjc-core, pymupdf, Pygments, propcache, Pillow, packaging, orjson, numpy, multidict, MarkupSafe, markdown2, lark, kiwisolver, itsdangerous, isodate, idna, httptools, h11, frozenlist, fonttools, ezdwg, docutils, cycler, click, certifi, bidict, attrs, annotated-types, annotated-doc, aiohappyeyeballs, aiofiles, yarl, wsproto, uvicorn, typing-inspection, trimesh, tinycss2, shapely, scipy, python-dateutil, pyproj, pyogrio, pyobjc-framework-Cocoa, pydantic-core, opentelemetry-api, mapbox-earcut, manifold3d, jinja2, httpcore, ezdxf, contourpy, anyio, aiosignal, affine, watchfiles, starlette, simple-websocket, rasterio, pyobjc-framework-WebKit, pyobjc-framework-UniformTypeIdentifiers, pyobjc-framework-security, pyobjc-framework-Quartz, pydantic, pandas, matplotlib, ifcopenshell, httpx, aiohttp, pywebview, python-engineio, fastapi, python-socketio, nicegui
 
 Successfully installed MarkupSafe-3.0.4 Pillow-13.0.0 Pygments-2.21.0 affine-3.0.1 aiofiles-25.1.0 aiohappyeyeballs-2.7.1 aiohttp-3.14.5 aiosignal-1.4.0 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 attrs-26.1.0 bidict-0.24.1 bottle-0.13.4 certifi-2026.10.23 click-8.5.0 contourpy-1.4.0 cycler-0.12.1 docutils-0.23 ezdwg-0.17.1 ezdxf-1.4.5 fastapi-0.162.0 fonttools-4.68.0 frozenlist-1.8.0 h11-0.16.0 httpcore-1.0.9 httptools-0.9.0 httpx-0.28.1 idna-3.20 ifaddr-0.2.0 ifcopenshell-0.9.0.post1 isodate-0.7.2 itsdangerous-2.2.0 jinja2-3.1.6 kiwisolver-1.5.1 lark-1.3.1 manifold3d-3.5.4 mapbox-earcut-2.1.0 markdown2-2.5.5 matplotlib-3.11.2 multidict-7.2.1 nicegui-3.18.0 numpy-2.5.4 opentelemetry-api-1.45.1 orjson-3.13.0 packaging-26.3 pandas-3.1.0 propcache-0.5.4 proxy_tools-0.1.0 pydantic-2.14.1 pydantic-core-2.50.1 pymupdf-1.28.2 pyobjc-core-12.2.2 pyobjc-framework-Cocoa-12.2.2 pyobjc-framework-Quartz-12.2.2 pyobjc-framework-UniformTypeIdentifiers-12.2.2 pyobjc-framework-WebKit-12.2.2 pyobjc-framework-security-12.2.2 pyogrio-0.13.0 pyparsing-3.3.3 pyproj-3.8.0 python-dateutil-3.0.0 python-dotenv-1.2.4 python-engineio-4.15.0 python-multipart-0.0.32 python-socketio-5.17.0 pywebview-6.2.1 pyyaml-6.0.3 rasterio-1.5.2 scipy-1.18.1 shapely-2.2.0 simple-websocket-1.1.0 six-1.17.0 starlette-1.10.0 svgelements-1.9.6 tinycss2-1.5.1 trimesh-5.2.0 truststore-0.10.5 typing-extensions-4.16.0 typing-inspection-0.4.4 tzdata-2026.6 uvicorn-0.54.0 uvloop-0.23.0 watchfiles-1.3.0 webencodings-0.6.1 websockets-17.3 wsproto-1.3.2 yarl-1.25.1
-Paket gebaut in 164 s
+Paket gebaut in 162 s
 + /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools/python/bin/python3 -c import numpy, scipy, shapely, rasterio, pyogrio, contourpy, matplotlib, trimesh, ezdxf, ezdwg, pymupdf, pandas, pyproj, PIL, ifcopenshell, nicegui, webview; print('Bibliotheken ok')
 Bibliotheken ok
 + /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools/python/bin/python3 /Users/runner/work/chris-architools/chris-architools/bau/smoke_e2e.py /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools
@@ -395,9 +395,9 @@ Baeume (Berliner WFS):
   Vegetationsraster: 0 Baeume bekamen die Rasterhoehe, 2 fehlende Baeume ergaenzt (nur Spitzen >= 4 m, ausserhalb von Gebaeuden)
   OpenStreetMap: 1 Baeume ergaenzt, die es in den amtlichen Quellen nicht gibt (kein amtlicher Baum im Umkreis von 3 m)
   Baeume im Nahbereich samt Uebergangszone: 4 (davon 2 mit Kronendurchmesser aus den Daten, Rest Standard 6 m)
-  OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 1.4 s (28 Objekte)
+  OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 1.3 s (28 Objekte)
   Gleisachsen (OpenStreetMap): 6 Linien, 2049 m; Bruecken in OSM: 13
-    (17.3 s, im Hintergrund)
+    (16.9 s, im Hintergrund)
 Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - ungetestet:
   Quelle: amtlich (Berlin)
   radverkehrsnetz:radverkehrsnetz: 1 geladen, 1 im Rechteck (erstes Objekt bei Ost 393500 / Nord 5826520, Gebiet bei Ost 393600 / Nord 5826550)
@@ -406,7 +406,7 @@ Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - un
   Radfernwege: Attribute (Beispiel): {}
   radverkehrsnetz:stadtgruen: keine Objekte geliefert
   -> 2 Objekte uebernommen
-Zeiten: Gelaende lesen und ausduennen 1 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 16 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 18 s
+Zeiten: Gelaende lesen und ausduennen 1 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 16 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 17 s
 Gelaende nach Nutzung aufteilen:
   12 Bruecke(n) ohne LoD2-Koerper: dort keine Fahrbahn/kein Gehweg (bleibt weg)
   Gelaende wird aufgeteilt nach: Weg_Platz
@@ -425,10 +425,10 @@ IFC schreiben:
   Lageplan: ifcmap_lageplan.dxf (0.1 MB)
   DXF-Pruefung (R2010): 13 Schraffuren, 6 Polylinien, 0 Kreise - keine Beanstandungen
   Schwarzplan: ifcmap_schwarzplan.dxf (0.0 MB)
-Zeiten der Ausgabe: IFC schreiben 1 s; Arbeits-DXF (ifcmap_2d.dxf) 0 s; Lageplan 0 s; Schwarzplan 0 s
+Zeiten der Ausgabe: IFC schreiben 2 s; Arbeits-DXF (ifcmap_2d.dxf) 0 s; Lageplan 0 s; Schwarzplan 0 s
 
 Lokaler Nullpunkt: E0 = 394000, N0 = 5827000, Z0 = 47 m  (lokal = Ost-E0 / Nord-N0 / Hoehe-Z0; EPSG:25833, NHN)
-Fertig in 2 s.
+Fertig in 3 s.
 === Modellbau ===
 Matplotlib is building the font cache; this may take a moment.
   DGM: 440 x 340 Zellen, Auflösung 1.00 m, Höhe 48.2 – 56.8 m
@@ -466,7 +466,7 @@ Material: Graupappe 2 mm · Platte 800 × 500 mm
 6/6  Druckplatten und Montageplan
   Druckplatte umgebung 1: 240 x 210 mm, 31 Teile, Ausnutzung 54 %
   Hinweis: Ansichten nicht erzeugt (No module named 'networkx')
-Fertig in 98 s: 6 Laserplatten, 1 Druckplatten. Ausgabe: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/tmprltz0zsb/ziel/MeinExport/modell
+Fertig in 100 s: 6 Laserplatten, 1 Druckplatten. Ausgabe: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/tmpldhhcd78/ziel/MeinExport/modell
 === Geländeschnitt ===
 Geländeschnitt von (393450, 5826550) nach (393750, 5826550)
   DGM: 390 x 190 Zellen, Auflösung 1.00 m, Höhe 48.2 – 56.7 m
@@ -477,9 +477,9 @@ Geländeschnitt von (393450, 5826550) nach (393750, 5826550)
   Bäume: 21 Objekte
   Ansicht dahinter (rechts, 100 m Tiefe): 19 Gebäude, 5 Bäume (5 davon im Schnitt)
   Schnitt 300 m lang, 1 Gebäudeschnitte, 19 Gebäude und 5 Bäume in der Ansicht dahinter, Gelände 50.1–56.1 m
-Fertig in 162 s
-FERTIG 162 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gravur'], 'schnitt': ['ordner', 'dateien', 'png', 'svg']}
-{"ifc": "2026-10-28 12:47", "lageplan": "2026-10-28 12:47", "schwarzplan": "2026-10-28 12:47", "info_dwg": "2026-10-28 12:47", "laser": "2026-10-28 12:49", "druck": "2026-10-28 12:49", "schnitt": "2026-10-28 12:49"}
+Fertig in 154 s
+FERTIG 154 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gravur'], 'schnitt': ['ordner', 'dateien', 'png', 'svg']}
+{"ifc": "2026-10-28 12:58", "lageplan": "2026-10-28 12:58", "schwarzplan": "2026-10-28 12:58", "info_dwg": "2026-10-28 12:58", "laser": "2026-10-28 13:00", "druck": "2026-10-28 13:00", "schnitt": "2026-10-28 13:00"}
 /E2E.architools.json 15079
 SMOKE-TEST OK
 Startseite antwortet (python): 200
