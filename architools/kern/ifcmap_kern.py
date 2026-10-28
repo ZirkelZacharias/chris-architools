@@ -3666,19 +3666,18 @@ def _wfs_extra(cfg, d, basis, typ, log):
 
 
 def _vorrang_sub(props, nacht):
-    """Eigenschaften eines Vorrangnetz-Objekts -> Untergruppe (Ebenenname): [Nacht_][Geplant_]Tram|Bus|SBahn|Netz"""
-    text = umlaute(" ".join("%s=%s" % (k, v) for k, v in props.items() if v not in (None, "")).lower())
-    werte = umlaute(" ".join(str(v) for v in props.values() if v not in (None, "")).lower())
-    geplant = bool(re.search(r"geplant|planung|umsetzung|neubau|im bau|in bau|projekt", werte)) or \
-        any(re.search(r"jahr|umsetz|bau", umlaute(str(k).lower())) and re.search(r"20\d\d", str(v)) for k, v in props.items())
-    if re.search(r"s-bahn|sbahn|s bahn", werte):
-        art = "SBahn"
-    elif re.search(r"tram|strassenbahn", werte):
+    """Eigenschaften eines Vorrangnetz-Objekts -> Untergruppe (Ebenenname): [Nacht_][Geplant_]Tram|Bus|Netz.
+    Echte Werte des Dienstes (Test 28.10.2026): vorrangtyp = Bus | Tram | Bus_Zukunft | Tram_Zukunft | NBS | leer (kein Vorrang);
+    v_zukunft = 1 und v_z_jahr bei geplanten Strecken. Die S-Bahn gehoert nicht zum Vorrangnetz (kommt aus OpenStreetMap)."""
+    vt = umlaute(str(props.get("vorrangtyp") or "").lower())
+    geplant = "zukunft" in vt or vt.strip() == "nbs" or str(props.get("v_zukunft") or "").strip() in ("1", "1.0")
+    if "tram" in vt:
         art = "Tram"
-    elif re.search(r"\bbus\b|buslinie|metrobus|expressbus", werte):
+    elif "bus" in vt:
         art = "Bus"
     else:
-        art = "Netz"
+        werte = umlaute(" ".join(str(v) for k, v in props.items() if v not in (None, "") and k not in ("linien", "no")).lower())
+        art = "Tram" if re.search(r"tram|strassenbahn", werte) else ("Bus" if re.search(r"\bbus\b|metrobus", werte) else "Netz")
     return ("Nacht_" if nacht else "") + ("Geplant_" if geplant else "") + art
 
 
@@ -3793,6 +3792,9 @@ def rad_als_nutzung(cfg, d, ctx, log):
     breite0 = float(getattr(cfg, "rad_breite", 2.5) or 2.5)
     for sub, art, g, p in extra_radverkehr(cfg, d, ctx, log):
         if art != "line" or sub.endswith("_geplant"):
+            continue
+        ex = umlaute(str((p or {}).get("existenz") or "").lower())
+        if "stra" in ex:                                             # 'ja, in Strassennetz': liegt schon auf der Strassenflaeche
             continue
         w = feldwert(p, r"breite|width")
         w = w if (w and 0.5 <= w <= 12.0) else breite0
