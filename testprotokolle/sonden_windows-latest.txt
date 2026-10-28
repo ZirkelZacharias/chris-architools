@@ -1,0 +1,388 @@
+
+=== vorrangnetz ===
+  Feature-Typen: ['vorrangnetz:a_oepnv_vorrangnetz', 'vorrangnetz:b_oepnv_nachtangebot']
+  vorrangnetz:a_oepnv_vorrangnetz / ganz Berlin (bis 20000): 8859 Objekte
+    Geometrie: {'MultiLineString': 8859}
+    no: 8859 verschiedene Werte, z. B. ['1', '2', '3', '4']
+    vorrangtyp: {'Bus': 5734, 'Tram': 1525, 'None': 1422, 'Bus_Zukunft': 102, 'Tram_Zukunft': 70, 'NBS': 6}
+    vorrang: {'1': 7472, '0': 1381, 'None': 6}
+    v_zukunft: {'0': 8682, '1': 171, 'None': 6}
+    v_z_jahr: {'None': 8789, '2023': 70}
+    nacht: {'1': 6745, '0': 2108, 'None': 6}
+    n: {'1': 4675, '0': 4178, 'None': 6}
+    m: {'0': 5920, '1': 2933, 'None': 6}
+    fh0_1: {'2': 2265, '3': 2075, '4': 1147, '1': 1072, '5': 656, '0': 463, '6': 351, '7': 252, '8': 125, 'None': 113, '9': 97, '10': 77, '11': 52, '12': 37, '13': 20, '20': 10, '15': 9, '16': 8, '17': 8, '14': 7, '22': 4, '21': 4, '19': 3, '18': 2, '23': 2}
+    fh1_2: {'2': 4812, '0': 2081, '4': 845, '3': 295, '1': 247, '6': 181, 'None': 113, '5': 80, '7': 43, '8': 41, '11': 22, '10': 20, '16': 19, '9': 19, '20': 9, '18': 7, '13': 7, '12': 6, '14': 5, '15': 3, '17': 3, '19': 1}
+    fh2_3: {'2': 4952, '0': 2089, '4': 993, '6': 191, '3': 145, '1': 115, 'None': 114, '5': 71, '8': 42, '7': 26, '10': 23, '9': 18, '16': 17, '11': 15, '12': 14, '19': 6, '15': 6, '18': 6, '14': 4, '13': 4, '20': 4, '17': 3, '21': 1}
+    fh3_4: {'2': 4916, '0': 2096, '4': 879, '3': 323, '6': 187, '1': 135, 'None': 107, '5': 58, '8': 30, '7': 23, '9': 21, '11': 20, '10': 14, '16': 13, '13': 9, '18': 7, '12': 7, '15': 6, '14': 5, '17': 2, '22': 1}
+    fh4_5: {'2': 2474, '3': 1672, '1': 1545, '4': 863, '0': 809, '5': 506, '6': 388, '7': 187, '8': 101, 'None': 86, '9': 57, '10': 57, '11': 34, '12': 33, '13': 14, '17': 12, '14': 6, '19': 5, '18': 5, '16': 3, '15': 2}
+    fh5_6: 41 verschiedene Werte, z. B. ['None', '3', '6', '27']
+    fh6_7: 60 verschiedene Werte, z. B. ['None', '5', '11', '8']
+    fh7_8: 65 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh8_9: 62 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh9_10: 62 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh10_11: 54 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh11_12: 53 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh12_13: 54 verschiedene Werte, z. B. ['None', '10', '18', '12']
+    fh13_14: 58 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh14_15: 62 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh15_16: 60 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh16_17: 59 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh17_18: 60 verschiedene Werte, z. B. ['None', '10', '19', '13']
+    fh18_19: 61 verschiedene Werte, z. B. ['None', '10', '16', '13']
+    fh19_20: 57 verschiedene Werte, z. B. ['None', '10', '16', '13']
+    fh20_21: 51 verschiedene Werte, z. B. ['None', '9', '13', '10']
+    fh21_22: 44 verschiedene Werte, z. B. ['None', '6', '12', '9']
+    fh22_23: 36 verschiedene Werte, z. B. ['None', '7', '9', '6']
+    fh23_24: 32 verschiedene Werte, z. B. ['None', '3', '6', '24']
+    linien: 1128 verschiedene Werte, z. B. ['Rahnsdorfer Str - Bhf. Mahlsdorf', 'Warschauer Str - Hermannplatz', 'Hbf - Turmstr. Jungfernheide', 'Blankenburger Süden']
+    t: 143 verschiedene Werte, z. B. ['None', '424', '287', '63']
+    b: 494 verschiedene Werte, z. B. ['None', '314', '220', '383']
+  vorrangnetz:a_oepnv_vorrangnetz / Pankow: 24 Objekte
+    Geometrie: {'MultiLineString': 24}
+    no: {'4': 1, '5': 1, '102635': 1, '1993827': 1, '1994040': 1, '1994226': 1, '1994352': 1, '1994353': 1, '1994746': 1, '1994840': 1, '1994841': 1, '1996317': 1, '1996830': 1, '2000169': 1, '2000178': 1, '2000179': 1, '2001487': 1, '2004882': 1, '2004883': 1, '2007002': 1, '2007003': 1, '2007574': 1, '2007575': 1, '2008725': 1}
+    vorrangtyp: {'Tram': 15, 'Bus': 5, 'NBS': 2, 'None': 2}
+    vorrang: {'1': 20, 'None': 2, '0': 2}
+    v_zukunft: {'0': 22, 'None': 2}
+    v_z_jahr: {'None': 24}
+    nacht: {'1': 12, '0': 10, 'None': 2}
+    n: {'1': 12, '0': 10, 'None': 2}
+    m: {'0': 22, 'None': 2}
+    fh0_1: {'2': 13, '3': 8, 'None': 2, '1': 1}
+    fh1_2: {'2': 11, '0': 10, 'None': 2, '4': 1}
+    fh2_3: {'2': 11, '0': 10, 'None': 2, '4': 1}
+    fh3_4: {'2': 11, '0': 10, 'None': 2, '4': 1}
+    fh4_5: {'3': 7, '2': 6, '0': 4, 'None': 2, '1': 2, '4': 2, '5': 1}
+    fh5_6: {'5': 15, '3': 6, 'None': 3}
+    fh6_7: {'7': 8, '8': 7, 'None': 3, '5': 3, '6': 2, '3': 1}
+    fh7_8: {'7': 15, '6': 5, 'None': 3, '5': 1}
+    fh8_9: {'6': 19, 'None': 3, '3': 1, '5': 1}
+    fh9_10: {'6': 20, 'None': 3, '3': 1}
+    fh10_11: {'6': 20, 'None': 3, '3': 1}
+    fh11_12: {'6': 20, 'None': 3, '3': 1}
+    fh12_13: {'6': 20, 'None': 3, '3': 1}
+    fh13_14: {'6': 20, 'None': 3, '3': 1}
+    fh14_15: {'6': 20, 'None': 3, '3': 1}
+    fh15_16: {'6': 20, 'None': 3, '3': 1}
+    fh16_17: {'6': 20, 'None': 3, '3': 1}
+    fh17_18: {'6': 19, 'None': 3, '3': 1, '5': 1}
+    fh18_19: {'6': 20, 'None': 3, '3': 1}
+    fh19_20: {'6': 12, '4': 4, '5': 4, 'None': 3, '3': 1}
+    fh20_21: {'4': 17, '3': 4, 'None': 3}
+    fh21_22: {'3': 17, '2': 4, 'None': 3}
+    fh22_23: {'3': 21, 'None': 3}
+    fh23_24: {'3': 21, 'None': 3}
+    linien: {'BN50,T50': 10, 'T50': 5, 'B250': 4, 'Blankenburger Süden': 1, 'Pankow-Heinersdorf - Weißensee': 1, 'B158,BN58': 1, 'B150': 1, 'BN50': 1}
+    t: {'109': 15, 'None': 9}
+    b: {'None': 10, '8': 10, '70': 1, '99': 1, '104': 1, '16': 1}
+  vorrangnetz:a_oepnv_vorrangnetz / Alexanderplatz: 70 Objekte
+    Geometrie: {'MultiLineString': 70}
+    no: 70 verschiedene Werte, z. B. ['982085', '987984', '1992945', '1993109']
+    vorrangtyp: {'Tram': 40, 'None': 16, 'Bus': 14}
+    vorrang: {'1': 54, '0': 16}
+    v_zukunft: {'0': 70}
+    v_z_jahr: {'None': 70}
+    nacht: {'1': 56, '0': 14}
+    n: {'1': 40, '0': 30}
+    m: {'0': 39, '1': 31}
+    fh0_1: {'4': 11, '3': 10, '7': 9, '1': 6, '2': 6, '8': 5, '0': 4, '5': 4, '10': 4, '15': 3, '11': 3, '12': 2, '16': 1, 'None': 1, '6': 1}
+    fh1_2: {'4': 19, '0': 14, '2': 11, '16': 5, '20': 4, '10': 4, '18': 4, '3': 2, '7': 2, '8': 1, 'None': 1, '19': 1, '17': 1, '15': 1}
+    fh2_3: {'4': 21, '0': 14, '2': 11, '19': 5, '16': 4, '9': 4, '18': 4, '15': 2, '8': 2, '7': 1, 'None': 1, '14': 1}
+    fh3_4: {'4': 18, '2': 15, '0': 14, '6': 5, '13': 5, '16': 4, '11': 4, '12': 2, '7': 1, 'None': 1, '14': 1}
+    fh4_5: {'7': 15, '2': 12, '3': 10, '4': 9, '1': 7, '0': 5, '13': 4, '8': 3, '6': 3, 'None': 1, '5': 1}
+    fh5_6: {'None': 16, '9': 11, '13': 10, '6': 9, '10': 6, '1': 5, '16': 4, '4': 4, '3': 2, '0': 2, '2': 1}
+    fh6_7: {'None': 16, '6': 10, '9': 7, '3': 6, '12': 6, '25': 5, '31': 4, '10': 4, '8': 3, '24': 3, '26': 2, '1': 2, '5': 1, '4': 1}
+    fh7_8: {'None': 16, '30': 10, '9': 8, '18': 8, '3': 6, '14': 6, '39': 4, '10': 4, '11': 2, '16': 2, '17': 1, '7': 1, '6': 1, '1': 1}
+    fh8_9: {'None': 16, '30': 10, '20': 9, '15': 6, '12': 6, '6': 5, '11': 5, '41': 4, '9': 3, '18': 2, '8': 2, '4': 1, '2': 1}
+    fh9_10: {'None': 16, '12': 10, '21': 9, '28': 8, '15': 6, '9': 5, '6': 5, '41': 3, '27': 2, '18': 2, '42': 1, '14': 1, '7': 1, '3': 1}
+    fh10_11: {'None': 16, '24': 10, '12': 10, '22': 9, '15': 7, '9': 5, '6': 5, '39': 4, '18': 2, '10': 1, '4': 1}
+    fh11_12: {'None': 16, '24': 10, '12': 10, '22': 9, '15': 7, '9': 5, '6': 5, '39': 4, '18': 2, '10': 1, '4': 1}
+    fh12_13: {'None': 16, '24': 10, '12': 10, '22': 9, '15': 7, '9': 5, '6': 5, '39': 4, '18': 2, '10': 1, '4': 1}
+    fh13_14: {'None': 16, '12': 10, '22': 9, '25': 8, '15': 7, '9': 5, '6': 5, '40': 4, '24': 2, '18': 2, '10': 1, '4': 1}
+    fh14_15: {'None': 16, '30': 10, '12': 10, '22': 9, '15': 6, '9': 5, '6': 5, '45': 4, '18': 2, '14': 1, '10': 1, '4': 1}
+    fh15_16: {'None': 16, '30': 10, '12': 9, '22': 9, '15': 6, '6': 5, '9': 4, '44': 4, '18': 2, '11': 1, '14': 1, '10': 1, '8': 1, '4': 1}
+    fh16_17: {'None': 16, '30': 10, '12': 10, '22': 9, '15': 7, '9': 5, '6': 5, '45': 4, '18': 2, '10': 1, '4': 1}
+    fh17_18: {'None': 16, '30': 10, '12': 10, '22': 9, '15': 7, '9': 5, '6': 5, '45': 4, '18': 2, '10': 1, '4': 1}
+    fh18_19: {'None': 16, '30': 10, '12': 10, '15': 6, '22': 6, '6': 5, '9': 4, '46': 3, '23': 3, '18': 2, '45': 1, '16': 1, '11': 1, '8': 1, '4': 1}
+    fh19_20: {'None': 16, '12': 10, '22': 9, '29': 7, '15': 7, '9': 5, '6': 5, '44': 4, '30': 3, '18': 2, '10': 1, '4': 1}
+    fh20_21: {'None': 16, '24': 8, '3': 6, '14': 6, '20': 6, '11': 5, '36': 4, '8': 3, '10': 3, '21': 3, '23': 2, '12': 2, '9': 2, '17': 2, '6': 2}
+    fh21_22: {'None': 16, '16': 14, '13': 7, '6': 7, '7': 6, '3': 6, '15': 5, '28': 4, '12': 2, '9': 1, '10': 1, '5': 1}
+    fh22_23: {'None': 16, '6': 12, '15': 10, '13': 9, '11': 8, '3': 5, '24': 2, '25': 2, '7': 2, '9': 1, '4': 1, '5': 1, '2': 1}
+    fh23_24: {'None': 16, '6': 14, '15': 10, '10': 9, '9': 8, '3': 6, '21': 4, '4': 2, '1': 1}
+    linien: {'TM4,TM5,TM6': 10, 'B142,B200,TM8': 6, 'TM2': 6, 'B100,B200,BN02,BN05,BN08,BN40,BN60,BN65,TM2': 6, 'BN05,BN60,BN65': 4, 'B248,B300': 4, 'BN08,BN40,BN42': 3, 'B300,BN60,BN65': 3, 'B100,B200,BN02,BN05,BN08,BN40,BN60,BN65,TM4,TM5,TM6': 3, 'B100,B200,BN02,BN05,BN08,BN40,BN42,BN60,BN65,TM2': 3, 'BN02': 3, 'B300': 2, 'BN60,BN65': 2, 'BN05': 2, 'B142,TM8': 2, 'BN42': 2, 'B200,BN02,TM2': 2, 'B100,B200,BN02,BN05,BN08,BN40,BN60,BN65': 2, 'B100,BN08,BN40,BN42': 2, 'B142,BN02,TM8': 1, 'B100,B200,B300,BN02,BN05,BN08,BN40,BN60,BN65,TM4,TM5,TM6': 1, 'B200,B300,BN02,BN08,BN40,BN42,BN60,BN65': 1}
+    t: {'None': 30, '209': 9, '500': 8, '210': 8, '501': 6, '107': 5, '106': 4}
+    b: 29 verschiedene Werte, z. B. ['22', '66', 'None', '93']
+  vorrangnetz:b_oepnv_nachtangebot / ganz Berlin (bis 20000): 6745 Objekte
+    Geometrie: {'MultiLineString': 6745}
+    no: 6745 verschiedene Werte, z. B. ['100007', '100008', '100011', '100015']
+    vorrangtyp: {'Bus': 3850, 'Tram': 1422, 'None': 1366, 'Tram_Zukunft': 54, 'Bus_Zukunft': 53}
+    vorrang: {'1': 5381, '0': 1364}
+    v_zukunft: {'0': 6638, '1': 107}
+    v_z_jahr: {'None': 6702, '2023': 43}
+    nacht: {'1': 6745}
+    n: {'1': 4675, '0': 2070}
+    m: {'0': 3812, '1': 2933}
+    fh0_1: {'3': 1857, '2': 1400, '4': 1057, '5': 628, '1': 363, '6': 351, '0': 270, '7': 251, '8': 124, 'None': 104, '9': 97, '10': 77, '11': 52, '12': 37, '13': 20, '20': 10, '15': 9, '16': 8, '17': 8, '14': 7, '22': 4, '21': 4, '19': 3, '18': 2, '23': 2}
+    fh1_2: {'2': 4808, '4': 844, '3': 294, '1': 232, '6': 181, 'None': 94, '5': 80, '7': 43, '8': 41, '11': 22, '10': 20, '16': 19, '9': 19, '20': 9, '0': 7, '18': 7, '13': 7, '12': 6, '14': 5, '15': 3, '17': 3, '19': 1}
+    fh2_3: {'2': 4948, '4': 991, '6': 191, '3': 145, '1': 112, 'None': 95, '5': 71, '8': 42, '7': 26, '10': 23, '9': 18, '16': 17, '11': 15, '12': 14, '19': 6, '15': 6, '18': 6, '14': 4, '13': 4, '20': 4, '17': 3, '0': 3, '21': 1}
+    fh3_4: {'2': 4912, '4': 877, '3': 323, '6': 187, '1': 132, 'None': 88, '5': 58, '8': 30, '7': 23, '9': 21, '11': 20, '10': 14, '16': 13, '0': 10, '13': 9, '18': 7, '12': 7, '15': 6, '14': 5, '17': 2, '22': 1}
+    fh4_5: {'2': 2066, '3': 1558, '4': 829, '1': 545, '5': 492, '6': 388, '0': 275, '7': 186, '8': 101, 'None': 77, '9': 57, '10': 57, '11': 34, '12': 33, '13': 14, '17': 12, '14': 6, '19': 5, '18': 5, '16': 3, '15': 2}
+    fh5_6: 41 verschiedene Werte, z. B. ['3', '6', '27', '9']
+    fh6_7: 60 verschiedene Werte, z. B. ['5', '11', '8', '34']
+    fh7_8: 65 verschiedene Werte, z. B. ['10', '19', '13', '44']
+    fh8_9: 62 verschiedene Werte, z. B. ['10', '19', '13', '44']
+    fh9_10: 62 verschiedene Werte, z. B. ['10', '19', '13', '45']
+    fh10_11: 54 verschiedene Werte, z. B. ['10', '19', '13', '45']
+    fh11_12: 53 verschiedene Werte, z. B. ['10', '19', '13', '45']
+    fh12_13: 54 verschiedene Werte, z. B. ['10', '18', '12', '45']
+    fh13_14: 58 verschiedene Werte, z. B. ['10', '19', '13', '45']
+    fh14_15: 62 verschiedene Werte, z. B. ['10', '19', '13', '45']
+    fh15_16: 60 verschiedene Werte, z. B. ['10', '19', '13', '44']
+    fh16_17: 59 verschiedene Werte, z. B. ['10', '19', '13', '45']
+    fh17_18: 60 verschiedene Werte, z. B. ['10', '19', '13', '45']
+    fh18_19: 61 verschiedene Werte, z. B. ['10', '16', '13', '40']
+    fh19_20: 57 verschiedene Werte, z. B. ['10', '16', '13', '39']
+    fh20_21: 51 verschiedene Werte, z. B. ['9', '13', '10', '34']
+    fh21_22: 44 verschiedene Werte, z. B. ['6', '12', '9', '27']
+    fh22_23: 36 verschiedene Werte, z. B. ['7', '9', '6', '26']
+    fh23_24: 32 verschiedene Werte, z. B. ['3', '6', '24', '9']
+    linien: 909 verschiedene Werte, z. B. ['BM27,BN07', 'B142,B147,BM27', 'B142,BM27', 'B120,B142,B147,B245,BN05,BN20,BN40,TM10,TM5,TM8']
+    t: 138 verschiedene Werte, z. B. ['None', '424', '287', '63']
+    b: 488 verschiedene Werte, z. B. ['None', '314', '220', '383']
+  vorrangnetz:b_oepnv_nachtangebot / Pankow: 12 Objekte
+    Geometrie: {'MultiLineString': 12}
+    no: {'1994226': 1, '1994746': 1, '1994840': 1, '1994841': 1, '1996317': 1, '2001487': 1, '2004882': 1, '2004883': 1, '2007003': 1, '2007574': 1, '2007575': 1, '2008725': 1}
+    vorrangtyp: {'Tram': 10, 'None': 2}
+    vorrang: {'1': 10, '0': 2}
+    v_zukunft: {'0': 12}
+    v_z_jahr: {'None': 12}
+    nacht: {'1': 12}
+    n: {'1': 12}
+    m: {'0': 12}
+    fh0_1: {'3': 8, '2': 3, '1': 1}
+    fh1_2: {'2': 11, '4': 1}
+    fh2_3: {'2': 11, '4': 1}
+    fh3_4: {'2': 11, '4': 1}
+    fh4_5: {'3': 7, '4': 2, '2': 1, '5': 1, '1': 1}
+    fh5_6: {'5': 10, '3': 1, 'None': 1}
+    fh6_7: {'8': 7, '7': 3, '3': 1, 'None': 1}
+    fh7_8: {'7': 10, '5': 1, 'None': 1}
+    fh8_9: {'6': 10, '3': 1, 'None': 1}
+    fh9_10: {'6': 10, '3': 1, 'None': 1}
+    fh10_11: {'6': 10, '3': 1, 'None': 1}
+    fh11_12: {'6': 10, '3': 1, 'None': 1}
+    fh12_13: {'6': 10, '3': 1, 'None': 1}
+    fh13_14: {'6': 10, '3': 1, 'None': 1}
+    fh14_15: {'6': 10, '3': 1, 'None': 1}
+    fh15_16: {'6': 10, '3': 1, 'None': 1}
+    fh16_17: {'6': 10, '3': 1, 'None': 1}
+    fh17_18: {'6': 10, '3': 1, 'None': 1}
+    fh18_19: {'6': 10, '3': 1, 'None': 1}
+    fh19_20: {'6': 6, '5': 4, '3': 1, 'None': 1}
+    fh20_21: {'4': 10, '3': 1, 'None': 1}
+    fh21_22: {'3': 8, '2': 3, 'None': 1}
+    fh22_23: {'3': 11, 'None': 1}
+    fh23_24: {'3': 11, 'None': 1}
+    linien: {'BN50,T50': 10, 'B158,BN58': 1, 'BN50': 1}
+    t: {'109': 10, 'None': 2}
+    b: {'8': 10, '70': 1, '16': 1}
+  vorrangnetz:b_oepnv_nachtangebot / Alexanderplatz: 56 Objekte
+    Geometrie: {'MultiLineString': 56}
+    no: 56 verschiedene Werte, z. B. ['982085', '987984', '1992945', '1993111']
+    vorrangtyp: {'Tram': 32, 'None': 16, 'Bus': 8}
+    vorrang: {'1': 40, '0': 16}
+    v_zukunft: {'0': 56}
+    v_z_jahr: {'None': 56}
+    nacht: {'1': 56}
+    n: {'1': 40, '0': 16}
+    m: {'1': 31, '0': 25}
+    fh0_1: {'7': 9, '1': 6, '3': 6, '8': 5, '4': 5, '0': 4, '5': 4, '10': 4, '15': 3, '11': 3, '12': 2, '2': 2, '16': 1, 'None': 1, '6': 1}
+    fh1_2: {'4': 19, '2': 11, '16': 5, '20': 4, '10': 4, '18': 4, '3': 2, '7': 2, '8': 1, 'None': 1, '19': 1, '17': 1, '15': 1}
+    fh2_3: {'4': 21, '2': 11, '19': 5, '16': 4, '9': 4, '18': 4, '15': 2, '8': 2, '7': 1, 'None': 1, '14': 1}
+    fh3_4: {'4': 18, '2': 15, '6': 5, '13': 5, '16': 4, '11': 4, '12': 2, '7': 1, 'None': 1, '14': 1}
+    fh4_5: {'7': 15, '2': 9, '3': 8, '1': 7, '13': 4, '4': 3, '8': 3, '6': 3, '0': 2, 'None': 1, '5': 1}
+    fh5_6: {'None': 16, '9': 11, '13': 10, '6': 7, '16': 4, '1': 3, '3': 2, '0': 2, '4': 1}
+    fh6_7: {'None': 16, '6': 7, '9': 7, '25': 5, '3': 4, '31': 4, '10': 4, '24': 3, '26': 2, '1': 2, '8': 1, '5': 1}
+    fh7_8: {'None': 16, '30': 10, '18': 8, '3': 4, '39': 4, '10': 4, '9': 3, '11': 2, '16': 2, '17': 1, '7': 1, '1': 1}
+    fh8_9: {'None': 16, '30': 10, '20': 9, '12': 6, '41': 4, '6': 3, '11': 2, '18': 2, '9': 1, '8': 1, '4': 1, '2': 1}
+    fh9_10: {'None': 16, '21': 9, '28': 8, '12': 7, '6': 3, '41': 3, '9': 2, '27': 2, '18': 2, '42': 1, '14': 1, '7': 1, '3': 1}
+    fh10_11: {'None': 16, '24': 10, '22': 9, '12': 7, '39': 4, '6': 3, '9': 2, '18': 2, '15': 1, '10': 1, '4': 1}
+    fh11_12: {'None': 16, '24': 10, '22': 9, '12': 7, '39': 4, '6': 3, '9': 2, '18': 2, '15': 1, '10': 1, '4': 1}
+    fh12_13: {'None': 16, '24': 10, '22': 9, '12': 7, '39': 4, '6': 3, '9': 2, '18': 2, '15': 1, '10': 1, '4': 1}
+    fh13_14: {'None': 16, '22': 9, '25': 8, '12': 7, '40': 4, '6': 3, '9': 2, '24': 2, '18': 2, '15': 1, '10': 1, '4': 1}
+    fh14_15: {'None': 16, '30': 10, '22': 9, '12': 7, '45': 4, '6': 3, '9': 2, '18': 2, '14': 1, '10': 1, '4': 1}
+    fh15_16: {'None': 16, '30': 10, '22': 9, '12': 6, '44': 4, '6': 3, '18': 2, '9': 1, '11': 1, '14': 1, '10': 1, '8': 1, '4': 1}
+    fh16_17: {'None': 16, '30': 10, '22': 9, '12': 7, '45': 4, '6': 3, '9': 2, '18': 2, '15': 1, '10': 1, '4': 1}
+    fh17_18: {'None': 16, '30': 10, '22': 9, '12': 7, '45': 4, '6': 3, '9': 2, '18': 2, '15': 1, '10': 1, '4': 1}
+    fh18_19: {'None': 16, '30': 10, '12': 7, '22': 6, '6': 3, '46': 3, '23': 3, '18': 2, '9': 1, '45': 1, '16': 1, '11': 1, '8': 1, '4': 1}
+    fh19_20: {'None': 16, '22': 9, '29': 7, '12': 7, '44': 4, '6': 3, '30': 3, '9': 2, '18': 2, '15': 1, '10': 1, '4': 1}
+    fh20_21: {'None': 16, '24': 8, '20': 6, '11': 5, '3': 4, '36': 4, '21': 3, '23': 2, '12': 2, '9': 2, '17': 2, '8': 1, '6': 1}
+    fh21_22: {'None': 16, '16': 14, '6': 7, '15': 5, '3': 4, '28': 4, '12': 2, '7': 1, '9': 1, '13': 1, '10': 1}
+    fh22_23: {'None': 16, '15': 10, '13': 9, '6': 7, '3': 3, '24': 2, '25': 2, '7': 2, '11': 2, '9': 1, '5': 1, '2': 1}
+    fh23_24: {'None': 16, '15': 10, '6': 9, '10': 9, '3': 4, '21': 4, '9': 2, '4': 1, '1': 1}
+    linien: {'TM4,TM5,TM6': 10, 'TM2': 6, 'B100,B200,BN02,BN05,BN08,BN40,BN60,BN65,TM2': 6, 'BN05,BN60,BN65': 4, 'BN08,BN40,BN42': 3, 'B300,BN60,BN65': 3, 'B100,B200,BN02,BN05,BN08,BN40,BN60,BN65,TM4,TM5,TM6': 3, 'B100,B200,BN02,BN05,BN08,BN40,BN42,BN60,BN65,TM2': 3, 'BN02': 3, 'BN60,BN65': 2, 'BN05': 2, 'BN42': 2, 'B200,BN02,TM2': 2, 'B100,B200,BN02,BN05,BN08,BN40,BN60,BN65': 2, 'B100,BN08,BN40,BN42': 2, 'B142,BN02,TM8': 1, 'B100,B200,B300,BN02,BN05,BN08,BN40,BN60,BN65,TM4,TM5,TM6': 1, 'B200,B300,BN02,BN08,BN40,BN42,BN60,BN65': 1}
+    t: {'None': 24, '209': 9, '500': 8, '210': 8, '501': 6, '107': 1}
+    b: {'None': 17, '281': 4, '29': 3, '113': 2, '18': 2, '10': 2, '11': 2, '157': 2, '300': 2, '7': 2, '8': 2, '164': 2, '115': 2, '155': 2, '22': 1, '66': 1, '31': 1, '93': 1, '285': 1, '272': 1, '173': 1, '259': 1, '159': 1, '280': 1}
+
+=== oepnv_ungestoert ===
+  Feature-Typen: ['oepnv_ungestoert:a_busstopp', 'oepnv_ungestoert:b_tramstopp', 'oepnv_ungestoert:c_buslinien', 'oepnv_ungestoert:d_tramlinien']
+  oepnv_ungestoert:a_busstopp / ganz Berlin (bis 20000): 6456 Objekte
+    Geometrie: {'MultiPoint': 6456}
+    no: 6456 verschiedene Werte, z. B. ['101000001', '101000002', '101000003', '101000004']
+    hstname: 2903 verschiedene Werte, z. B. ['U Fehrbelliner Platz', 'U Blissestr.', 'Am Volkspark', 'Birger-Forell-Platz']
+    anzlinien: {'1': 3532, '2': 1790, '3': 662, '4': 261, '5': 107, '6': 56, '7': 21, '8': 14, '9': 5, '10': 4, '13': 1, '16': 1, '12': 1, '17': 1}
+    code: 6456 verschiedene Werte, z. B. ['UFBP01', 'UBLI03', 'AMVP01', 'BFPL01']
+  oepnv_ungestoert:a_busstopp / Pankow: 6 Objekte
+    Geometrie: {'MultiPoint': 6}
+    no: {'101005249': 1, '101006331': 1, '101007013': 1, '101007022': 1, '101007328': 1, '101007330': 1}
+    hstname: {'Galenusstr.': 2, 'S Pankow-Heinersdorf': 2, 'Grumbkowstr./Pankower Str.': 1, 'Karower Str.': 1}
+    anzlinien: {'1': 6}
+    code: {'GMPK01': 1, 'KAOW01': 1, 'GALE01N': 1, 'GALE02N': 1, 'SPH01N': 1, 'SPH02N': 1}
+  oepnv_ungestoert:a_busstopp / Alexanderplatz: 24 Objekte
+    Geometrie: {'MultiPoint': 24}
+    no: {'101005149': 1, '101005216': 1, '101005469': 1, '101006417': 1, '101006506': 1, '101006736': 1, '101006806': 1, '101006818': 1, '101006967': 1, '101007004': 1, '101007014': 1, '101007113': 1, '101007129': 1, '101007153': 1, '101007154': 1, '101007173': 1, '101007174': 1, '101007175': 1, '101007177': 1, '101007179': 1, '101007186': 1, '101007309': 1, '101007596': 1, '101007682': 1}
+    hstname: {'S+U Alexanderplatz/Memhardstr.': 7, 'Mollstr./Prenzlauer Allee': 4, 'U Rosa-Luxemburg-Platz': 3, 'U Alexanderplatz': 2, 'S+U Alexanderplatz/Grunerstr.': 2, 'Memhardstr.': 2, 'Spandauer Str./Marienkirche': 2, 'U Weinmeisterstr.': 1, 'Littenstr.': 1}
+    anzlinien: {'1': 13, '2': 5, '3': 2, '5': 1, '7': 1, '4': 1, '8': 1}
+    code: {'URLP09': 1, 'UALX01N': 1, 'MOPA06': 1, 'SUAG02': 1, 'URLP10N': 1, 'ALXM03N': 1, 'MOPA01': 1, 'SUAG05': 1, 'UWEI01N': 1, 'ALXM07N': 1, 'ALXM08N': 1, 'MEMH07': 1, 'URLP11N': 1, 'ALXM05': 1, 'UALX02N': 1, 'SPMK02': 1, 'ALXM01N': 1, 'ALXM02': 1, 'ALXM04': 1, 'MOPA02': 1, 'MEMH02': 1, 'SPMK03': 1, 'LITT01': 1, 'MOPA12N': 1}
+  oepnv_ungestoert:b_tramstopp / ganz Berlin (bis 20000): 875 Objekte
+    Geometrie: {'MultiPoint': 875}
+    no: 875 verschiedene Werte, z. B. ['301008800', '301008801', '301008802', '301008803']
+    hstname: 659 verschiedene Werte, z. B. ['Mollstr./Otto-Braun-Str., M5+M6 -> Stadt', 'U Alexanderplatz', 'S+U Alexanderplatz/Gontardstr.', 'Spandauer Str./Marienkirche']
+    anzlinien: {'1': 353, '2': 258, '4': 103, '0': 49, '3': 47, '6': 38, '5': 24, '7': 3}
+    code: 875 verschiedene Werte, z. B. ['MOOB01', 'UALX01', 'ALXG01', 'SPMK01']
+  oepnv_ungestoert:b_tramstopp / Pankow: 6 Objekte
+    Geometrie: {'MultiPoint': 6}
+    no: {'301009482': 1, '301009483': 1, '301009484': 1, '301009499': 1, '301009500': 1, '301009501': 1}
+    hstname: {'Würtzstr.': 2, 'S Pankow-Heinersdorf': 2, 'Prenzlauer Chaussee/Galenusstr.': 2}
+    anzlinien: {'1': 6}
+    code: {'WRTZ01': 1, 'SPH01': 1, 'GALE01': 1, 'GALE02': 1, 'SPH02': 1, 'WRTZ02': 1}
+  oepnv_ungestoert:b_tramstopp / Alexanderplatz: 17 Objekte
+    Geometrie: {'MultiPoint': 17}
+    no: {'301008801': 1, '301008802': 1, '301008803': 1, '301008807': 1, '301008808': 1, '301008809': 1, '301008810': 1, '301008811': 1, '301008815': 1, '301008816': 1, '301008817': 1, '301008818': 1, '301008837': 1, '301009133': 1, '301009151': 1, '301009556': 1, '301009587': 1}
+    hstname: {'U Alexanderplatz': 2, 'S+U Alexanderplatz/Gontardstr.': 2, 'S+U Alexanderplatz/Memhardstr.': 2, 'Spandauer Str./Marienkirche': 1, 'Mollstr./Otto-Braun-Str., M4 -> Land': 1, 'Mollstr./Otto-Braun-Str., M5+M6 -> Land': 1, 'Mollstr./Otto-Braun-Str., M8 -> Land': 1, 'S+U Alexanderplatz/Dircksenstr. Gl.1 Durchfahrtsgleis': 1, 'S+U Alexanderplatz/Dircksenstr. Gl.2 Stumpfgleis': 1, 'S+U Alexanderplatz/Dircksenstr. Halt vor Stumpfgleis': 1, 'Mollstr./Prenzlauer Allee, M8 -> Stadt': 1, 'Mollstr./Prenzlauer Allee, M8 -> Land': 1, 'Mollstr./Prenzlauer Allee, M2 -> Land': 1, 'Mollstr./Prenzlauer Allee, M2 -> Stadt': 1}
+    anzlinien: {'1': 10, '3': 5, '2': 1, '0': 1}
+    code: {'UALX01': 1, 'ALXG01': 1, 'SPMK01': 1, 'ALXG02': 1, 'UALX02': 1, 'MOOB02': 1, 'MOOB03': 1, 'MOOB04': 1, 'ALXM01': 1, 'ALXD01': 1, 'ALXD02': 1, 'ALXM02': 1, 'ALXD03': 1, 'MOPA01': 1, 'MOPA02': 1, 'MOPA03': 1, 'MOPA04': 1}
+  oepnv_ungestoert:c_buslinien / ganz Berlin (bis 20000): 1466 Objekte
+    Geometrie: {'MultiLineString': 1466}
+    gisid: 1466 verschiedene Werte, z. B. ['1', '2', '3', '4']
+    linename: 203 verschiedene Werte, z. B. ['100-10-100', '101-10-101', '106-10-106', '107-10-107']
+    starthst: 366 verschiedene Werte, z. B. ['S+U Alexanderplatz/Memhardstr.', 'Memhardstr.', 'Hertzallee', 'Mansfelder Str./Barstr.']
+    endhst: 361 verschiedene Werte, z. B. ['Hertzallee', 'S+U Zoologischer Garten/Jebensstr.', 'Memhardstr.', 'S+U Alexanderplatz/Memhardstr.']
+    richtung: {'H': 737, 'R': 729}
+  oepnv_ungestoert:c_buslinien / Pankow: 53 Objekte
+    Geometrie: {'MultiLineString': 53}
+    gisid: 53 verschiedene Werte, z. B. ['331', '332', '334', '335']
+    linename: {'158-10-158': 13, '150-10-150': 11, '154-10-154': 8, '250-10-250': 5, 'N08-10-908': 5, 'N50-10-950': 5, '259-10-259': 3, 'N58-10-958': 3}
+    starthst: 27 verschiedene Werte, z. B. ['S Buch', 'Krugstege', 'Alt-Blankenburg', 'Hofzeichendamm']
+    endhst: {'U Osloer Str.': 7, 'Aubertstr.': 6, 'S Buch': 5, 'Alt-Blankenburg': 4, 'Frundsbergstr.': 3, 'Grumbkowstr.': 3, 'S+U Hermannstr.': 3, 'Hugenottenplatz': 3, 'Michelangelostr.': 2, 'Prenzlauer Allee/Ostseestr.': 2, 'Prenzlauer Prom./Am Steinberg': 2, 'Hofzeichendamm': 1, 'U Elsterwerdaer Platz': 1, 'Prerower Platz': 1, 'Jan-Petersen-Str.': 1, 'S Hohenschönhausen': 1, 'Am Wasserturm': 1, 'U Vinetastr.': 1, 'U Franz-Neumann-Platz': 1, 'Stadion Buschallee/Hansastr.': 1, 'Wilhelmsruher Damm': 1, 'S+U Wittenau': 1, 'U Tierpark': 1, 'Betriebshof Indira-Gandhi-Str.': 1}
+    richtung: {'H': 27, 'R': 26}
+  oepnv_ungestoert:c_buslinien / Alexanderplatz: 112 Objekte
+    Geometrie: {'MultiLineString': 112}
+    gisid: 112 verschiedene Werte, z. B. ['1', '2', '3', '4']
+    linename: {'N08-10-908': 11, '142-10-142': 9, 'N02-10-902': 9, 'N05-10-905': 9, '147-10-147': 8, '200-10-200': 7, '248-10-248': 7, '300-10-300': 7, '100-10-100': 6, 'N60-10-960': 6, 'N65-10-965': 6, 'M41-10-841': 5, 'N07-10-907': 5, 'N50-10-950': 5, 'M27-10-827': 4, '154-10-154': 3, 'N40-10-940': 3, 'N42-10-942': 2}
+    starthst: 44 verschiedene Werte, z. B. ['S+U Alexanderplatz/Memhardstr.', 'Memhardstr.', 'Hertzallee', 'U Leopoldplatz']
+    endhst: 43 verschiedene Werte, z. B. ['Hertzallee', 'S+U Zoologischer Garten/Jebensstr.', 'Memhardstr.', 'S+U Alexanderplatz/Memhardstr.']
+    richtung: {'R': 59, 'H': 53}
+  oepnv_ungestoert:d_tramlinien / ganz Berlin (bis 20000): 268 Objekte
+    Geometrie: {'MultiLineString': 268}
+    gisid: 268 verschiedene Werte, z. B. ['1', '2', '3', '4']
+    linename: {'M5-30-005': 26, 'M10-30-010': 25, '62-30-062': 18, 'M2-30-002': 16, 'M6-30-006': 15, '60-30-060': 14, 'M4-30-004': 14, 'M13-30-013': 13, 'M8-30-008': 13, 'M1-30-001': 12, '68-30-068': 11, '21-30-021': 10, '27-30-027': 10, '50-30-050': 10, '63-30-063': 10, '67-30-067': 10, 'M17-30-017': 10, '18-30-018': 8, '61-30-061': 8, '12-30-012': 7, '16-30-016': 4, '37-30-037': 4}
+    starthst: 64 verschiedene Werte, z. B. ['BH Weißensee Einstieg', 'Sulzfelder Str. -> Stadt', 'Am Kupfergraben, Gleis 3', 'Pasedagplatz, Einstieg']
+    endhst: 65 verschiedene Werte, z. B. ['Pasedagplatz, Ausstieg', 'BH Weißensee Ausstieg', 'Sulzfelder Str. -> Land', 'Am Kupfergraben, Gleis 3']
+    richtung: {'H': 138, 'R': 130}
+  oepnv_ungestoert:d_tramlinien / Pankow: 6 Objekte
+    Geometrie: {'MultiLineString': 6}
+    gisid: {'46': 1, '48': 1, '49': 1, '50': 1, '52': 1, '53': 1}
+    linename: {'50-30-050': 6}
+    starthst: {'Guyotstr., Einstieg': 3, 'Björnsonstr., Einstieg Gleis 2': 2, 'Virchow-Klinikum, Einstieg': 1}
+    endhst: {'Guyotstr., Ausstieg': 3, 'Björnsonstr., Ausstieg': 2, 'Virchow-Klinikum, Ausstieg': 1}
+    richtung: {'R': 3, 'H': 3}
+  oepnv_ungestoert:d_tramlinien / Alexanderplatz: 63 Objekte
+    Geometrie: {'MultiLineString': 63}
+    gisid: 63 verschiedene Werte, z. B. ['3', '4', '6', '7']
+    linename: {'M10-30-010': 16, 'M2-30-002': 12, 'M5-30-005': 9, 'M1-30-001': 6, 'M4-30-004': 6, '12-30-012': 4, 'M13-30-013': 4, 'M6-30-006': 3, 'M8-30-008': 3}
+    starthst: 28 verschiedene Werte, z. B. ['Am Kupfergraben, Gleis 3', 'Pasedagplatz, Einstieg', 'BH Weißensee Einstieg', 'Am Kupfergraben, Gleis 2']
+    endhst: {'BH Lichtenberg > Gudrun': 7, 'S Hackescher Markt, von Alex': 7, 'BH Weißensee Ausstieg': 5, 'U Turmstr., Ausstieg': 5, 'Lüneburger Str.': 5, 'S+U Warschauer Str., Ausstieg': 4, 'S+U Alexanderplatz/Dircksenstr. Gl.1 Durchfahrtsgleis': 4, 'Am Kupfergraben, Gleis 2': 3, 'Am Kupfergraben, Gleis 3': 2, 'Virchow-Klinikum, Ausstieg': 2, 'S+U Alexanderplatz/Dircksenstr. Gl.2 Stumpfgleis': 2, 'Heinersdorf, Ausstieg': 2, 'Am Steinberg -> Land': 2, 'Zingster Str., Ausstieg Gl.3-5': 2, 'Pasedagplatz, Ausstieg': 1, 'Schillerstr., Ausstieg': 1, 'Rosenthal Nord, Ausstieg': 1, 'Friedrich-Ludwig-Jahn-Sportpark, Aus- und Einstieg Gl.1': 1, 'Friedrich-Ludwig-Jahn-Sportpark, Aus- und Einstieg Gl.2': 1, 'S Warschauer Str./Revaler Str.': 1, 'Zingster Str., Ausstieg Gl.1+2': 1, 'Falkenberg, Ausstieg': 1, 'Gehrenseestr., M5 -> Land': 1, 'Riesaer Str., Ausstieg': 1, 'Ahrensfelde, Ausstieg': 1}
+    richtung: {'H': 34, 'R': 29}
+
+=== radverkehrsnetz ===
+  Feature-Typen: ['radverkehrsnetz:radfernwege', 'radverkehrsnetz:radverkehrsnetz', 'radverkehrsnetz:stadtgruen', 'radverkehrsnetz:untersuchungsbereiche']
+  radverkehrsnetz:radfernwege / ganz Berlin (bis 20000): 175 Objekte
+    Geometrie: {'MultiLineString': 175}
+    gisid: 175 verschiedene Werte, z. B. ['1', '2', '3', '4']
+    t_routen: {'Havel': 33, 'B-DD,R1': 30, 'B-Kop': 25, 'R1': 23, 'Dahme': 18, 'B-Usd': 14, 'Havel,R1': 12, 'B-Kop,Havel': 7, 'B-L': 7, 'B-DD,Dahme': 4, 'B-DD': 2}
+  radverkehrsnetz:radfernwege / Pankow: 1 Objekte
+    Geometrie: {'MultiLineString': 1}
+    gisid: {'45': 1}
+    t_routen: {'B-Usd': 1}
+  radverkehrsnetz:radfernwege / Alexanderplatz: 4 Objekte
+    Geometrie: {'MultiLineString': 4}
+    gisid: {'13': 1, '50': 1, '51': 1, '74': 1}
+    t_routen: {'B-DD,R1': 4}
+  radverkehrsnetz:radverkehrsnetz / ganz Berlin (bis 20000): 14882 Objekte
+    Geometrie: {'MultiLineString': 14882}
+    gisid: 14882 verschiedene Werte, z. B. ['1', '2', '3', '4']
+    elem_nr: 14087 verschiedene Werte, z. B. ['37430014_37430015.02', '54600040_54600027.02', '49470035_49470036.02', '52520034_53520013.02']
+    ist_radvorrangnetz: {'Ergänzungsnetz': 9549, 'Radvorrangnetz': 5333}
+    existenz: {'ja, in Straßennetz': 14309, 'ja, als Pfad, Privat, o. ä.': 288, 'ja, in Fußnetz': 192, 'nein': 91, 'None': 2}
+  radverkehrsnetz:radverkehrsnetz / Pankow: 41 Objekte
+    Geometrie: {'MultiLineString': 41}
+    gisid: 41 verschiedene Werte, z. B. ['130', '914', '915', '1675']
+    elem_nr: 26 verschiedene Werte, z. B. ['None', '48610003_49600050.03', '48610035_48610003.01', '48620057_48620055.01']
+    ist_radvorrangnetz: {'Ergänzungsnetz': 31, 'Radvorrangnetz': 10}
+    existenz: {'ja, in Straßennetz': 27, 'nein': 7, 'ja, in Fußnetz': 4, 'ja, als Pfad, Privat, o. ä.': 3}
+  radverkehrsnetz:radverkehrsnetz / Alexanderplatz: 43 Objekte
+    Geometrie: {'MultiLineString': 43}
+    gisid: 43 verschiedene Werte, z. B. ['603', '604', '606', '608']
+    elem_nr: 39 verschiedene Werte, z. B. ['None', '47550011_47550001.02', '47550018_47560001.02', '47560034_48550061.01']
+    ist_radvorrangnetz: {'Radvorrangnetz': 25, 'Ergänzungsnetz': 18}
+    existenz: {'ja, in Straßennetz': 38, 'ja, in Fußnetz': 5}
+  radverkehrsnetz:stadtgruen / ganz Berlin (bis 20000): 1028 Objekte
+    Geometrie: {'MultiLineString': 1028}
+    gisid: 1028 verschiedene Werte, z. B. ['1', '2', '3', '4']
+    verlauf_stadtgruen: {'Ergänzungsnetz': 671, 'Radvorrangnetz': 357}
+  radverkehrsnetz:stadtgruen / Pankow: 2 Objekte
+    Geometrie: {'MultiLineString': 2}
+    gisid: {'486': 1, '525': 1}
+    verlauf_stadtgruen: {'Ergänzungsnetz': 2}
+  radverkehrsnetz:stadtgruen / Alexanderplatz: 0 Objekte
+  radverkehrsnetz:untersuchungsbereiche / ganz Berlin (bis 20000): 11 Objekte
+    Geometrie: {'MultiPolygon': 11}
+    gisid: {'1': 1, '2': 1, '3': 1, '4': 1, '5': 1, '6': 1, '7': 1, '8': 1, '9': 1, '10': 1, '11': 1}
+    beschreibu: {'Alexanderplatz': 1, 'Georgen-Parochial-Friedhof III': 1, 'Georgen-Parochial-Friedhof I / Sankt-Nicolai und Sankt Marie': 1, 'Prüfung der Verknüpfung des Netzes it Rampen oder Brücken, N': 1, 'Prüfung separate Gleisunterführung im Zuge der Karlshorster ': 1, 'Untersuchung, ob z.B. Neubau einer Nord-Süd-Querung besser i': 1, 'Prüfung der Passfähigkeit eines Wegeneubaus zwischen Ghanast': 1, 'Untersuchung von Optionen der Bahnquerung zwischen Siegfried': 1, 'Tempelhofer Feld nachts geschlossen': 1, 'Spreetunnel: Brücke als Alternative prüfen': 1, 'Führung im entstehenden Stadtquartier Marienhöfe statt auf R': 1}
+  radverkehrsnetz:untersuchungsbereiche / Pankow: 0 Objekte
+  radverkehrsnetz:untersuchungsbereiche / Alexanderplatz: 2 Objekte
+    Geometrie: {'MultiPolygon': 2}
+    gisid: {'1': 1, '3': 1}
+    beschreibu: {'Alexanderplatz': 1, 'Georgen-Parochial-Friedhof I / Sankt-Nicolai und Sankt Marie': 1}
+
+=== ua_gebaeudehoehen ===
+  Feature-Typen: ['ua_gebaeudehoehen:gebaeudehoehen']
+  ua_gebaeudehoehen:gebaeudehoehen / ganz Berlin (bis 20000): 20000 Objekte
+    Geometrie: {'MultiPolygon': 20000}
+    gisid: 20000 verschiedene Werte, z. B. ['1', '2', '3', '4']
+    gml_id: 16240 verschiedene Werte, z. B. ['DEBE06YYD00003Pk', 'DEBE06YYD0001Ctc', 'DEBE06YYD00001AQ', 'DEBE06YYD0001Cqn']
+    name: 70 verschiedene Werte, z. B. ['None', 'Gr. Neugierde Kl. Neugierde', 'Kasino', 'Orangerie']
+    funktion: 101 verschiedene Werte, z. B. ['31001_1000', '51009_1610', '31001_3030', '31001_2463']
+    dachart: {'1000': 10157, '3100': 5865, '9999': 1033, '5000': 972, '2100': 841, '3200': 800, '3500': 236, '3300': 96}
+    hoehe: 9069 verschiedene Werte, z. B. ['17.152', '3.446', '7.788', '10.46']
+    geschosse: {'1': 10782, '2': 4952, '0': 3300, '3': 755, '4': 101, '5': 54, '6': 47, '30': 5, '11': 4}
+    quellebodenhoehe: {'1400': 20000}
+    quelledachhoehe: {'1000': 19874, '3000': 125, '5000': 1}
+    quellelage: {'1000': 20000}
+    grundrissaktualitaet: 387 verschiedene Werte, z. B. ['2020-02-07', '2020-02-10', '2020-02-06', '2015-09-10']
+    strasse: 228 verschiedene Werte, z. B. ['Königstraße', 'None', 'Am Waldrand', 'Am Böttcherberg']
+    hnr: 31 verschiedene Werte, z. B. ['36B (9)', 'None', '35D (1)', '36B (6)']
+    funktion_txt: 101 verschiedene Werte, z. B. ['Wohngebäude', 'Überdachung', 'Gebäude für kulturelle Zwecke', 'Garage']
+    shape_area: 19992 verschiedene Werte, z. B. ['23.915011499996318', '3.4196210008261687', '134.0178249911379', '7.178483498619493']
+    role_txt: {'Gebäude': 13941, 'Gebäudeteil': 6059}
+    dachart_txt: {'Flachdach': 10157, 'Satteldach': 5865, 'Sonstiges': 1033, 'Mischform': 972, 'Pultdach': 841, 'Walmdach': 800, 'Zeltdach': 236, 'Krüppelwalmdach': 96}
+    quellebodenhoehe_txt: {'Verschneidung mit DGM10': 20000}
+    quelledachhoehe_txt: {'Laserscan': 19874, 'Standard': 125, 'Photogrammetrie (automatisch)': 1}
+    quellelage_txt: {'Liegenschaftskataster': 20000}
+    erole_txt: {'Building': 13941, 'Part of building': 6059}
+    edachart_txt: {'Flat roof': 10157, 'Gable roof': 5865, 'Others': 1033, 'Mixed type': 972, 'Shed roof': 841, 'Hip roof': 800, 'Tented roof': 236, 'Half-hip roof': 96}
+    equellebodenhoehe_txt: {'Intersection with DTM10': 20000}
+    equelledachhoehe_txt: {'Laserscan': 19874, 'Standard': 125, 'Photogrammetry (automatic)': 1}
+    equellelage_txt: {'Real Estate Cadastre Information System': 20000}
+    efunktion_txt: 101 verschiedene Werte, z. B. ['Residential building', 'Roofing', 'Building used for cultural purposes', 'Garage']
