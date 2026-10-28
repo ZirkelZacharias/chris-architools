@@ -53,15 +53,16 @@ def bauen():
     win = sysname == "Windows"
     ziel = os.path.join(DIST, NAME)
     shutil.rmtree(ziel, ignore_errors=True)
-    os.makedirs(ziel)
+    prog = os.path.join(ziel, "programm")                      # alles Technische liegt hier; oben nur Starter und Anleitung
+    os.makedirs(prog)
     t0 = time.time()
     # 1) eigenes Python
-    shutil.copytree(python_holen(), os.path.join(ziel, "python"), symlinks=True)
-    for f in glob.glob(os.path.join(ziel, "python", "**", "EXTERNALLY-MANAGED"), recursive=True):
+    shutil.copytree(python_holen(), os.path.join(prog, "python"), symlinks=True)
+    for f in glob.glob(os.path.join(prog, "python", "**", "EXTERNALLY-MANAGED"), recursive=True):
         os.remove(f)
-    py = os.path.join(ziel, "python", "python.exe") if win else os.path.join(ziel, "python", "bin", "python3")
+    py = os.path.join(prog, "python", "python.exe") if win else os.path.join(prog, "python", "bin", "python3")
     if not os.path.exists(py):
-        cand = glob.glob(os.path.join(ziel, "python", "bin", "python3*"))
+        cand = glob.glob(os.path.join(prog, "python", "bin", "python3*"))
         py = sorted(cand)[0]
     # 2) Bibliotheken
     req = os.path.join(ROOT, "requirements.txt")
@@ -73,35 +74,35 @@ def bauen():
         run([py, "-m", "pip", "install", "--prefer-binary", "-r", req])
     # 3) Programm
     for n in ("architools", "beispiel"):
-        shutil.copytree(os.path.join(ROOT, n), os.path.join(ziel, n),
+        shutil.copytree(os.path.join(ROOT, n), os.path.join(prog, n),
                         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "projekte", ".vorschau"))
     for n in ("architools_app.py", "architools_update.py", "requirements.txt"):
-        shutil.copy2(os.path.join(ROOT, n), os.path.join(ziel, n))
+        shutil.copy2(os.path.join(ROOT, n), os.path.join(prog, n))
     build = int(os.environ.get("ARCHITOOLS_BUILD") or open(os.path.join(ROOT, "stand.txt")).read().strip())
-    json.dump({"build": build, "version": "0.1", "zeit": time.strftime("%Y-%m-%d")}, open(os.path.join(ziel, "stand.json"), "w"))
+    json.dump({"build": build, "version": "0.1", "zeit": time.strftime("%Y-%m-%d")}, open(os.path.join(prog, "stand.json"), "w"))
     # 4) Starter + Anleitung
     start = "Chris ArchItools starten.bat" if win else "Chris ArchItools starten.command"
     a = open(os.path.join(ROOT, "docs", "ANLEITUNG_portabel.md"), encoding="utf-8").read().replace("@START@", start)
     a = re.sub(r"<!--WINDOWS-->(.*?)<!--MAC-->(.*?)<!--ENDE-->", lambda m: m.group(1) if win else m.group(2), a, flags=re.S)
     open(os.path.join(ziel, "ANLEITUNG.md"), "w", encoding="utf-8").write(a)
-    shutil.copy2(os.path.join(ROOT, "docs", "entscheidungen.md"), os.path.join(ziel, "ENTSCHEIDUNGEN.md"))
+    shutil.copy2(os.path.join(ROOT, "docs", "entscheidungen.md"), os.path.join(prog, "ENTSCHEIDUNGEN.md"))
     if win:
         open(os.path.join(ziel, start), "w", newline="\r\n").write(
-            '@echo off\r\ncd /d "%~dp0"\r\nset PYTHONUTF8=1\r\npython\\python.exe architools_update.py\r\n'
+            '@echo off\r\ncd /d "%~dp0programm"\r\nset PYTHONUTF8=1\r\npython\\python.exe architools_update.py\r\n'
             'start "" python\\pythonw.exe architools_app.py\r\n')
-        open(os.path.join(ziel, "Chris ArchItools mit Fehlerfenster.bat"), "w", newline="\r\n").write(
+        open(os.path.join(prog, "Mit Fehlerfenster starten.bat"), "w", newline="\r\n").write(
             '@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\nset PYTHONUTF8=1\r\npython\\python.exe architools_update.py\r\n'
             'python\\python.exe architools_app.py\r\npause\r\n')
     else:
         p = os.path.join(ziel, start)
         open(p, "w", newline="\n").write(
-            '#!/bin/bash\ncd "$(dirname "$0")" || exit 1\n'
-            'xattr -dr com.apple.quarantine . >/dev/null 2>&1\nexport PYTHONUTF8=1\n'
+            '#!/bin/bash\nDIR="$(cd "$(dirname "$0")" && pwd)"\n'
+            'xattr -dr com.apple.quarantine "$DIR" >/dev/null 2>&1\ncd "$DIR/programm" || exit 1\nexport PYTHONUTF8=1\n'
             'PY=python/bin/python3\n"$PY" architools_update.py\n'
             '"$PY" architools_app.py "$@" || { echo; read -r -p "Fehler - Enter ..." _; }\n')
         os.chmod(p, 0o755)
     print(f"Paket gebaut in {time.time() - t0:.0f} s", flush=True)
-    return sysname, ziel, py
+    return sysname, ziel, prog, py
 
 
 def packen(sysname, ziel):
@@ -165,7 +166,7 @@ def serverpruefen(name, exe, ziel):
 
 
 if __name__ == "__main__":
-    s, z, py = bauen()
+    s, z, prog, py = bauen()
     if "--test" in sys.argv:
-        testen(py, z)
+        testen(py, prog)
     packen(s, z)

@@ -38,16 +38,16 @@ jobs:
         shell: bash
         continue-on-error: true
         run: |
-          cd dist/ChrisArchItools
+          cd dist/ChrisArchItools/programm
           if [ -x python/bin/python3 ]; then PY=python/bin/python3; else PY=python/python.exe; fi
-          "$PY" ../../bau/dienste_test.py 2>&1 | tee ../../dienste.txt
+          "$PY" ../../../bau/dienste_test.py 2>&1 | tee ../../../dienste.txt
       - name: Dienste-Sonden (Attribute und Werte der Berliner Dienste)
         shell: bash
         continue-on-error: true
         run: |
-          cd dist/ChrisArchItools
+          cd dist/ChrisArchItools/programm
           if [ -x python/bin/python3 ]; then PY=python/bin/python3; else PY=python/python.exe; fi
-          "$PY" ../../bau/sonden.py 2>&1 | tee ../../sonden.txt
+          "$PY" ../../../bau/sonden.py 2>&1 | tee ../../../sonden.txt
       - name: Protokolle ins Repository schreiben
         if: ${{ always() && github.ref_type == 'branch' }}
         shell: bash
