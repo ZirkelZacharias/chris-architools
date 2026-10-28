@@ -1,36 +1,36 @@
 + uv python install 3.12
 Downloading cpython-3.12.16-windows-x86_64-none (download) (21.0MiB)
  Downloaded cpython-3.12.16-windows-x86_64-none (download)
-Installed Python 3.12.16 in 5.37s
+Installed Python 3.12.16 in 8.27s
  + cpython-3.12.16-windows-x86_64-none (python3.12.exe)
 warning: `C:\Users\runneradmin\.local\bin` is not on your PATH. To use installed Python executables, run `$env:PATH = "C:\Users\runneradmin\.local\bin;$env:PATH"` or `uv python update-shell`.
 Python: C:\Users\runneradmin\AppData\Roaming\uv\python\cpython-3.12.16-windows-x86_64-none\python.exe -> C:\Users\runneradmin\AppData\Roaming\uv\python\cpython-3.12.16-windows-x86_64-none
-+ uv pip install --python D:\a\chris-architools\chris-architools\dist\ChrisArchItools\python\python.exe --break-system-packages --no-progress -r D:\a\chris-architools\chris-architools\requirements.txt
-Using Python 3.12.16 environment at: dist\ChrisArchItools\python
-Resolved 93 packages in 445ms
++ uv pip install --python D:\a\chris-architools\chris-architools\dist\ChrisArchItools\programm\python\python.exe --break-system-packages --no-progress -r D:\a\chris-architools\chris-architools\requirements.txt
+Using Python 3.12.16 environment at: dist\ChrisArchItools\programm\python
+Resolved 93 packages in 829ms
 Downloading numpy (12.0MiB)
-Downloading pydantic-core (2.1MiB)
-Downloading nicegui (8.1MiB)
-Downloading ifcopenshell (40.8MiB)
-Downloading pygments (1.2MiB)
-Downloading shapely (1.7MiB)
 Downloading fonttools (2.4MiB)
-Downloading matplotlib (8.9MiB)
+Downloading pygments (1.2MiB)
 Downloading networkx (2.0MiB)
-Downloading pillow (6.9MiB)
 Downloading ezdwg (1.5MiB)
+Downloading pillow (6.9MiB)
 Downloading pyogrio (22.7MiB)
-Downloading rasterio (29.3MiB)
+Downloading matplotlib (8.9MiB)
+Downloading pydantic-core (2.1MiB)
 Downloading pymupdf (60.1MiB)
+Downloading ifcopenshell (40.8MiB)
 Downloading pyproj (6.4MiB)
-Downloading ezdxf (2.9MiB)
-Downloading pandas (10.3MiB)
 Downloading scipy (35.0MiB)
+Downloading rasterio (29.3MiB)
+Downloading shapely (1.7MiB)
+Downloading ezdxf (2.9MiB)
+Downloading nicegui (8.1MiB)
+Downloading pandas (10.3MiB)
 Downloading onnxruntime (14.2MiB)
- Downloaded ezdwg
  Downloaded shapely
- Downloaded pygments
+ Downloaded ezdwg
  Downloaded pydantic-core
+ Downloaded pygments
  Downloaded fonttools
  Downloaded networkx
  Downloaded ezdxf
@@ -38,16 +38,16 @@ Downloading onnxruntime (14.2MiB)
  Downloaded pillow
  Downloaded nicegui
  Downloaded matplotlib
- Downloaded pandas
  Downloaded numpy
  Downloaded onnxruntime
+ Downloaded pandas
  Downloaded pyogrio
  Downloaded rasterio
  Downloaded scipy
  Downloaded ifcopenshell
  Downloaded pymupdf
-Prepared 93 packages in 4.07s
-Installed 93 packages in 1.25s
+Prepared 93 packages in 3.58s
+Installed 93 packages in 1.05s
  + affine==3.0.1
  + aiofiles==25.1.0
  + aiohappyeyeballs==2.7.1
@@ -141,10 +141,11 @@ Installed 93 packages in 1.25s
  + websockets==17.3
  + wsproto==1.3.2
  + yarl==1.25.1
-Paket gebaut in 13 s
-+ D:\a\chris-architools\chris-architools\dist\ChrisArchItools\python\python.exe -c import numpy, scipy, shapely, rasterio, pyogrio, contourpy, matplotlib, trimesh, ezdxf, ezdwg, pymupdf, pandas, pyproj, PIL, ifcopenshell, nicegui, webview; print('Bibliotheken ok')
+Paket gebaut in 16 s
++ D:\a\chris-architools\chris-architools\dist\ChrisArchItools\programm\python\python.exe -c import numpy, scipy, shapely, rasterio, pyogrio, contourpy, matplotlib, trimesh, ezdxf, ezdwg, pymupdf, pandas, pyproj, PIL, ifcopenshell, nicegui, webview; print('Bibliotheken ok')
 Bibliotheken ok
-+ D:\a\chris-architools\chris-architools\dist\ChrisArchItools\python\python.exe D:\a\chris-architools\chris-architools\bau\smoke_e2e.py D:\a\chris-architools\chris-architools\dist\ChrisArchItools
+pythonnet-Test: pythonnet (Programmfenster) ok
++ D:\a\chris-architools\chris-architools\dist\ChrisArchItools\programm\python\python.exe D:\a\chris-architools\chris-architools\bau\smoke_e2e.py D:\a\chris-architools\chris-architools\dist\ChrisArchItools\programm
 === Umgebung ===
 Bundesland: Berlin
 Mitte (EPSG:25833): Ost 393600.0  Nord 5826550.0   Rechteck 300 x 300 m   E0=394000 N0=5827000
@@ -179,9 +180,9 @@ Baeume (Berliner WFS):
   Vegetationsraster: 0 Baeume bekamen die Rasterhoehe, 2 fehlende Baeume ergaenzt (nur Spitzen >= 4 m, ausserhalb von Gebaeuden)
   OpenStreetMap: 1 Baeume ergaenzt, die es in den amtlichen Quellen nicht gibt (kein amtlicher Baum im Umkreis von 3 m)
   Baeume im Nahbereich samt Uebergangszone: 4 (davon 2 mit Kronendurchmesser aus den Daten, Rest Standard 6 m)
-  OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 5.3 s (28 Objekte)
+  OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 1.2 s (28 Objekte)
   Gleisachsen (OpenStreetMap): 6 Linien, 2049 m; Bruecken in OSM: 13
-    (20.8 s, im Hintergrund)
+    (16.6 s, im Hintergrund)
 Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - ungetestet:
   Quelle: amtlich (Berlin)
   radverkehrsnetz:radverkehrsnetz: 1 geladen, 1 im Rechteck (erstes Objekt bei Ost 393500 / Nord 5826520, Gebiet bei Ost 393600 / Nord 5826550)
@@ -190,7 +191,7 @@ Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - un
   Radfernwege: Attribute (Beispiel): {}
   radverkehrsnetz:stadtgruen: keine Objekte geliefert
   -> 2 Objekte uebernommen
-Zeiten: Gelaende lesen und ausduennen 3 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 18 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 21 s
+Zeiten: Gelaende lesen und ausduennen 2 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 14 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 17 s
 Gelaende nach Nutzung aufteilen:
   12 Bruecke(n) ohne LoD2-Koerper: dort keine Fahrbahn/kein Gehweg (bleibt weg)
   Gelaende wird aufgeteilt nach: Weg_Platz
@@ -248,7 +249,7 @@ Material: Graupappe 2 mm · Platte 800 × 500 mm
   Einsatz-PDFs: 1
 6/6  Druckplatten und Montageplan
   Druckplatte umgebung 1: 240 x 210 mm, 31 Teile, Ausnutzung 54 %
-Fertig in 48 s: 6 Laserplatten, 1 Druckplatten. Ausgabe: C:\Users\RUNNER~1\AppData\Local\Temp\tmpfc50xef0\ziel\MeinExport\modell
+Fertig in 51 s: 6 Laserplatten, 1 Druckplatten. Ausgabe: C:\Users\RUNNER~1\AppData\Local\Temp\tmpege1ddjy\ziel\MeinExport\modell
 === Geländeschnitt ===
 Geländeschnitt von (393450, 5826550) nach (393750, 5826550)
   DGM: 390 x 190 Zellen, Auflösung 1.00 m, Höhe 48.2 – 56.7 m
@@ -259,10 +260,10 @@ Geländeschnitt von (393450, 5826550) nach (393750, 5826550)
   Bäume: 21 Objekte
   Ansicht dahinter (rechts, 100 m Tiefe): 19 Gebäude, 5 Bäume (5 davon im Schnitt)
   Schnitt 300 m lang, 1 Gebäudeschnitte, 19 Gebäude und 5 Bäume in der Ansicht dahinter, Gelände 50.1–56.1 m
-Fertig in 74 s
-FERTIG 74 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gravur'], 'schnitt': ['ordner', 'dateien', 'png', 'svg']}
-{"ifc": "2026-10-28 14:17", "lageplan": "2026-10-28 14:17", "schwarzplan": "2026-10-28 14:17", "info_dwg": "2026-10-28 14:17", "laser": "2026-10-28 14:18", "druck": "2026-10-28 14:18", "schnitt": "2026-10-28 14:18"}
-\E2E.architools.json 15375
+Fertig in 71 s
+FERTIG 71 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gravur'], 'schnitt': ['ordner', 'dateien', 'png', 'svg']}
+{"ifc": "2026-10-28 14:49", "lageplan": "2026-10-28 14:49", "schwarzplan": "2026-10-28 14:49", "info_dwg": "2026-10-28 14:49", "laser": "2026-10-28 14:50", "druck": "2026-10-28 14:50", "schnitt": "2026-10-28 14:50"}
+\E2E.architools.json 15475
 SMOKE-TEST OK
 Startseite antwortet (python): 200
 --- Server-Log (python) ---
@@ -270,4 +271,4 @@ Startseite antwortet (python): 200
 Startseite antwortet (pythonw): 200
 --- Server-Log (pythonw) ---
 
-ZIP: D:\a\chris-architools\chris-architools\dist\ChrisArchItools_Windows_portabel.zip 344 MB
+ZIP: D:\a\chris-architools\chris-architools\dist\ChrisArchItools_Windows_portabel.zip 345 MB
