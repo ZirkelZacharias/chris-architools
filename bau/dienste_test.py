@@ -39,6 +39,28 @@ try:
             print("  Datei:", os.path.join(r, f).replace(TMP, ""), os.path.getsize(os.path.join(r, f)))
 except Exception:
     print("ABBRUCH:\n" + traceback.format_exc())
+# Zweiter Lauf am Alexanderplatz: viele Tram-, Bus- und S-Bahn-Linien -> prüft die ÖPNV-Ebenen der Informations-DWG
+try:
+    print("\n=== ÖPNV-Test Alexanderplatz ===")
+    p2 = P.neues_projekt("Alex", os.path.join(TMP, "alex"))
+    p2["gebiet"]["mitte_en"] = [392300.0, 5820500.0]
+    u2 = p2["umgebung"]
+    u2.update(land="berlin", quelle="berlin", online_dgm=True, online_lod2=False, breite=400.0, hoehe=400.0, nah_breite=300.0,
+              nah_hoehe=300.0, lod2_luecken=False, alkis_zusatz=False, extra=["oepnv"], buergersteige="keine", markant=False)
+    p2["formate"] = {"zweid": ["dxf"], "dreid": ["ifc"]}
+    p2["ausgaben"].update(info_dwg=True)
+    erg2 = L.alles(p2, ["info_dwg"], log, lambda x, t="": None)
+    import ezdxf
+    for r, _, fs in os.walk(os.path.join(TMP, "alex", "ausgabe")):
+        for f in fs:
+            if f.endswith(".dxf"):
+                doc = ezdxf.readfile(os.path.join(r, f))
+                zaehl = {}
+                for e in doc.modelspace():
+                    zaehl[e.dxf.layer] = zaehl.get(e.dxf.layer, 0) + 1
+                print("ÖPNV-Ebenen:", {k: v for k, v in zaehl.items() if "OEPNV" in k.upper() or "OPNV" in k.upper()})
+except Exception:
+    print("ABBRUCH ÖPNV-Test:\n" + traceback.format_exc())
 # Kurzfassung der Auffälligkeiten
 print("\n=== AUFFÄLLIGKEITEN ===")
 for z in zeilen:
