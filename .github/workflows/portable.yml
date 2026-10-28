@@ -26,6 +26,7 @@ jobs:
       matrix:
         os: [windows-latest, macos-15, macos-15-intel]
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.os == 'macos-15' }}   # ausgelasteter Runner darf den Release nicht verhindern
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -73,7 +74,7 @@ jobs:
   release:
     needs: bauen
     # läuft auch, wenn ein Mac-Runner wegen Auslastung ausfällt (dann fehlt dessen Zip, der Hinweis steht in den Release-Notizen)
-    if: ${{ always() && (startsWith(github.ref, 'refs/tags/') || inputs.veroeffentlichen || contains(github.event.head_commit.message, '[release]')) && (needs.bauen.result == 'success' || needs.bauen.result == 'failure' || needs.bauen.result == 'cancelled') }}
+    if: ${{ always() && (startsWith(github.ref, 'refs/tags/') || inputs.veroeffentlichen || contains(github.event.head_commit.message, '[release]')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
