@@ -1,0 +1,132 @@
+"""Chris ArchItools – Oberfläche (NiceGUI, eigenes Fenster; Fallback: Browser)."""
+import os
+
+from nicegui import ui
+
+from .. import VERSION
+from . import eier, einst, export, start as start_seite, stil, zustand as Z
+from .einst_modell import ModellEinst
+from .gebiet import Gebiet
+from .stil import AKZENT, BG, CSS, INK, NATIVE, OCKER, SCHIEFER, TERRA, TEXT, WASSERZEICHEN
+from .werkzeuge import Werkzeuge
+
+ABLAUF = [("start", "1 · Start", "flag"), ("gebiet", "2 · Gebiet", "map"),
+          ("einst", "3 · Einstellungen", "tune"), ("export", "4 · Vorschau & Export", "view_in_ar")]
+WERKZEUGE = [("layout", "Lasercut-Layout", "grid_view"), ("druck3d", "3D-Druck-Layout", "view_in_ar"),
+             ("bib", "Materialbibliothek", "inventory_2"), ("prog", "Einstellungen", "settings")]
+
+
+def seite():
+    for el in (ui.input, ui.number, ui.select):
+        el.default_props("dense")
+    ui.add_css(CSS)
+    ui.colors(primary=AKZENT, secondary=TERRA, accent=OCKER)
+    ui.query("body").style(f"background:{BG}; color:{TEXT}")
+    p = Z.projekt()
+    ui.page_title(f"Chris ArchItools – {WASSERZEICHEN}")
+
+    def speichern():
+        try:
+            Z.speichern(p)
+        except Exception:
+            pass
+
+    with ui.header().classes("items-center gap-3 py-2").style(f"background:{INK}"):
+        ui.label("Chris ArchItools").classes("text-h6 text-white cursor-default") \
+            .style("font-family: Georgia, serif; font-style: italic").on("click", eier.titel_klicks())
+        ui.label(WASSERZEICHEN).style(
+            "position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); text-decoration:underline; "
+            "text-underline-offset:3px; color:#c9d3dd; font-size:13px; letter-spacing:.06em; pointer-events:none")
+        ui.space()
+        lbl = ui.label("").classes("text-caption text-white")
+        ui.timer(0.8, lambda: setattr(lbl, "text", p["name"] + ("" if p.get("_pfad") else "  (noch nicht gespeichert)")))
+
+        def sp():
+            speichern()
+            ui.notify(f"Gespeichert: {p.get('_pfad', '')}", type="positive")
+        ui.button("Speichern", icon="save", on_click=sp).props("flat color=white dense")
+
+    panels = None
+    tabs_w = None
+    sperre = {"an": False}
+    items = {}
+    arbeit = [k for k, _, _ in ABLAUF]
+
+    def wechsel(name):
+        if panels is None:
+            return
+        sperre["an"] = True
+        panels.value = name
+        tabs_w.value = name if name in arbeit else None
+        for k, it in items.items():
+            it.props(add="active" if k == name else None, remove=None if k == name else "active")
+        sperre["an"] = False
+
+    # ---- Werkzeug-Leiste links: eingeklappt nur Symbole, ausgeklappt mit Namen
+    with ui.left_drawer(value=True, fixed=True, bordered=False).props("mini width=232 mini-width=58 behavior=desktop") \
+            .classes("p-0").style(f"background:{INK}; color:#dbe3ea") as leiste:
+        mini = {"an": True}
+
+        def umschalten():
+            mini["an"] = not mini["an"]
+            leiste.props(add="mini" if mini["an"] else None, remove=None if mini["an"] else "mini")
+            knopf.props(f"icon={'chevron_right' if mini['an'] else 'chevron_left'}")
+        with ui.row().classes("w-full items-center no-wrap").style("padding:6px 8px; min-height:48px"):
+            knopf = ui.button(icon="chevron_right", on_click=umschalten).props("flat round dense color=white") \
+                .tooltip("Werkzeuge ein-/ausklappen")
+            ui.label("Werkzeuge").classes("text-caption text-uppercase").style("color:#9fb0bf; letter-spacing:.08em; white-space:nowrap")
+        with ui.list().props("dense").classes("w-full"):
+            for k, t, ic in WERKZEUGE:
+                it = ui.item(on_click=lambda k=k: wechsel(k)).props("clickable").style("color:#dbe3ea")
+                with it:
+                    with ui.item_section().props("avatar").style("min-width:34px"):
+                        ui.icon(ic).style("font-size:24px")
+                    with ui.item_section():
+                        ui.label(t).style("white-space:nowrap")
+                    ui.tooltip(t).props("anchor=center right self=center left")
+                items[k] = it
+
+    with ui.row().classes("w-full items-center no-wrap gap-0").style(f"background:{AKZENT}"):
+        with ui.tabs(value="start", on_change=lambda e: (not sperre["an"]) and e.value and wechsel(e.value)) \
+                .props("align=left active-color=white indicator-color=white dense").style("color:#dcebec") as tabs_w:
+            for k, t, ic in ABLAUF:
+                ui.tab(k, label=t, icon=ic)
+
+    me = ModellEinst(p)
+    wz = Werkzeuge(p, me)
+    with ui.tab_panels(value="start").classes("w-full bg-transparent").props("keep-alive") as panels:
+        with ui.tab_panel("start").classes("py-2"):
+            start_seite.seite(wechsel, lambda *a, **k: None)
+        with ui.tab_panel("gebiet").classes("py-2"):
+            Gebiet(p, speichern).seite()
+        with ui.tab_panel("einst").classes("py-2"):
+            einst.seite(p)
+        with ui.tab_panel("export").classes("py-2"):
+            export.seite(p, speichern)
+        with ui.tab_panel("layout").classes("py-2"):
+            wz.seite_layout()
+        with ui.tab_panel("druck3d").classes("py-2"):
+            wz.seite_druck()
+        with ui.tab_panel("bib").classes("py-2"):
+            wz.seite_bibliothek()
+        with ui.tab_panel("prog").classes("py-2"):
+            wz.seite_einstellungen()
+    eier.fuss()
+    ui.timer(45, lambda: speichern() if p.get("_pfad") else None)
+
+
+def start(native=None, port=None, show=True):
+    if native is None:
+        try:
+            import webview  # noqa: F401
+            native = True
+        except Exception:
+            native = False
+    NATIVE["an"] = bool(native)
+    ui.page("/")(seite)
+    kw = dict(title=f"Chris ArchItools – {WASSERZEICHEN}", reload=False, language="de", show_welcome_message=False,
+              favicon="📐")
+    if native:
+        ui.run(native=True, window_size=(1500, 950), port=port or 8765, **kw)
+    else:
+        ui.run(port=port or 8765, show=show, **kw)

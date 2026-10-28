@@ -1,0 +1,186 @@
+{
+  "projekt_name": "Beispiel",
+  "ausgabe_ordner": "ausgabe",
+  "massstab": 500,
+  "ausschnitt": {
+    "xmin": 393400,
+    "ymin": 5826400,
+    "xmax": 393800,
+    "ymax": 5826700
+  },
+  "ausschnitt_datei": "",
+  "dgm": {
+    "datei": "testdaten/dgm1.tif",
+    "glaettung_m": 1.5
+  },
+  "quelle": "dateien",
+  "gebiet": {
+    "mitte_en": [
+      393600.0,
+      5826550.0
+    ],
+    "breite_cm": 80.0,
+    "hoehe_cm": 60.0
+  },
+  "netz": {
+    "cafile": "",
+    "unsicher": false
+  },
+  "ifcmap": {
+    "rahmen": "karte",
+    "projekt": "",
+    "ordner": "",
+    "ebenen": {},
+    "zusatz": []
+  },
+  "einsatz": {
+    "aktiv": true,
+    "flurstuecke_datei": "testdaten/flurstuecke.gpkg",
+    "layer": "",
+    "mitte": null,
+    "spiel_mm": 0.4,
+    "exemplare": 1,
+    "gebaeude": "drucken",
+    "bauweise": ""
+  },
+  "gelaende": {
+    "ueberhoehung": 1.0,
+    "basis_hoehe_m": null,
+    "min_breite_mm": 3.0,
+    "min_flaeche_mm2": 30.0,
+    "bauweise": "voll",
+    "auflage_rand_mm": 12.0,
+    "min_hohl_mm": 8.0,
+    "rippen_abstand_mm": 80.0,
+    "stuetze_mm": 15.0,
+    "unterste_schicht_voll": true,
+    "passloecher": true,
+    "passloch_d_mm": 3.0,
+    "passloch_abstand_mm": 160.0,
+    "beschriftung_hoehe_mm": 4.0,
+    "gebaeude_aussparen": true,
+    "schichtdicke_mm": 2.0,
+    "hohlbau": "ringe"
+  },
+  "ebenen": {
+    "Anlegekante nächste Schicht": "ritzen",
+    "Gebäudeumrisse": "ritzen",
+    "Gebäudenummern": "gravieren",
+    "Teile-IDs": "gravieren",
+    "Rippen-/Klotzmarken": "ritzen"
+  },
+  "laser": {
+    "format": "Werkstatt-Laser 80 × 50 cm",
+    "eigenes_format_mm": [
+      600,
+      400
+    ],
+    "material": "Graupappe",
+    "staerke_mm": 2.0,
+    "staerke_gemessen_mm": null,
+    "rand_mm": 3.0,
+    "abstand_mm": 2.0,
+    "nesting_raster_mm": 1.0,
+    "drehungen": [
+      0,
+      90,
+      180,
+      270
+    ],
+    "ringe_teilen": true,
+    "teilstueck_mm": 250.0,
+    "ausgabe_dxf": false,
+    "plattenformate_mm": [
+      [
+        600,
+        400
+      ],
+      [
+        400,
+        300
+      ]
+    ]
+  },
+  "markierungen": [
+    {
+      "name": "Straßen",
+      "datei": "testdaten/strassen.gpkg",
+      "layer": "",
+      "aktion": "ritzen",
+      "breite_m": 10,
+      "punkt_d_mm": 0
+    },
+    {
+      "name": "Gleise",
+      "datei": "testdaten/gleise.gpkg",
+      "layer": "",
+      "aktion": "ritzen",
+      "breite_m": 0,
+      "punkt_d_mm": 0
+    },
+    {
+      "name": "Wasser",
+      "datei": "testdaten/wasser.gpkg",
+      "layer": "",
+      "aktion": "ritzen",
+      "breite_m": 0,
+      "punkt_d_mm": 0
+    },
+    {
+      "name": "Bäume",
+      "datei": "testdaten/baeume.gpkg",
+      "layer": "",
+      "aktion": "schneiden",
+      "breite_m": 0,
+      "punkt_d_mm": 1.5
+    }
+  ],
+  "gebaeude": {
+    "citygml": [
+      "testdaten/lod2.gml"
+    ],
+    "grundriss_datei": "",
+    "grundriss_layer": "",
+    "hoehe_feld": "",
+    "standard_hoehe_m": 9.0,
+    "nahzone_mitte": [
+      393690,
+      5826520
+    ],
+    "nahzone_radius_m": 150,
+    "min_breite_mm": 1.2,
+    "min_hoehe_mm": 1.0,
+    "zu_klein": "gravieren",
+    "platzhalter_ids": [
+      "DEBE_HALLE1"
+    ],
+    "separat_ids": [],
+    "beschriften": true,
+    "beschriftung_hoehe_mm": 2.5
+  },
+  "bauwerke": [
+    {
+      "name": "Bahnsteige",
+      "datei": "testdaten/bahnsteige.gpkg",
+      "layer": "",
+      "hoehe_feld": "hoehe",
+      "hoehe_m": 0.8,
+      "breite_m": 0
+    }
+  ],
+  "druck": {
+    "geraet": "Werkstatt Prusa MK4",
+    "bett_mm": [
+      220,
+      220
+    ],
+    "hoehe_mm": 210,
+    "filament": "PLA",
+    "rand_mm": 5.0,
+    "abstand_mm": 3.0,
+    "nesting_raster_mm": 1.0,
+    "drehschritt_grad": 90,
+    "fuellgrad_effektiv": 0.35
+  },
+  "_version": 2
+}

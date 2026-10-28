@@ -1,0 +1,16 @@
+{
+ "_hinweis": "Hier stehen nur Aenderungen gegenueber den eingebauten Laenderprofilen (Erklaerung im Kopf von ifcmap_laender.py). Eintraege, deren Name mit _ beginnt, werden ignoriert. Neues Land: Eintrag mit eigenem Namen (epsg, box = West, Sued, Ost, Nord in Grad, dgm, lod2, nutzung).",
+ "_beispiel_adresse_aendern": {
+  "bayern": {
+   "dgm": {
+    "url": "https://example.org/dgm/{ekm}_{nkm}.tif"
+   }
+  }
+ },
+ "_eingebaute_laender": [
+  "bayern",
+  "brandenburg",
+  "hamburg",
+  "nrw"
+ ]
+}

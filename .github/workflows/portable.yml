@@ -1,0 +1,76 @@
+name: Portable Pakete bauen und testen
+
+on:
+  workflow_dispatch:
+    inputs:
+      veroeffentlichen:
+        description: "Als Release veröffentlichen (Download für alle Systeme)"
+        type: boolean
+        default: true
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  bauen:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Paket bauen und testen
+        shell: bash
+        env:
+          ARCHITOOLS_BUILD: "0"
+        run: |
+          export ARCHITOOLS_BUILD=$(cat stand.txt)
+          python3 --version || true
+          uv run --no-project --python 3.12 python bau/portable.py --test 2>&1 | tee bauprotokoll.txt
+      - name: Echtlauf gegen die Berliner Dienste
+        shell: bash
+        continue-on-error: true
+        run: |
+          cd dist/ChrisArchItools
+          if [ -x python/bin/python3 ]; then PY=python/bin/python3; else PY=python/python.exe; fi
+          "$PY" ../../bau/dienste_test.py 2>&1 | tee ../../dienste.txt
+      - name: Protokolle ins Repository schreiben
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p testprotokolle
+          cp bauprotokoll.txt "testprotokolle/bau_${{ matrix.os }}.txt" || true
+          cp dienste.txt "testprotokolle/dienste_${{ matrix.os }}.txt" || true
+          cp dist/server.log "testprotokolle/server_${{ matrix.os }}.txt" || true
+          git config user.name "build-bot"
+          git config user.email "build-bot@users.noreply.github.com"
+          git add testprotokolle
+          git commit -m "Testprotokoll ${{ matrix.os }} [skip ci]" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin ${{ github.ref_name }} && git push origin HEAD:${{ github.ref_name }} && break || sleep 5; done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paket-${{ matrix.os }}
+          path: dist/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    needs: bauen
+    if: ${{ github.event_name == 'push' || inputs.veroeffentlichen }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: pakete
+          merge-multiple: true
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="stand-$(cat stand.txt)-$(date +%Y%m%d-%H%M)"
+          gh release create "$TAG" pakete/*.zip --title "Chris ArchItools Stand $(cat stand.txt)" --notes "Portable Pakete (kein Python nötig) für Windows und Mac."
