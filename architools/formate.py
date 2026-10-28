@@ -23,6 +23,18 @@ EMPFEHLUNG_2D = "dxf"
 EMPFEHLUNG_3D = "ifc"
 
 
+# Export-Profile: Formate für das Programm, in dem es weitergeht. (2D-Formate, 3D-Formate, Hinweis)
+PROFILE = {
+    "Archicad": (["dxf"], ["ifc"], "Archicad öffnet DXF direkt; IFC bringt Gelände, Straßen und Gebäude als getrennte Teile."),
+    "Vectorworks": (["dxf"], ["ifc"], "Vectorworks liest DXF/DWG und IFC; bei Farbproblemen zusätzlich DWG wählen."),
+    "AutoCAD / Revit": (["dwg"], ["ifc"], "DWG für AutoCAD; IFC für Revit (Einfügen/Verknüpfen)."),
+    "SketchUp": (["dxf"], ["obj"], "OBJ mit Farben (mit .mtl) importiert SketchUp; 2D als DXF."),
+    "Rhino": (["dxf"], ["obj"], "OBJ mit Farben oder STL für Rhino; 2D als DXF/DWG."),
+    "3D-Druck": ([], ["stl"], "Nur STL (Form ohne Farben) für Slicer."),
+    "Illustrator / Affinity": (["svg", "pdf"], [], "Vektorbilder zum Gestalten von Plänen, nicht zum Weiterzeichnen."),
+}
+
+
 def zweid_umwandeln(dateien, formate, oda="", log=print):
     """DXF-Dateien in die gewählten Formate umwandeln. Ohne 'dxf' in formate wird die DXF am Ende entfernt.
     -> Liste aller Ergebnisdateien"""

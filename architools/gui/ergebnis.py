@@ -19,6 +19,9 @@ def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
             if stats.get("laser_ordner"):
                 ui.button(f"Laser-PDFs ({len(stats.get('laser_pdfs', [])) + len(stats.get('einsatz_pdfs', []))})",
                           icon="picture_as_pdf", on_click=lambda: oeffnen(stats["laser_ordner"])).props("outline dense")
+            if stats.get("kostenliste") and os.path.exists(stats["kostenliste"]):
+                ui.button("Kostenliste", icon="receipt_long", on_click=lambda: oeffnen(stats["kostenliste"])) \
+                    .props("outline dense").tooltip("Zuschnitt- und Kostenliste (Text, nur geschätzt)")
             if stats.get("montageplan"):
                 ui.button("Montageplan", icon="picture_as_pdf",
                           on_click=lambda: oeffnen(stats["montageplan"])).props("outline dense")
@@ -37,11 +40,16 @@ def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
                 with ui.card().tight().classes("p-2"):
                     ui.label(str(b)).classes("text-subtitle1 text-weight-medium")
                     ui.label(a).classes("text-caption").style(f"color:{GRAU}")
-        teile = [(stats.get("vorschau_laser"), FARBE_LASER), (stats.get("vorschau_druck"), FARBE_DRUCK)]
+        if stats.get("kosten_text"):
+            with ui.expansion("Zuschnitt- und Kostenliste (nur geschätzt)", icon="receipt_long").classes("w-full").props("dense"):
+                ui.html("<pre style='white-space:pre-wrap; font-size:12px; margin:0'>"
+                        + stats["kosten_text"].replace("&", "&amp;").replace("<", "&lt;") + "</pre>")
+        fl = stats.get("material_farbe") or FARBE_LASER                      # Vorschau in der Farbe des Lasercut-Materials
+        teile = [(stats.get("vorschau_laser"), fl), (stats.get("vorschau_druck"), FARBE_DRUCK)]
         if any(p and os.path.exists(p) for p, _ in teile):
             with ui.row().classes("items-center gap-3 mt-2"):
                 ui.label("3D-Vorschau").classes("text-subtitle2")
-                ui.html(f'<span style="display:inline-block;width:12px;height:12px;background:{FARBE_LASER}"></span> Lasercut'
+                ui.html(f'<span style="display:inline-block;width:12px;height:12px;background:{fl};border:1px solid #999"></span> Lasercut ({stats.get("material", "")})'
                         f' &nbsp; <span style="display:inline-block;width:12px;height:12px;background:{FARBE_DRUCK}"></span> 3D-Druck')
                 hinweis("Maus: drehen · Rad: zoomen · rechte Taste: verschieben")
             szene3d(teile, stats.get("modell_b", 400), stats.get("modell_h", 300))
@@ -53,7 +61,8 @@ def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
         svgs = stats.get("laser_svgs") or stats.get("svgs") or []
         if svgs:
             ui.label("Laserplatten (Vorschau; Linien hier dicker gezeichnet)").classes("text-subtitle2 mt-2")
-            vs = vorschau_svgs(svgs, os.path.join(os.path.dirname(svgs[0]), ".vorschau"))
+            vs = [x for x in stats.get("laser_svgs_vorschau") or [] if os.path.exists(x)] \
+                or vorschau_svgs(svgs, os.path.join(os.path.dirname(svgs[0]), ".vorschau"))
             with ui.grid(columns=2).classes("w-full gap-2"):
                 for p in vs:
                     with ui.card().tight():

@@ -154,9 +154,20 @@ def modell_export(p, ausgaben, log=print, prog=None, vorschau=False):
 
 # ------------------------------------------------------------------ Schnitt
 def schnitt_export(p, log=print, prog=None):
-    from . import schnitt
+    if p["schnitt"].get("art") == "abwicklung":
+        from . import abwicklung as schnitt
+    else:
+        from . import schnitt
     r = schnitt.erzeugen(p, log, prog or (lambda *a, **k: None))
     P.stand_setzen(p, "schnitt", r["dateien"], r["ordner"])
+    return r
+
+
+# ------------------------------------------------------------------ Höhenlinien
+def hoehenlinien_export(p, log=print, prog=None):
+    from . import hoehenlinien
+    r = hoehenlinien.erzeugen(p, log, prog or (lambda *a, **k: None))
+    P.stand_setzen(p, "hoehenlinien", r["dateien"], r["ordner"])
     return r
 
 
@@ -171,19 +182,23 @@ def alles(p, ausgaben, log=print, prog=None, speichern=True, test=False):
         gruppen.append("modell")
     if "schnitt" in ausgaben:
         gruppen.append("schnitt")
+    if "hoehenlinien" in ausgaben:
+        gruppen.append("hoehenlinien")
     erg = {}
     t0 = time.time()
     for i, g in enumerate(gruppen):
         a0, a1 = i / len(gruppen), (i + 1) / len(gruppen)
         pg = lambda x, t="", a0=a0, a1=a1: prog(a0 + (a1 - a0) * float(x), t)
-        log(f"=== {'Umgebung' if g == 'umgebung' else 'Modellbau' if g == 'modell' else 'Geländeschnitt'} ===")
+        log(f"=== {dict(umgebung='Umgebung', modell='Modellbau', schnitt='Geländeschnitt', hoehenlinien='Höhenlinien')[g]} ===")
         try:
             if g == "umgebung":
                 erg["umgebung"] = umgebung_export(p, ausgaben, log, pg, test=test)
             elif g == "modell":
                 erg["modell"] = modell_export(p, ausgaben, log, pg)
-            else:
+            elif g == "schnitt":
                 erg["schnitt"] = schnitt_export(p, log, pg)
+            else:
+                erg["hoehenlinien"] = hoehenlinien_export(p, log, pg)
         except Exception as e:
             import traceback
             log(f"FEHLER in {g}: {e}")

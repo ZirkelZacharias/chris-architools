@@ -242,6 +242,10 @@ class Werkzeuge:
             ui.button("updates-Ordner öffnen", icon="folder", on_click=lambda: (os.makedirs(AU.UPDATES, exist_ok=True), oeffnen(AU.UPDATES))) \
                 .props("flat dense")
         hinweis("Oder: die Datei in den Ordner „updates“ neben dem Programm legen – beim nächsten Start wird sie automatisch eingespielt.")
+        es = ES.laden()
+        ui.checkbox("Beim Start nach einem neueren Stand suchen (nur Hinweis, nichts wird installiert)") \
+            .bind_value(es, "update_pruefen").on_value_change(lambda e: ES.speichern(es))
+        hinweis("Dafür fragt das Programm bei GitHub nach der neuesten Veröffentlichung. Es werden keine Daten von dir gesendet.")
 
     # ---------------- Einstellungen
     def seite_einstellungen(self):

@@ -37,6 +37,8 @@ class ModellEinst:
         if lc.get("material") not in mats and mats:
             lc["material"] = next(iter(mats))
         with ui.row().classes("w-full gap-2 items-end"):
+            muster = ui.element("div").style("width:26px;height:26px;border-radius:6px;border:1px solid #999;margin-bottom:6px") \
+                .tooltip("So sieht das Material in der Vorschau aus")
             sel_m = ui.select(list(mats), label="Material").bind_value(lc, "material").classes("min-w-[220px] grow")
             sel_s = ui.select([], label="Stärke mm", new_value_mode="add-unique", with_input=True) \
                 .classes("w-40").tooltip("Standardstärke wählen oder eigene Stärke in mm eintippen (z. B. gemessen) und Enter")
@@ -77,7 +79,10 @@ class ModellEinst:
             if v != e.value:
                 staerken()
         sel_s.on_value_change(staerke_gewaehlt)
-        sel_m.on_value_change(lambda e: (setattr(staerken, "eigen", False), staerken()))
+        def muster_farbe(*_):
+            muster.style(f"background:{BIB.farbe(lc.get('material'))}")
+        sel_m.on_value_change(lambda e: (setattr(staerken, "eigen", False), staerken(), muster_farbe()))
+        muster_farbe()
         staerken()
         fm = list(BIB.alle("laser")) + ["eigen"]
         with ui.row().classes("w-full gap-2 items-end"):

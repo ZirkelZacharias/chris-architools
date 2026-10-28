@@ -197,8 +197,9 @@ def pdfs_schreiben(ordner, basis, platten, titel="", log=print):
     return pfade
 
 
-def svg_schreiben(pfad, platte, linie_mm=None, titel=""):
-    """Eine Platte als SVG (Vorschau oder für andere Werkstätten)."""
+def svg_schreiben(pfad, platte, linie_mm=None, titel="", plattenfarbe=None, teilefarbe=None):
+    """Eine Platte als SVG (Vorschau oder für andere Werkstätten). Mit plattenfarbe/teilefarbe (#rrggbb) entsteht die
+    Vorschau in Materialfarbe (Platte und ausgeschnittene Teile gefüllt) – die Werkstatt-Dateien bleiben ohne Füllung."""
     W, H = platte["format"]
     lw = linie_mm if linie_mm is not None else WERKSTATT["linienstaerke_mm"]
     hexf = lambda c: "#%02X%02X%02X" % c
@@ -210,8 +211,15 @@ def svg_schreiben(pfad, platte, linie_mm=None, titel=""):
         return "M" + " L".join(f"{x:.3f},{H - y:.3f}" for x, y in c)
 
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}mm" height="{H}mm" viewBox="0 0 {W} {H}">',
-         f"<title>{titel}</title>",
-         f'<g fill="{hexf(WERKSTATT["farbe_gravieren"])}" stroke="none" fill-rule="evenodd">']
+         f"<title>{titel}</title>"]
+    if plattenfarbe:
+        o.append(f'<rect width="{W}" height="{H}" fill="{plattenfarbe}"/>')
+        if teilefarbe:
+            o.append(f'<g fill="{teilefarbe}" stroke="none" fill-rule="evenodd">')
+            for t in platte["teile"]:
+                o.append('<path d="' + ring(t["poly"].exterior.coords) + "".join(ring(i.coords) for i in t["poly"].interiors) + '"/>')
+            o.append("</g>")
+    o.append(f'<g fill="{hexf(WERKSTATT["farbe_gravieren"])}" stroke="none" fill-rule="evenodd">')
     for t in platte["teile"]:
         for g in t.get("gravieren", []):
             o.append('<path d="' + ring(g.exterior.coords) + "".join(ring(i.coords) for i in g.interiors) + '"/>')

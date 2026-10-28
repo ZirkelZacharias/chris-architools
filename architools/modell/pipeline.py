@@ -272,7 +272,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
             parts_e += rip_e
             stuetzen = list(st_e)
 
-    parts, Q, stuetzen_e, rippen_3d, platten, platten_e, pdfs, pdfs_e, svgs = [], [], [], [], [], [], [], [], []
+    parts, Q, stuetzen_e, rippen_3d, platten, platten_e, pdfs, pdfs_e, svgs, svgs_v = [], [], [], [], [], [], [], [], [], []
     if laser:
         log("4/6  Laserteile")
         lc = cfg["laser"]
@@ -305,11 +305,12 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         platten, rest = BL.anordnen(parts, formate, cfg, log, filler=filler, n_filler=len(stuetzen))
         titel = f"{cfg['projekt_name']} – {sorte} {mm(t)} mm"
         pdfs = BL.pdfs_schreiben(d_laser, f"{name}_{_safe(sorte)}_{mm(t)}mm", platten, titel, log)
-        svgs = []
+        svgs, svgs_v = [], []
         for i, pl in enumerate(platten, 1):
             sp = os.path.join(d_laser, f"{name}_platte_{i:02d}.svg")
             BL.svg_schreiben(sp, pl, titel=f"Platte {i}")
             svgs.append(sp)
+            svgs_v.append(_svg_vorschau(sp, pl, sorte, f"Platte {i}"))
         if lc.get("ausgabe_dxf"):
             BL.dxf_schreiben(os.path.join(d_laser, f"{name}_laser.dxf"), platten)
         log(f"  Werkstatt-PDFs: {len(pdfs)} (je Platte eine Datei, z. B. {os.path.basename(pdfs[0]) if pdfs else '-'})")
@@ -331,6 +332,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
                 sp_ = os.path.join(d_laser, f"{name}_einsatz_platte_{i:02d}.svg")
                 BL.svg_schreiben(sp_, pl, titel=f"Einsatz Platte {i}")
                 svgs.append(sp_)
+                svgs_v.append(_svg_vorschau(sp_, pl, sorte, f"Einsatz Platte {i}"))
             log(f"  Einsatz-PDFs: {len(pdfs_e)}")
 
     else:
@@ -403,8 +405,15 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         for b in blds + blds_in:
             w.writerow([b["art"], b["nr"], b["layer"], b.get("druckplatte", "-"),
                         f"{b['height_mm']:.1f} mm", f"{b['status']} ({b['lod']})", b["gml_id"]])
+    try:
+        from . import kosten as KO
+        stats["kostenliste"] = os.path.join(out, f"{name}_zuschnitt_und_kosten.txt")
+        stats["kosten_text"] = KO.schreiben(stats["kostenliste"], cfg, stats, platten, platten_e, drucke)
+    except Exception as e:
+        stats["kostenliste"] = None
+        log(f"  Hinweis: Zuschnitt-/Kostenliste nicht erzeugt ({e})")
     stats.update({
-        "ausgabe": out, "laser_ordner": d_laser, "laser_pdfs": pdfs, "einsatz_pdfs": pdfs_e, "laser_svgs": svgs,
+        "ausgabe": out, "laser_ordner": d_laser, "laser_pdfs": pdfs, "einsatz_pdfs": pdfs_e, "laser_svgs": svgs, "laser_svgs_vorschau": svgs_v, "material_farbe": BIB.farbe(sorte) if laser else None,
         "n_einsatzplatten": len(platten_e),
         "vorschau_laser": os.path.join(out, f"{name}_vorschau_laser.stl"),
         "vorschau_druck": os.path.join(out, f"{name}_vorschau_druck.stl"),
@@ -414,6 +423,16 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
     })
     log(f"Fertig in {stats['dauer_s']:.0f} s: {len(platten)} Laserplatten, {len(drucke)} Druckplatten. Ausgabe: {out}")
     return stats
+
+
+def _svg_vorschau(pfad, platte, sorte, titel):
+    """Vorschau-SVG in Materialfarbe (nur zur Anzeige, im Unterordner .vorschau; die Werkstatt-Datei bleibt unverändert)."""
+    ordner = os.path.join(os.path.dirname(pfad), ".vorschau")
+    os.makedirs(ordner, exist_ok=True)
+    ziel = os.path.join(ordner, os.path.basename(pfad))
+    f = BIB.farbe(sorte)
+    BL.svg_schreiben(ziel, platte, linie_mm=0.6, titel=titel, plattenfarbe=f, teilefarbe=BIB.aufhellen(f, 0.35))
+    return ziel
 
 
 def _vorschau_3d(out, name, parts, stuetzen, blds, t, log, rippen_3d=()):

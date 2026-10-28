@@ -34,7 +34,9 @@ AUSGABEN = {
     "laser": ("Gelände Lasercut", "grid_view", "#d19a2b",
               "Geländeschichten als Laser-PDFs, Montageplan, Steckrippen.", "modell", "modell/laser"),
     "schnitt": ("Geländeschnitt", "show_chart", "#c8643b",
-                "Schnitt durch Gelände und Gebäude entlang einer Linie (SVG/DXF).", "sonstige", "schnitt"),
+                "Schnitt durch Gelände und Gebäude – oder Straßen-/Fassadenabwicklung entlang einer Linie (DXF/SVG).", "sonstige", "schnitt"),
+    "hoehenlinien": ("Höhenlinien (DXF/DWG)", "terrain", "#8a5a2b",
+                     "Schichtlinien aus dem Geländemodell mit Höhenkoten – eigene Zeichnung.", "sonstige", "hoehenlinien"),
 }
 GRUPPEN = {"umgebung": "Umgebung (IFCmap-Kern)", "modell": "Modellbau", "sonstige": "Weitere Werkzeuge"}
 
@@ -43,6 +45,7 @@ _ABGELEITET = {"latlon", "mitte_en", "ausgabe", "ifc", "dxf2d", "dxf_plaene", "t
                "mit_gelaende", "xyz"}
 
 SCHNITT_STANDARD = {
+    "art": "schnitt",                 # "schnitt" = Geländeschnitt; "abwicklung" = Straßen-/Fassadenabwicklung (Linie mit mehreren Punkten)
     "linie_en": None,                 # [[Ost, Nord], [Ost, Nord]] oder None = quer durch die Mitte
     "richtung_grad": 0.0,             # nur wenn linie_en None: Richtung der Schnittlinie (0 = Ost-West)
     "laenge_m": 200.0,
@@ -51,9 +54,15 @@ SCHNITT_STANDARD = {
     "gebaeude": True,
     "ansicht": True,                  # Gebäude und Bäume HINTER der Schnittlinie als Ansicht zeigen
     "tiefe_m": 100.0,                 # so weit hinter der Linie
-    "seite": "links",                 # Blickseite: "links" oder "rechts" der Linie (Richtung erster -> zweiter Punkt)
+    "seite": "links",                 # Blickseite: "links" oder "rechts" der Linie (Abwicklung auch "beide")
     "baeume": True,                   # Bäume markieren (dunkelgrün = von der Linie getroffen, hellgrün = dahinter)
     "format": ["dxf"],
+}
+
+
+HOEHENLINIEN_STANDARD = {
+    "aequidistanz_m": 1.0, "haupt_alle": 5, "beschriften": True, "glaetten": True, "massstab": 500, "z_null": None,
+    "min_laenge_m": 4.0,
 }
 
 
@@ -100,6 +109,7 @@ def neues_projekt(name="Neues Projekt", ordner=None):
         "umgebung": umgebung_standard(),
         "modell": modell,
         "schnitt": copy.deepcopy(SCHNITT_STANDARD),
+        "hoehenlinien": copy.deepcopy(HOEHENLINIEN_STANDARD),
         "notizen": "",
         "formate": {"zweid": ["dxf"], "dreid": ["ifc"]},
         "ziel": {"ordner": "", "name": ""},                   # Ausgabe: selbst gewählter Ordner + selbst benannter Unterordner
@@ -114,7 +124,7 @@ def neues_projekt(name="Neues Projekt", ordner=None):
 def verbinden(p):
     """Nach Laden/Ändern: Querverbindungen herstellen (gemeinsames Gebiet, Pflichtschlüssel)."""
     base = neues_projekt(p.get("name", "Projekt"), p.get("ordner"))
-    for k in ("ausgaben", "gebiet", "umgebung", "schnitt"):
+    for k in ("ausgaben", "gebiet", "umgebung", "schnitt", "hoehenlinien"):
         merged = base[k]
         merged.update(p.get(k) or {})
         p[k] = merged

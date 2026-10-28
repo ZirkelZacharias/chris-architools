@@ -161,14 +161,15 @@ def seite(p, speichern):
                     hinweis("3D-Vorschau war nicht möglich (siehe Protokoll).")
             else:
                 s = d3["modell"]
-                teile = [(s.get("vorschau_laser"), FARBE_LASER), (s.get("vorschau_druck"), FARBE_DRUCK)] if s else []
+                fl = (s or {}).get("material_farbe") or FARBE_LASER
+                teile = [(s.get("vorschau_laser"), fl), (s.get("vorschau_druck"), FARBE_DRUCK)] if s else []
                 if not any(pf and os.path.exists(pf) for pf, _ in teile):
                     hinweis("Das Modell (Lasercut-Schichten und 3D-Druck-Gebäude) erscheint nach „Vorschau laden“.")
                     ui.button("Modell-Vorschau berechnen", icon="view_in_ar", on_click=lambda: modell_vorschau()).props("outline")
                 else:
                     with ui.row().classes("items-center gap-3"):
                         ui.label("Modell").classes("text-subtitle2")
-                        ui.html(f'<span style="display:inline-block;width:12px;height:12px;background:{FARBE_LASER}"></span> Lasercut'
+                        ui.html(f'<span style="display:inline-block;width:12px;height:12px;background:{fl};border:1px solid #999"></span> Lasercut'
                                 f' &nbsp; <span style="display:inline-block;width:12px;height:12px;background:{FARBE_DRUCK}"></span> 3D-Druck')
                         hinweis("Maus: drehen · Rad: zoomen · rechte Taste: verschieben")
                     szene3d(teile, s.get("modell_b", 400), s.get("modell_h", 300), hoehe=640, z_faktor=d3["ue"])
@@ -277,9 +278,11 @@ def seite(p, speichern):
             else:
                 sub = ui.column().classes("w-full")
                 ergebnis_zeigen(sub, m, "Modellbau")
-        s = r.get("schnitt")
-        if s:
-            ui.label("Geländeschnitt").classes("text-h6 mt-2")
+        for key, titel in (("schnitt", "Geländeschnitt"), ("hoehenlinien", "Höhenlinien")):
+            s = r.get(key)
+            if not s:
+                continue
+            ui.label(titel).classes("text-h6 mt-2")
             if s.get("fehler"):
                 ui.label("Fehler: " + s["fehler"]).style("color:#b00020")
             else:

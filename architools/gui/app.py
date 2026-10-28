@@ -58,6 +58,41 @@ def seite():
             stand["zeit"] = time.strftime("%H:%M")
             if not still:
                 ui.notify(f"Gespeichert: {p.get('_pfad', '')}", type="positive")
+        upd_btn = ui.button("Update verfügbar", icon="system_update_alt") \
+            .props("unelevated dense no-caps color=secondary").classes("q-px-sm")
+        upd_btn.set_visibility(False)
+
+        async def update_pruefen():
+            from .. import STAND, updatehinweis as UH, einstellungen as _ES
+            from nicegui import run
+            es = _ES.laden()
+            if not es.get("update_pruefen", True):
+                return
+            info = await run.io_bound(UH.neueste)
+            if not UH.ist_neuer(info, STAND, es.get("update_ignoriert", 0)):
+                return
+            upd_btn.text = f"Update: Stand {info['stand']}"
+            upd_btn.set_visibility(True)
+
+            with ui.dialog() as dlg, ui.card().style("width:460px"):
+                ui.label(f"Neuer Stand {info['stand']} verfügbar").classes("text-h6")
+                ui.label(f"Installiert ist Stand {STAND}. Auf GitHub liegt „{info['titel']}“.").classes("text-body2")
+                ui.label("So aktualisierst du: Download-Seite öffnen, das Paket für dein System laden (Windows oder Mac), entpacken und "
+                         "wie gewohnt starten. Deine Projekte und Einstellungen bleiben unberührt (sie liegen in deinem Projektordner "
+                         "und in .architools im Benutzerordner).").classes("text-body2").style("color:#6b737b")
+                with ui.row().classes("w-full justify-end gap-2"):
+                    def spaeter_nie():
+                        e2 = _ES.laden()
+                        e2["update_ignoriert"] = info["stand"]
+                        _ES.speichern(e2)
+                        upd_btn.set_visibility(False)
+                        dlg.close()
+                    ui.button("Nicht mehr erinnern", on_click=spaeter_nie).props("flat no-caps")
+                    ui.button("Später", on_click=dlg.close).props("flat no-caps")
+                    ui.button("Download-Seite öffnen", icon="open_in_new",
+                              on_click=lambda: ui.navigate.to(info["url"], new_tab=True)).props("unelevated no-caps color=primary")
+            upd_btn.on_click(dlg.open)
+        ui.timer(3.0, update_pruefen, once=True)
         ui.button(icon="save", on_click=lambda: sp()).props("flat round color=white dense").tooltip("Speichern (geschieht auch automatisch)")
 
         def beenden():

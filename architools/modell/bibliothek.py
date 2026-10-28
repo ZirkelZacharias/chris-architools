@@ -65,6 +65,47 @@ MATERIALIEN = {
         "staerken": [1.5, 2.0, 3.0, 4.0, 5.0], "max_mm": 5.0},
 }
 
+# Vorschaufarbe je Material (nur Darstellung): so sieht die Platte ungefähr aus
+MATERIAL_FARBE = {"Finnpappe": "#efe6cf", "Graupappe": "#8f908e", "Graukarton": "#b4b0a6", "Bristolkarton": "#fbfbf6",
+                  "MDF": "#b8956a", "Sperrholz": "#d8b983", "Acrylglas": "#b9dfe9"}
+STANDARD_FARBE = "#d6bf96"
+
+
+def farbe(sorte):
+    """Vorschaufarbe (#rrggbb) des Materials; eigene Materialien dürfen "farbe" im Eintrag haben."""
+    sorte = ALTE_NAMEN.get(sorte, sorte)
+    e = alle("materialien").get(sorte) or {}
+    return e.get("farbe") or MATERIAL_FARBE.get(sorte) or STANDARD_FARBE
+
+
+def aufhellen(hexfarbe, anteil=0.3):
+    h = hexfarbe.lstrip("#")
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    f = lambda v: int(round(v + (255 - v) * anteil))
+    return "#%02x%02x%02x" % (f(r), f(g), f(b))
+
+
+# Grobe Richtwerte für die Kostenliste (Händlerpreise schwanken stark – nur zur Orientierung, in ~/.architools/bibliothek.json unter "preise" änderbar)
+PREISE = {
+    "material_eur_m2_je_mm": {"Finnpappe": 5.5, "Graupappe": 5.0, "Graukarton": 5.0, "Bristolkarton": 7.0, "MDF": 2.0,
+                              "Sperrholz": 10.0, "Acrylglas": 15.0},   # € brutto je m² und mm Stärke
+    "filament_eur_kg": 25.0,
+    "handelsplatte_mm": [1000, 700],                                    # übliche Plattengröße im Handel (nur für die Plattenzahl)
+}
+
+
+def preise():
+    """Richtwerte + eigene Änderungen aus der Benutzerdatei."""
+    out = copy.deepcopy(PREISE)
+    eig = _lesen().get("preise") or {}
+    for k, v in eig.items():
+        if isinstance(v, dict) and isinstance(out.get(k), dict):
+            out[k].update(v)
+        else:
+            out[k] = v
+    return out
+
+
 # frühere Namen (Projektdateien v0.2)
 ALTE_NAMEN = {"Finnpappe (Modulor)": "Finnpappe", "Graupappe glatt/glatt (Modulor)": "Graupappe",
               "Graukarton glatt/rau (Modulor)": "Graukarton", "Bristolkarton hochweiß (Modulor)": "Bristolkarton",

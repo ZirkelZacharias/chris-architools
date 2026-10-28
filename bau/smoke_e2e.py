@@ -33,7 +33,7 @@ _K.wfs_laden=_f2
 _K.osm_laden=lambda *a, **k: ([], [(SG.Point(393500,5826450), {"natural":"tree"}), (SG.Point(393600.5,5826500.5), {"natural":"tree"})])
 
 B = os.path.abspath("beispiel")
-MUSS = {"ifc","lageplan","info_dwg","laser","druck","schnitt"}
+MUSS = {"ifc","lageplan","info_dwg","laser","druck","schnitt","hoehenlinien"}
 ordner = os.path.join(TMP, "proj"); shutil.rmtree(ordner, ignore_errors=True)
 p = P.neues_projekt("E2E", ordner)
 p["gebiet"]["mitte_en"] = [393600.0, 5826550.0]
@@ -67,7 +67,7 @@ g = p["modell"]["gebaeude"]
 if g.get("grundriss_datei") and not os.path.isabs(g["grundriss_datei"]): g["grundriss_datei"] = os.path.join(B, g["grundriss_datei"])
 p["formate"]={"zweid":["dxf","dwg","pdf"],"dreid":["ifc","glb"]}; u["extra"]=["radverkehr"]; u["ua_gebaeudehoehen"]=True; u["ua_vegetationshoehen"]=True
 p["formate"]={"zweid":["dxf"],"dreid":["ifc"]}; u["extra"]=["radverkehr"]; u["ua_vegetationsraster"]=True; u["veg_raster_dateien"]=[VEG]; u["rad_wege"]=True
-p["ausgaben"].update(ifc=True, lageplan=True, schwarzplan=True, info_dwg=True, laser=True, druck=True, schnitt=True)
+p["ausgaben"].update(ifc=True, lageplan=True, schwarzplan=True, info_dwg=True, laser=True, druck=True, schnitt=True, hoehenlinien=True)
 p["schnitt"]["seite"]="rechts"; p["ziel"]={"ordner":os.path.join(TMP,"ziel"),"name":"MeinExport"}
 p["schnitt"]["linie_en"] = [[393450, 5826550], [393750, 5826550]]
 t0 = time.time()
@@ -78,6 +78,15 @@ print(json.dumps({k: v["zeit"] for k, v in p["stand"].items()}))
 for r, _, fs in os.walk(ordner):
     for f in fs[:40]:
         print(os.path.join(r, f).replace(ordner, ""), os.path.getsize(os.path.join(r, f)))
+
+# Abwicklung (Schnitt-Werkzeug mit mehrpunktiger Linie)
+p["schnitt"].update(art="abwicklung", seite="beide", tiefe_m=60.0, linie_en=[[393450, 5826520], [393600, 5826540], [393700, 5826600]])
+ab = L.schnitt_export(p, log)
+assert any("Abwicklung" in os.path.basename(f) for f in ab["dateien"]), ab
+print("ABWICKLUNG OK", [os.path.basename(f) for f in ab["dateien"]])
+kl = [f for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f in fs_ if f.endswith("zuschnitt_und_kosten.txt")]
+assert kl, "Kostenliste fehlt"
+print("KOSTENLISTE OK")
 
 fehler = [k for k, v in erg.items() if isinstance(v, dict) and v.get("fehler")]
 fehlend = [k for k in MUSS if k not in p["stand"]]

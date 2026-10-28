@@ -19,6 +19,8 @@ Kein Python und keine Installation nötig. Oben liegen nur der Starter und diese
 ## Updates
 Eine Datei **ChrisArchItools_Update_…zip** in den Ordner **programm/updates** legen und das Programm starten (oder Werkzeuge → Einstellungen → Programm-Update). Projekte und Einstellungen bleiben unberührt.
 
+Bei bestehender Internetverbindung zeigt das Programm in der Kopfleiste **Update: Stand N**, sobald auf GitHub ein neueres Paket liegt (abschaltbar unter Werkzeuge → Einstellungen → Programm-Update). Es wird nichts automatisch installiert: Download-Seite öffnen, das Paket laden, entpacken, starten.
+
 ## Wenn etwas nicht klappt
 Nach jedem Lauf liegt die Datei **bericht.txt** im Ausgabeordner. Einfach weitergeben.
 

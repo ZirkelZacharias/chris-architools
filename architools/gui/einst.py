@@ -17,6 +17,7 @@ def _format_gruppe(titel, tabelle, liste, empfohlen, brauche_oda=False):
     from .. import dwg, dwg_direkt
     oda = dwg.finden(ES.laden().get("oda_pfad", ""))
     ui.label(titel).classes("text-subtitle2")
+    boxen = {}
     with ui.row().classes("gap-5 items-center"):
         for key, (name, text) in tabelle.items():
             def umschalten(e, key=key):
@@ -28,6 +29,7 @@ def _format_gruppe(titel, tabelle, liste, empfohlen, brauche_oda=False):
                     u()
             with ui.row().classes("items-center no-wrap gap-1"):
                 cb = ui.checkbox(name, value=key in liste, on_change=umschalten).tooltip(text)
+                boxen[key] = cb
                 if key == empfohlen:
                     eier.zeiger()
     dwg_hinweis = hinweis("") if brauche_oda else None
@@ -43,6 +45,60 @@ def _format_gruppe(titel, tabelle, liste, empfohlen, brauche_oda=False):
     dwg_text()
     _dwg_updates.append(dwg_text)
     hinweis("Mehrere möglich. Mit der Maus über einem Format steht, was es kann.")
+    return boxen
+
+
+def _profile_leiste(p, boxen2, boxen3):
+    """Export-Profile: ein Klick stellt die Formate für das Zielprogramm ein; eigene Profile lassen sich speichern."""
+    f = p["formate"]
+    es = ES.laden()
+    eigene = es.setdefault("export_profile", {})
+    zeile = ui.row().classes("w-full items-center gap-1")
+    info = hinweis("")
+
+    def anwenden(zwei, drei, text=""):
+        for key, cb in boxen2.items():
+            cb.value = key in zwei
+        for key, cb in boxen3.items():
+            cb.value = key in drei
+        info.text = text
+
+    def speichern_dlg():
+        with ui.dialog() as dlg, ui.card():
+            ui.label("Aktuelle Formate als Profil speichern").classes("text-subtitle1")
+            name = ui.input("Name des Profils").classes("w-64")
+
+            def ok():
+                n = (name.value or "").strip()
+                if not n:
+                    return
+                eigene[n] = {"zweid": list(f["zweid"]), "dreid": list(f["dreid"])}
+                ES.speichern(es)
+                dlg.close()
+                zeichnen()
+            with ui.row().classes("justify-end w-full"):
+                ui.button("Abbrechen", on_click=dlg.close).props("flat no-caps")
+                ui.button("Speichern", on_click=ok).props("unelevated no-caps color=primary")
+        dlg.open()
+
+    def loeschen(n):
+        eigene.pop(n, None)
+        ES.speichern(es)
+        zeichnen()
+
+    def zeichnen():
+        zeile.clear()
+        with zeile:
+            ui.label("Profil:").classes("text-caption").style(f"color:{GRAU}")
+            for n, (zwei, drei, text) in FM.PROFILE.items():
+                ui.chip(n, on_click=lambda zwei=zwei, drei=drei, text=text: anwenden(zwei, drei, text)) \
+                    .props("dense outline clickable color=primary")
+            for n, e in eigene.items():
+                ui.chip(n, icon="bookmark", removable=True, on_click=lambda e=e: anwenden(e["zweid"], e["dreid"], "Eigenes Profil"),
+                        on_value_change=lambda ev, n=n: loeschen(n) if not ev.value else None) \
+                    .props("dense outline clickable color=secondary")
+            ui.button(icon="add", on_click=speichern_dlg).props("flat round dense size=sm").tooltip("Aktuelle Auswahl als eigenes Profil speichern")
+    zeichnen()
 
 
 def formate_karte(p):
@@ -50,17 +106,20 @@ def formate_karte(p):
     ausg = p["ausgaben"]
     with ui.column().classes("w-full") as wurzel:
         with karte("Dateiformate", INK):
+            profile_ort = ui.column().classes("w-full")
             z = ui.column().classes("w-full gap-1")
             with z:
-                _format_gruppe("2D-Zeichnungen (Lageplan, Schwarzplan, Informations-DWG)", FM.FORMATE_2D, f["zweid"], FM.EMPFEHLUNG_2D, brauche_oda=True)
+                boxen2 = _format_gruppe("2D-Zeichnungen (Lageplan, Schwarzplan, Informations-DWG, Höhenlinien)", FM.FORMATE_2D, f["zweid"], FM.EMPFEHLUNG_2D, brauche_oda=True)
             d = ui.column().classes("w-full gap-1")
             with d:
                 ui.separator()
-                _format_gruppe("3D-Modell der Umgebung", FM.FORMATE_3D, f["dreid"], FM.EMPFEHLUNG_3D)
+                boxen3 = _format_gruppe("3D-Modell der Umgebung", FM.FORMATE_3D, f["dreid"], FM.EMPFEHLUNG_3D)
+            with profile_ort:
+                _profile_leiste(p, boxen2, boxen3)
             warn = ui.label("").classes("text-caption").style("color:#b00020")
 
             def pruefen():
-                z.set_visibility(bool(ausg.get("lageplan") or ausg.get("schwarzplan") or ausg.get("info_dwg")))
+                z.set_visibility(bool(ausg.get("lageplan") or ausg.get("schwarzplan") or ausg.get("info_dwg") or ausg.get("hoehenlinien")))
                 d.set_visibility(bool(ausg.get("ifc")))
                 bad = (not f["zweid"] and z.visible) or (not f["dreid"] and d.visible)
                 warn.text = "Bitte mindestens ein Format wählen – sonst gibt es keine Datei." if bad else ""
@@ -72,7 +131,7 @@ def formate_karte(p):
 def schnitt_karte(p):
     s = p["schnitt"]
     with ui.column().classes("w-full") as wurzel:
-        with karte("Geländeschnitt: Ausgabe", TERRA):
+        with karte("Geländeschnitt / Abwicklung: Ausgabe", TERRA):
             with ui.row().classes("gap-2 items-end"):
                 ui.select(MASSSTAEBE, label="Maßstab", new_value_mode="add-unique", with_input=True) \
                     .bind_value(s, "massstab").classes("w-32")
@@ -84,9 +143,32 @@ def schnitt_karte(p):
     return wurzel
 
 
+def hoehenlinien_karte(p):
+    h = p["hoehenlinien"]
+    with ui.column().classes("w-full") as wurzel:
+        with karte("Höhenlinien: Ausgabe", TERRA):
+            with ui.row().classes("gap-2 items-end"):
+                ui.number("Abstand der Linien (m)", step=0.5, min=0.1).bind_value(h, "aequidistanz_m").classes("w-44") \
+                    .tooltip("Äquidistanz: Höhenunterschied zwischen zwei Linien – 1 m ist für Stadtgebiete üblich, 0,5 m für flaches Gelände")
+                ui.number("Hauptlinie alle … Linien", step=1, min=1, format="%.0f").bind_value(h, "haupt_alle").classes("w-48") \
+                    .tooltip("Jede n-te Linie wird stärker gezeichnet und beschriftet")
+                ui.select(MASSSTAEBE, label="Maßstab (Schriftgröße)", new_value_mode="add-unique", with_input=True) \
+                    .bind_value(h, "massstab").classes("w-44")
+            with ui.row().classes("gap-4 items-center"):
+                ui.checkbox("Höhenkoten beschriften").bind_value(h, "beschriften")
+                ui.checkbox("leicht glätten").bind_value(h, "glaetten") \
+                    .tooltip("Das Gelände-Raster ist stufig – leichtes Glätten gibt ruhigere Linien")
+            hinweis("Eigene Zeichnung (DXF/DWG je nach „Dateiformate“), Gebiet = Größe der Umgebung. Jede Linie liegt in ihrer wahren Höhe (m ü. NHN), "
+                    "Nullpunkt in Ost/Nord wie bei den anderen Plänen.")
+            with ui.expansion("Höhen auf einen Nullpunkt beziehen (optional)").classes("w-full").props("dense"):
+                ui.number("Z-Nullpunkt (m ü. NHN)", step=1).bind_value(h, "z_null").classes("w-56") \
+                    .tooltip("Leer = wahre Höhen. Mit Wert: Höhe minus Wert – z. B. der Nullpunkt Z0 aus dem IFC-Bericht")
+    return wurzel
+
+
 SPRUNG = [("Formate", "Dateiformate"), ("Daten", "Daten"), ("IFC", "Archicad-IFC"), ("Pläne", "Lageplan und Schwarzplan"),
           ("Informations-DWG", "Informations-DWG"), ("Zusatzpläne", "Zusatzpläne"), ("Modellbau", "Modell: Daten"),
-          ("Schnitt", "Geländeschnitt"), ("Erweitert", "#erweitert-anker")]
+          ("Schnitt", "Geländeschnitt"), ("Höhenlinien", "Höhenlinien: Ausgabe"), ("Erweitert", "#erweitert-anker")]
 
 
 def _springen(ziel):
@@ -114,9 +196,11 @@ def seite(p):
             einst_umgebung.seiten(p)
             ModellEinst(p).seite()
             sk = schnitt_karte(p)
+            hk = hoehenlinien_karte(p)
 
             def pruefen():
                 leer.set_visibility(not P.gewaehlt(p))
                 sk.set_visibility(bool(ausg.get("schnitt")))
+                hk.set_visibility(bool(ausg.get("hoehenlinien")))
             ui.timer(0.4, pruefen)
             pruefen()
