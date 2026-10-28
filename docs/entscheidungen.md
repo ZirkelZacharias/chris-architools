@@ -80,3 +80,11 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
 - Zirkel Zacharias (nur 3D, absichtlich schlecht gerendert) – 3 Klicks aufs Versionskürzel oder selten nach langem Lauf. Er sagt nie etwas. Als kleines 3D-Icon (durchsichtiger Hintergrund, `figuren.icon()`) markiert er das Archicad-beste Format und sitzt still im Ergebnis-Reiter.
 - Freundin: Rosi Radiergummi (3D, schlecht gerendert; Doppelbild mit Zirkel Zacharias) – nach sehr langen Läufen (> 10 min) kommt er mit ihr. Es gibt keinen 2D-Zacharias mehr (28.10. 12:17, auf Wunsch); Gerda Geodreieck (flach) ist rausgenommen. „Dorothea“ ist bewusst nicht vergeben.
 - „Sonnenbank-Flavour“ bleibt der Name der Sonnenbahn-Karte; eine leise „· 67 ·“-Zeile im Protokoll bei 67 %.
+
+## Schneller laden, Quellen, Fenstermuster (28.10.2026 abends)
+- **Schneller:** CityGML wird per Byte-Suche vorgefiltert und nur im Nahbereich (+350 m Rand) geparst (≈4× schneller, gleiches Ergebnis); Nesting mit gemeinsamer FFT und parallelen Packreihenfolgen (≈4–5× schneller, gleiches Ergebnis). Noch offen: parallele Kachel-Downloads, Vorab-Laden nach dem Gebiet-Schritt.
+- **Quellen:** Jeder Export schreibt `QUELLEN.txt` (Namensnennungen für dl-de/by, ODbL, Copernicus). Übersicht und offene Punkte in `docs/QUELLEN_UND_LIZENZEN.md`. User-Agent der Dienste nennt jetzt das Projekt. Offen: PyMuPDF ist AGPL (LICENSE oder Ersatz), LGPL-Hinweis für ifcopenshell.
+- **Persönliches Foto** (`abschluss.jpg`) bleibt auf ausdrücklichen Wunsch im Repository. Ansonsten keine persönlichen Daten gefunden (Autoren: nur „Claude“ und „build-bot“).
+- **Fenstermuster (Vorschlag 2):** optional in der IFC (Ebene „Gebaeude_Fenstermuster“, nur Nahbereich, Standard aus) und im Modellbau (gravierte Rechtecke bei Flächen/Faltmodell). Ein MUSTER nach Wandbreite und -höhe, keine Messung; jedes IFC-Element trägt den Vermerk „MUSTER“. Nicht im Schnitt. Getestet mit künstlichen Wänden (`beispiel/testdaten/lod2_waende.gml`), nicht mit echten Berliner Wänden verglichen.
+- **Release:** Der Apple-Silicon-Runner (macos-15) von GitHub war ausgelastet (Job nie zugeteilt). Der Release läuft deshalb auch ohne dieses Paket (`continue-on-error`); es wird nachgeliefert. Stand 3 enthält Windows und Mac Intel.
+- **Fassaden mit Foto-Textur** (experimentell, außerhalb von GitHub): in Planung, noch nicht gebaut.
