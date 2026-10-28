@@ -8,6 +8,8 @@ on:
         type: boolean
         default: true
   push:
+    branches: [main]
+    paths-ignore: ["testprotokolle/**"]
     tags: ["v*"]
 
 permissions:
@@ -39,7 +41,7 @@ jobs:
           if [ -x python/bin/python3 ]; then PY=python/bin/python3; else PY=python/python.exe; fi
           "$PY" ../../bau/dienste_test.py 2>&1 | tee ../../dienste.txt
       - name: Protokolle ins Repository schreiben
-        if: always()
+        if: ${{ always() && github.ref_type == 'branch' }}
         shell: bash
         run: |
           mkdir -p testprotokolle
@@ -60,7 +62,7 @@ jobs:
 
   release:
     needs: bauen
-    if: ${{ github.event_name == 'push' || inputs.veroeffentlichen }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.veroeffentlichen }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
