@@ -8,6 +8,8 @@ on:
         type: boolean
         default: true
   push:
+    branches: [main]
+    paths-ignore: ["testprotokolle/**"]
     tags: ["v*"]
 
 permissions:
@@ -25,11 +27,8 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: Paket bauen und testen
         shell: bash
-        env:
-          ARCHITOOLS_BUILD: "0"
         run: |
           export ARCHITOOLS_BUILD=$(cat stand.txt)
-          python3 --version || true
           uv run --no-project --python 3.12 python bau/portable.py --test 2>&1 | tee bauprotokoll.txt
       - name: Echtlauf gegen die Berliner Dienste
         shell: bash
@@ -38,14 +37,23 @@ jobs:
           cd dist/ChrisArchItools
           if [ -x python/bin/python3 ]; then PY=python/bin/python3; else PY=python/python.exe; fi
           "$PY" ../../bau/dienste_test.py 2>&1 | tee ../../dienste.txt
+      - name: Dienste-Sonden (Attribute und Werte der Berliner Dienste)
+        shell: bash
+        continue-on-error: true
+        run: |
+          cd dist/ChrisArchItools
+          if [ -x python/bin/python3 ]; then PY=python/bin/python3; else PY=python/python.exe; fi
+          "$PY" ../../bau/sonden.py 2>&1 | tee ../../sonden.txt
       - name: Protokolle ins Repository schreiben
-        if: always()
+        if: ${{ always() && github.ref_type == 'branch' }}
         shell: bash
         run: |
           mkdir -p testprotokolle
           cp bauprotokoll.txt "testprotokolle/bau_${{ matrix.os }}.txt" || true
           cp dienste.txt "testprotokolle/dienste_${{ matrix.os }}.txt" || true
-          cp dist/server.log "testprotokolle/server_${{ matrix.os }}.txt" || true
+          cp sonden.txt "testprotokolle/sonden_${{ matrix.os }}.txt" || true
+          cp dist/server_python.log "testprotokolle/server_${{ matrix.os }}.txt" || true
+          cp dist/server_pythonw.log "testprotokolle/server_pythonw_${{ matrix.os }}.txt" || true
           git config user.name "build-bot"
           git config user.email "build-bot@users.noreply.github.com"
           git add testprotokolle
@@ -60,7 +68,7 @@ jobs:
 
   release:
     needs: bauen
-    if: ${{ github.event_name == 'push' || inputs.veroeffentlichen }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.veroeffentlichen }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
