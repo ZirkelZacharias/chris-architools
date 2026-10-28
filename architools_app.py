@@ -3,6 +3,23 @@ import os
 import sys
 
 HIER = os.path.dirname(os.path.abspath(__file__))
+
+# pythonw.exe (Start ohne Konsolenfenster) hat keine Standardausgabe: Meldungen in eine Protokolldatei umleiten;
+# überall UTF-8, damit Umlaute in Meldungen nie zu Fehlern führen.
+if sys.stdout is None or sys.stderr is None:
+    try:
+        _ord = os.path.join(os.path.expanduser("~"), ".architools")
+        os.makedirs(_ord, exist_ok=True)
+        _log = open(os.path.join(_ord, "programm.log"), "a", encoding="utf-8", buffering=1)
+        sys.stdout = sys.stdout or _log
+        sys.stderr = sys.stderr or _log
+    except OSError:
+        pass
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 if HIER not in sys.path:
     sys.path.insert(0, HIER)
 

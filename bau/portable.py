@@ -87,16 +87,16 @@ def bauen():
     shutil.copy2(os.path.join(ROOT, "docs", "entscheidungen.md"), os.path.join(ziel, "ENTSCHEIDUNGEN.md"))
     if win:
         open(os.path.join(ziel, start), "w", newline="\r\n").write(
-            '@echo off\r\ncd /d "%~dp0"\r\npython\\python.exe architools_update.py\r\n'
+            '@echo off\r\ncd /d "%~dp0"\r\nset PYTHONUTF8=1\r\npython\\python.exe architools_update.py\r\n'
             'start "" python\\pythonw.exe architools_app.py\r\n')
         open(os.path.join(ziel, "Chris ArchItools mit Fehlerfenster.bat"), "w", newline="\r\n").write(
-            '@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\npython\\python.exe architools_update.py\r\n'
+            '@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\nset PYTHONUTF8=1\r\npython\\python.exe architools_update.py\r\n'
             'python\\python.exe architools_app.py\r\npause\r\n')
     else:
         p = os.path.join(ziel, start)
         open(p, "w", newline="\n").write(
             '#!/bin/bash\ncd "$(dirname "$0")" || exit 1\n'
-            'xattr -dr com.apple.quarantine . >/dev/null 2>&1\n'
+            'xattr -dr com.apple.quarantine . >/dev/null 2>&1\nexport PYTHONUTF8=1\n'
             'PY=python/bin/python3\n"$PY" architools_update.py\n'
             '"$PY" architools_app.py "$@" || { echo; read -r -p "Fehler - Enter ..." _; }\n')
         os.chmod(p, 0o755)
@@ -126,24 +126,31 @@ def testen(py, ziel):
     ok = True
     run([py, "-c", PRUEF], cwd=ziel)
     run([py, os.path.join(ROOT, "bau", "smoke_e2e.py"), ziel], cwd=ziel)
-    # Server starten und die Startseite abrufen
+    starter = [("python", py)]
+    if os.name == "nt":
+        starter.append(("pythonw", os.path.join(os.path.dirname(py), "pythonw.exe")))
+    for name, exe in starter:
+        serverpruefen(name, exe, ziel)
+
+
+def serverpruefen(name, exe, ziel):
     port = 8799
-    logd = open(os.path.join(DIST, "server.log"), "w")
-    proc = subprocess.Popen([py, "architools_app.py", "--browser", "--ohne-fenster", "--port", str(port)], cwd=ziel,
+    logname = os.path.join(DIST, f"server_{name}.log")
+    logd = open(logname, "w")
+    proc = subprocess.Popen([exe, "architools_app.py", "--browser", "--ohne-fenster", "--port", str(port)], cwd=ziel,
                             stdout=logd, stderr=subprocess.STDOUT)
+    ok = False
     try:
         for _ in range(90):
             time.sleep(1)
             try:
                 code = urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=3).status
-                print("Startseite antwortet:", code, flush=True)
+                print(f"Startseite antwortet ({name}):", code, flush=True)
                 ok = code == 200
                 break
             except Exception:
                 if proc.poll() is not None:
                     break
-        else:
-            ok = False
     finally:
         proc.terminate()
         try:
@@ -151,10 +158,10 @@ def testen(py, ziel):
         except Exception:
             proc.kill()
         logd.close()
-    log = open(os.path.join(DIST, "server.log"), encoding="utf-8", errors="replace").read()
-    print("--- Server-Log ---\n" + log[-2500:], flush=True)
+    log = open(logname, encoding="utf-8", errors="replace").read()
+    print(f"--- Server-Log ({name}) ---\n" + log[-2500:], flush=True)
     if not ok or "Traceback" in log:
-        raise SystemExit("Programmstart fehlgeschlagen")
+        raise SystemExit(f"Programmstart ({name}) fehlgeschlagen")
 
 
 if __name__ == "__main__":
