@@ -6,6 +6,12 @@ import re
 import urllib.parse
 import urllib.request
 
+try:                                   # Zertifikate des Betriebssystems verwenden (wie das Programm selbst)
+    import truststore
+    truststore.inject_into_ssl()
+except Exception as e:
+    print('truststore nicht nutzbar:', e)
+
 BASIS = "https://gdi.berlin.de/services/wfs/"
 DIENSTE = {
     "vorrangnetz": None, "oepnv_ungestoert": None, "radverkehrsnetz": None, "ua_gebaeudehoehen": None,
