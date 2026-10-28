@@ -1147,6 +1147,77 @@ def _behalten(teile, behalte):
     return False
 
 
+FAST_RAND = 350.0          # m: Gebaeude, deren erster und letzter Ring weiter als das ausserhalb des Rechtecks liegen, werden gar nicht erst geparst
+_RX_POS = re.compile(rb"<(?:[\w.-]+:)?posList[^>]*>\s*(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)")
+
+
+def _gebaeude_iter(f, n, rechteck, log=print):
+    """Liefert die Building-Elemente einer CityGML-Datei. Schnell: die Datei wird als Bytes in Stuecken gelesen, jedes Gebaeude per Textsuche
+    abgegrenzt; nur Gebaeude nahe am Rechteck werden ueberhaupt geparst (erster/letzter Ring entscheiden). Faellt auf iterparse zurueck, wenn
+    die Datei nicht so aufgebaut ist (dann wird alles gelesen wie frueher)."""
+    xmin, xmax, ymin, ymax = rechteck
+    kopf = f.read(1 << 16)
+    f.seek(0)
+    m_root = re.search(rb"<(?:[\w.-]+:)?CityModel\b[^>]*>", kopf)
+    m_pre = re.search(rb'xmlns:?([\w.-]*)="' + re.escape(n.B.strip("{}").encode()) + rb'"', kopf)
+    if not (m_root and m_pre) or os.environ.get("ARCHITOOLS_LANGSAM_LESEN"):
+        for ev, bld in ET.iterparse(f, events=("end",)):
+            if bld.tag == n.B + "Building":
+                yield bld
+        return
+    pre = m_pre.group(1).decode()
+    praefix = (pre + ":") if pre else ""
+    wurzel = m_root.group(0).decode("utf-8", "replace")
+    wname = re.match(r"<([\w.:-]+)", wurzel).group(1)
+    start = re.compile(rb"<" + re.escape(praefix.encode()) + rb"Building(?=[\s>])")
+    ende = ("</" + praefix + "Building>").encode()
+    x0, x1, y0, y1 = xmin - FAST_RAND, xmax + FAST_RAND, ymin - FAST_RAND, ymax + FAST_RAND
+    puffer, geparst, uebersprungen = b"", 0, 0
+
+    def nahe(stueck):
+        pos = _RX_POS.findall(stueck)
+        if not pos:
+            return True
+        for x, y in (pos[0], pos[-1]):
+            try:
+                xf, yf = float(x), float(y)
+            except ValueError:
+                return True
+            if x0 <= xf <= x1 and y0 <= yf <= y1:
+                return True
+        return False
+
+    while True:
+        block = f.read(8 << 20)
+        puffer += block
+        pos = 0
+        while True:
+            a = start.search(puffer, pos)
+            if not a:
+                break
+            e = puffer.find(ende, a.start())
+            if e < 0:
+                break
+            stueck = puffer[a.start():e + len(ende)]
+            pos = e + len(ende)
+            if not nahe(stueck):
+                uebersprungen += 1
+                continue
+            try:
+                root = ET.fromstring(wurzel + stueck.decode("utf-8", "replace") + "</" + wname + ">")
+            except ET.ParseError:
+                continue
+            geparst += 1
+            for bld in root:
+                yield bld
+        if not block:
+            break
+        a = start.search(puffer, pos)
+        puffer = puffer[a.start():] if a else puffer[max(pos, len(puffer) - 64):]
+    if uebersprungen:
+        log("    (schnell gelesen: %d Gebaeude geparst, %d weit ausserhalb uebersprungen)" % (geparst, uebersprungen))
+
+
 def lod2_lesen(pfade, xmin, xmax, ymin, ymax, log=print, prog=_noop, nah=None, fern="bloecke", behalte=None):
     """Liest CityGML-Gebaeude (Stream, Speicher bleibt klein). nah = (Ost, Nord, Breite, Hoehe) des Nahbereichs-Rechtecks;
     Teile ausserhalb werden (ausser fern == "lod2") nur als Grundriss + Dachhoehen gespeichert."""
@@ -1160,9 +1231,7 @@ def lod2_lesen(pfade, xmin, xmax, ymin, ymax, log=print, prog=_noop, nah=None, f
                 log("  LoD2 %s: CityGML 3.0 wird nicht unterstuetzt (nur 1.0/2.0)" % name)
                 continue
             n0 = len(teile)
-            for ev, bld in ET.iterparse(f, events=("end",)):
-                if bld.tag != n.B + "Building":
-                    continue
+            for bld in _gebaeude_iter(f, n, (xmin, xmax, ymin, ymax), log):
                 bid = bld.get(n.G + "id")
                 neu = []
                 for el in [bld] + list(bld.iter(n.B + "BuildingPart")):

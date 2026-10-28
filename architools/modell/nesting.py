@@ -5,9 +5,12 @@ alle kollisionsfreien Positionen auf einmal gefunden, gewählt wird die
 unterste, dann linkeste (Bottom-Left). Kleine Teile landen dadurch auch in
 Löchern großer Teile (z. B. im Inneren der Hohlbau-Ringe).
 """
+import os
+
 import numpy as np
 from affine import Affine
 from rasterio.features import rasterize
+from scipy import fft as sfft
 from scipy.signal import fftconvolve
 from shapely import affinity
 
@@ -56,25 +59,42 @@ def _empty(W, H, margin, res):
 
 
 def _pack(items, W, H, margin, gap, res, occ=None):
-    """Bottom-Left-Packen. Mit occ wird in eine bestehende Belegung gepackt (occ wird kopiert)."""
+    """Bottom-Left-Packen. Mit occ wird in eine bestehende Belegung gepackt (occ wird kopiert).
+
+    Schnell: je Teil wird die Belegung nur EINMAL fouriertransformiert (nicht je Drehung), und nur bis knapp ueber die hoechste belegte
+    Zeile (darueber ist alles frei - die erste freie Stelle liegt spaetestens dort). Die erste freie Stelle ist die niedrigste Zeile,
+    dann die linkeste: das Ergebnis ist dasselbe wie bei der Suche ueber die ganze Platte, nur wesentlich schneller."""
     occ = _empty(W, H, margin, res) if occ is None else occ.copy()
     ny, nx = occ.shape
+    m = int(np.ceil(margin / res))
     placed, rest = [], []
     for it in items:
-        best = None
+        kerns = []
         for ang in it.angles:
             k, minx, miny = _kernel(it, ang, gap, res)
+            if k.shape[0] <= ny and k.shape[1] <= nx:
+                kerns.append((ang, k, minx, miny))
+        if not kerns:
+            rest.append(it)
+            continue
+        kh_max = max(k.shape[0] for _, k, _, _ in kerns)
+        inner = occ[:max(1, ny - m), m:max(m + 1, nx - m)].any(axis=1)
+        top = int(np.nonzero(inner)[0][-1]) + 1 if inner.any() else 0
+        R = min(ny, max(top, m) + kh_max + 1)
+        shp = (sfft.next_fast_len(R, real=True), sfft.next_fast_len(nx, real=True))
+        f_occ = sfft.rfft2(occ[:R], s=shp, workers=1)
+        best = None
+        for ang, k, minx, miny in kerns:
             kh, kw = k.shape
-            if kh > ny or kw > nx:
+            conv = sfft.irfft2(f_occ * np.conj(sfft.rfft2(k, s=shp, workers=1)), s=shp, workers=1)[:R - kh + 1, :nx - kw + 1]
+            frei = (conv < 0.5).ravel()
+            i = int(frei.argmax())
+            if not frei[i]:
                 continue
-            conv = fftconvolve(occ, k[::-1, ::-1], mode="valid")
-            feas = np.argwhere(conv < 0.5)
-            if not len(feas):
-                continue
-            score = (feas[:, 0].astype(np.int64) + kh) * nx + feas[:, 1]   # niedrigste Oberkante, dann links
-            i = int(np.argmin(score))
-            if best is None or score[i] < best[0]:
-                best = (score[i], ang, int(feas[i, 0]), int(feas[i, 1]), minx, miny, k)
+            r, c = divmod(i, conv.shape[1])
+            score = (r + kh) * nx + c                      # niedrigste Oberkante, dann links
+            if best is None or score < best[0]:
+                best = (score, ang, r, c, minx, miny, k)
         if best is None:
             rest.append(it)
             continue
@@ -214,8 +234,17 @@ def nest(items, formats, margin, gap, res, log=print, label="Platte", filler=Non
         rest_sheets, items = _restplatten(items, fest, margin, gap, res, log, "Restplatte")
     orders = [lambda i: -i.area, lambda i: -bbox_area(i), lambda i: -maxdim(i)][:max(1, tries)]
     best = None
-    for key in orders:
-        sh, rest, left = _run(sorted(items, key=key), formats, margin, gap, res, filler, n_filler)
+
+    def lauf(key):
+        return _run(sorted(items, key=key), formats, margin, gap, res, filler, n_filler)
+
+    if len(orders) > 1 and len(items) > 40:                 # die Reihenfolgen sind unabhaengig; FFT gibt die Sperre frei -> echte Parallelitaet
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=min(len(orders), max(1, os.cpu_count() or 1))) as ex:
+            ergebnisse = list(ex.map(lauf, orders))
+    else:
+        ergebnisse = [lauf(key) for key in orders]
+    for sh, rest, left in ergebnisse:
         score = (len(rest), sum(s["format"][0] * s["format"][1] for s in sh), len(sh))
         if best is None or score < best[0]:
             best = (score, sh, rest, left)
