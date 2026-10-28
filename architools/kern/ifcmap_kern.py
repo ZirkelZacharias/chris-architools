@@ -3766,7 +3766,12 @@ def extra_radverkehr(cfg, d, ctx, log):
             feats = []
         if feats:
             log("  %s: Attribute (Beispiel): %s" % (sub, dict(list(feats[0][1].items())[:8])))
-        _extra_sammeln(out, sub, feats)
+        ist_gepl = lambda p: str((p or {}).get("existenz", "")).strip().lower() == "nein"
+        gepl = [(g, p) for g, p in feats if ist_gepl(p)]
+        if gepl:                                                     # geplante, noch nicht gebaute Strecken: eigene Gruppe, keine Wege
+            log("  %s: %d geplante (noch nicht vorhandene) Strecken -> Gruppe %s_geplant, nicht als Weg" % (sub, len(gepl), sub))
+            _extra_sammeln(out, sub + "_geplant", gepl)
+        _extra_sammeln(out, sub, [(g, p) for g, p in feats if not ist_gepl(p)])
     if not out:
         try:
             bekannt = {t for t, _ in arten}
@@ -3787,7 +3792,7 @@ def rad_als_nutzung(cfg, d, ctx, log):
     out = []
     breite0 = float(getattr(cfg, "rad_breite", 2.5) or 2.5)
     for sub, art, g, p in extra_radverkehr(cfg, d, ctx, log):
-        if art != "line":
+        if art != "line" or sub.endswith("_geplant"):
             continue
         w = feldwert(p, r"breite|width")
         w = w if (w and 0.5 <= w <= 12.0) else breite0
