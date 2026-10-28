@@ -308,7 +308,7 @@ def _datei_laden(url, ziel, ctx, log):
     if os.path.exists(ziel) and os.path.getsize(ziel) > 0:
         log("  (aus Zwischenspeicher) %s" % os.path.basename(ziel))
         return True
-    req = urllib.request.Request(url, headers={"User-Agent": "ifcmap/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "ZachariasTools/0.1 (+https://github.com/ZirkelZacharias/zacharias-tools)"})
     tmp = ziel + ".teil"
     t0 = time.time()
     try:
@@ -1384,7 +1384,7 @@ def _wfs_url(basis, typ, bbox, version, fmt, start=None, count=None, bbox_crs=Tr
 
 
 def _http_json(url, ctx):
-    req = urllib.request.Request(url, headers={"User-Agent": "ifcmap/1.0", "Accept": "application/json, */*;q=0.5"})
+    req = urllib.request.Request(url, headers={"User-Agent": "ZachariasTools/0.1 (+https://github.com/ZirkelZacharias/zacharias-tools)", "Accept": "application/json, */*;q=0.5"})
     try:
         with urllib.request.urlopen(req, timeout=60, context=ctx) as r:
             raw = r.read().decode("utf-8", errors="replace")
@@ -1484,7 +1484,7 @@ def typnamen_aus_xml(text):
 
 def wfs_typnamen(basis, ctx):
     url = basis + "?" + urllib.parse.urlencode({"service": "WFS", "request": "GetCapabilities"})
-    req = urllib.request.Request(url, headers={"User-Agent": "ifcmap/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "ZachariasTools/0.1 (+https://github.com/ZirkelZacharias/zacharias-tools)"})
     with urllib.request.urlopen(req, timeout=60, context=ctx) as r:
         return typnamen_aus_xml(r.read().decode("utf-8", errors="replace"))
 
@@ -1574,7 +1574,7 @@ def osm_abfragen(q, ctx, log, was="OpenStreetMap"):
     def arbeit(url):
         t0 = time.time()
         try:
-            req = urllib.request.Request(url, data=daten, headers={"User-Agent": "ifcmap/2.1 (+https://github.com/ifcmap)"})
+            req = urllib.request.Request(url, data=daten, headers={"User-Agent": "ZachariasTools/0.1 (+https://github.com/ZirkelZacharias/zacharias-tools)"})
             with urllib.request.urlopen(req, timeout=OSM_TIMEOUT, context=ctx) as r:
                 js = json.loads(r.read().decode("utf-8"))
             if "elements" not in js:                       # Overpass meldet Zeitueberschreitung oft als 200 mit 'remark'
@@ -1797,7 +1797,7 @@ def wfs_gml_features(basis, typ, bbox, epsg, ctx, log, version="2.0.0"):
     q["TYPENAMES" if version.startswith("2") else "TYPENAME"] = typ
     url = basis + ("&" if "?" in basis else "?") + urllib.parse.urlencode(q, safe=":,")
     log("  WFS (GML): " + url)
-    req = urllib.request.Request(url, headers={"User-Agent": "ifcmap/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "ZachariasTools/0.1 (+https://github.com/ZirkelZacharias/zacharias-tools)"})
     with urllib.request.urlopen(req, timeout=300, context=ctx) as r:
         daten = r.read()
     if re.search(rb"ExceptionReport|ServiceException", daten[:3000]):

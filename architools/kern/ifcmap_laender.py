@@ -208,7 +208,7 @@ def _text_laden(url, ctx, ziel=None, max_alter=86400):
     if ziel and os.path.exists(ziel) and time.time() - os.path.getmtime(ziel) < max_alter:
         with open(ziel, "r", encoding="utf-8", errors="replace") as f:
             return f.read()
-    req = urllib.request.Request(url, headers={"User-Agent": "ifcmap/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "ZachariasTools/0.1 (+https://github.com/ZirkelZacharias/zacharias-tools)"})
     with urllib.request.urlopen(req, timeout=120, context=ctx) as r:
         text = r.read().decode("utf-8", errors="replace")
     if ziel:
@@ -276,7 +276,7 @@ def _wfs_kachel_holen(teil, land, e, n, epsg, ctx, ziel, log, K):
     tmp = ziel + ".teil"
     t0 = time.time()
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "ifcmap/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "ZachariasTools/0.1 (+https://github.com/ZirkelZacharias/zacharias-tools)"})
         with urllib.request.urlopen(req, timeout=300, context=ctx) as r, open(tmp, "wb") as f:
             while True:
                 b = r.read(1 << 20)

@@ -209,5 +209,10 @@ def alles(p, ausgaben, log=print, prog=None, speichern=True, test=False):
                 P.speichern(p)
             except Exception as e:
                 log(f"Projekt konnte nicht gespeichert werden: {e}")
+    try:
+        from . import quellen
+        quellen.schreiben(P.ausgabe_basis(p))
+    except Exception:
+        pass
     log(f"Fertig in {time.time() - t0:.0f} s")
     return erg

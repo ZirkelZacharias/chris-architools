@@ -39,7 +39,7 @@ def _lokal(tag):
 
 
 def _holen(url, ctx, timeout=90):
-    req = urllib.request.Request(url, headers={"User-Agent": "ifcmap/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "ZachariasTools/0.1 (+https://github.com/ZirkelZacharias/zacharias-tools)"})
     with urllib.request.urlopen(req, timeout=timeout, context=ctx) as r:
         return r.read(), (r.headers.get("Content-Type") or "").lower()
 
