@@ -1,10 +1,10 @@
-# Chris ArchItools (portable Version)
+# Zacharias Tools (portable Version)
 
 Kein Python und keine Installation nötig. Oben liegen nur der Starter und diese Anleitung; alles Technische steckt im Ordner **programm** (bitte nichts darin verschieben).
 
 ## Starten
 <!--WINDOWS-->
-1. ZIP entpacken (an einen Ort mit viel Platz, z. B. `C:\ArchItools`; nicht in einen Ordner mit Leerzeichen und Umlauten mit Schreibschutz).
+1. ZIP entpacken (an einen Ort mit viel Platz, z. B. `C:\ZachariasTools`; nicht in einen Ordner mit Leerzeichen und Umlauten mit Schreibschutz).
 2. Doppelklick auf **@START@**. Es öffnet sich das Programmfenster.
 3. Falls Windows warnt („Der Computer wurde durch Windows geschützt“): „Weitere Informationen“ → „Trotzdem ausführen“.
 4. Beim ersten Start gibt das Programm sich selbst für Windows frei (ca. 30 Sekunden, einmalig).
@@ -17,7 +17,7 @@ Kein Python und keine Installation nötig. Oben liegen nur der Starter und diese
 <!--ENDE-->
 
 ## Updates
-Eine Datei **ChrisArchItools_Update_…zip** in den Ordner **programm/updates** legen und das Programm starten (oder Werkzeuge → Einstellungen → Programm-Update). Projekte und Einstellungen bleiben unberührt.
+Eine Datei **ZachariasTools_Update_…zip** in den Ordner **programm/updates** legen und das Programm starten (oder Werkzeuge → Einstellungen → Programm-Update). Projekte und Einstellungen bleiben unberührt.
 
 Bei bestehender Internetverbindung zeigt das Programm in der Kopfleiste **Update: Stand N**, sobald auf GitHub ein neueres Paket liegt (abschaltbar unter Werkzeuge → Einstellungen → Programm-Update). Es wird nichts automatisch installiert: Download-Seite öffnen, das Paket laden, entpacken, starten.
 

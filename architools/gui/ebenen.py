@@ -83,6 +83,8 @@ def ebenen_panel(box, p, d):
         if getattr(d, "markant", None):
             reihe("Markante Gebäude (Detailform): %d – %s" % (len(d.markant), ", ".join(sorted({m["quelle"] for m in d.markant}))),
                   "Gebaeude_Markant", None)
+        if getattr(d.cfg, "geschosslinien", False):
+            reihe("Geschosslinien an den Wänden (nur Nahbereich)", "Gebaeude_Geschosse", None)
         reihe("Bäume: %d (2D: nur Baumkronen als Kreise)" % len(d.baeume), "Baeume", "Baeume")
         reihe("Rahmen von Gebiet und Nahbereich", None, "Rahmen")
         reihe("Brücken (2D: oberhalb von Gelände, Wasser und Bahn)", None, "Bruecken")

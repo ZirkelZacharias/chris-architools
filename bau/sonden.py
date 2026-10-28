@@ -21,7 +21,7 @@ GEBIETE = {"Pankow": (393000, 5826000, 394400, 5827200), "Alexanderplatz": (3918
 
 
 def holen(url, timeout=120):
-    req = urllib.request.Request(url, headers={"User-Agent": "ChrisArchItools-Sonde"})
+    req = urllib.request.Request(url, headers={"User-Agent": "ZachariasTools-Sonde"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 

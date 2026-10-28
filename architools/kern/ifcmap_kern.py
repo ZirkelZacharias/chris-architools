@@ -83,7 +83,8 @@ IFC_FARBEN = {  # ruhige, entsaettigte Palette (v2.2): helles Gelaende, graphitf
               "Gewaesser": (138, 176, 204), "Wald": (104, 134, 112), "Gehoelz": (132, 158, 120), "Gruen": (172, 194, 156),
               "Landwirtschaft": (216, 210, 174), "Brache_Unland": (208, 194, 170), "Siedlung": (226, 219, 211),
               "Gelaende": (232, 228, 220), "Ohne_Nutzung": (232, 228, 220), "Sonstige": (224, 224, 224),
-              "Gebaeude_Nah": (242, 240, 236), "Gebaeude_Fern": (242, 240, 236), "Bruecke": (200, 198, 194), "Gebaeude_Markant": (242, 240, 236), "Baeume": (128, 164, 124)}
+              "Gebaeude_Nah": (242, 240, 236), "Gebaeude_Fern": (242, 240, 236), "Bruecke": (200, 198, 194), "Gebaeude_Markant": (242, 240, 236), "Baeume": (128, 164, 124),
+              "Geschosslinie": (92, 98, 108)}
 KBS_NAMEN = {25831: "ETRS89 / UTM zone 31N", 25832: "ETRS89 / UTM zone 32N", 25833: "ETRS89 / UTM zone 33N",
              25834: "ETRS89 / UTM zone 34N"}
 
@@ -126,6 +127,7 @@ FNP_PALETTE = [(240, 190, 150), (250, 220, 120), (170, 210, 140), (110, 170, 110
 LAYER_NAH = "Gebaeude_Nah_LoD2_Daecher"
 LAYER_FERN = "Gebaeude_Fern_Bloecke_Traufe"
 LAYER_MARKANT = "Gebaeude_Markant_Detail"
+LAYER_GESCHOSSE = "Gebaeude_Geschosslinien"
 MINTRAUFE_ANTEIL = 0.5
 
 
@@ -176,6 +178,9 @@ class Config:
     extra: list = field(default_factory=list)             # Berlin-Zusatzdaten (nur 2D-DXF): "denkmal", "fnp", "laerm", "oepnv", "gewaesser"
     laerm_art: str = "gesamtlaerm"        # "gesamtlaerm" | "strasse" | "ubahn" | "industrie" | "flug"
     laerm_wert: str = "L_DEN"             # "L_DEN" (24-h-Mittel) | "L_N" (Nacht)
+    geschosslinien: bool = False          # IFC: waagerechte Linien an den LoD2-Waenden fuer die Geschosse (Zahl aus LoD2/ALKIS/OSM, sonst geschaetzt)
+    geschosslinien_quelle: str = "auto"   # "auto" = fehlende Zahl aus der Traufhoehe schaetzen, "daten" = nur Gebaeude mit echter Geschosszahl
+    geschosslinien_radius: float = 150.0  # nur Gebaeude bis zu diesem Abstand vom Mittelpunkt (m)
     sonne: bool = False                   # Sonnenbahn-Diagramm (IFC + DXF; je Datei ueber die Ebene "Sonne" abwaehlbar)
     sonne_radius: float = 0.0             # Radius des Diagramms in m; 0 = automatisch (40 % der kleineren Nahbereich-Seite)
     sonne_modus: str = "wende"            # "wende" = 21.6./21.3.+9./21.12.;  "monate" = der 21. jedes Monats
@@ -1001,6 +1006,12 @@ def _teil(el, bid, n):
         d["h"] = float(h.text) if h is not None and h.text else None
     except ValueError:
         d["h"] = None
+    sg = el.find(n.B + "storeysAboveGround")
+    if sg is not None and sg.text:
+        try:
+            d["geschosse"] = int(float(sg.text))
+        except ValueError:
+            pass
     typen = {n.B + "WallSurface": "wall", n.B + "RoofSurface": "roof",
              n.B + "GroundSurface": "ground", n.B + "ClosureSurface": "closure"}
     for bb in el.findall(n.B + "boundedBy"):
@@ -2296,6 +2307,7 @@ def lade(cfg, log=print, prog=_noop):
             o = vorab.hole("zusatz:Gebaeude", lambda lg: wfs_laden(WFS_ALKIS, "alkis:gebaeudeflaechen", d.bbox, cfg.cafile, cfg.unsicher, lg))
             if o:
                 alk = [(g, p) for g, p in geojson_features(o, "", cfg.epsg) if g.geom_type in ("Polygon", "MultiPolygon")]
+        d.alk_geb = alk
         try:
             import ifcmap_luecken as LK
             d.ua_geb = None
@@ -2990,6 +3002,32 @@ def _flaeche(faces):
     return a
 
 
+def _geschosslinien_schreiben(d, je_gebaeude, zahlen, element, sto):
+    """Geschosslinien je Gebaeude als EIN flaches Element -> (Gebaeude, Baender)"""
+    import ifcmap_geschosse as GS
+    nb = ng = 0
+    rad = float(getattr(d.cfg, "geschosslinien_radius", 150.0))
+    for gid, teile in je_gebaeude.items():
+        if gid not in zahlen:
+            continue
+        n, zg, tr, quelle = zahlen[gid]
+        waende = [w for t in teile for w in (t.get("wall") or [])]
+        if not waende or n < 2:
+            continue
+        pts = np.vstack([np.asarray(e)[:, :2] for e, _ in waende])
+        c = pts.mean(axis=0)
+        if np.hypot(c[0] - d.ce, c[1] - d.cn) > rad:
+            continue
+        arr = GS.linien(waende, c, n, zg, tr)
+        if len(arr) and element("IfcBuildingElementProxy", "Geschosslinien_" + str(gid), list(arr), LAYER_GESCHOSSE, sto, gebaeude=False,
+                                farbe=IFC_FARBEN["Geschosslinie"], stil="Geschosslinie",
+                                props={"Gebaeude_ID": str(gid), "Geschosse": int(n), "Quelle_Geschosse": quelle,
+                                       "Hinweis": "Geschossteilung gleichmaessig ueber die Traufhoehe, keine gemessenen Geschosshoehen"}):
+            nb += len(arr)
+            ng += 1
+    return ng, nb
+
+
 def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
     import ifcopenshell
     import ifcopenshell.api.root, ifcopenshell.api.unit, ifcopenshell.api.context, ifcopenshell.api.project
@@ -3102,7 +3140,10 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         return el
 
     n_geb = n_gel = n_baum = 0
+    n_gl = n_glb = 0
     fern_modus = getattr(d.cfg, "fern_gebaeude", "bloecke")
+    gl_an = bool(getattr(d.cfg, "geschosslinien", False)) and ebene_an(d.cfg, "ifc", "Gebaeude_Geschosse")
+    gl_zahlen = {}
     leer = []                                             # Gebaeude, aus denen keine Flaechen entstanden
     # markante Gebaeude zuerst: nur was wirklich geschrieben wurde, wird unten aus den normalen Gebaeuden herausgenommen
     # (sonst verschwaende ein Gebaeude, dessen markantes Element leer bleibt oder dessen Ebene abgeschaltet ist)
@@ -3125,6 +3166,13 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         je_gebaeude = {}                                  # Teile eines Gebaeudes -> ein Element (ein Morph)
         for t in liste:
             je_gebaeude.setdefault(t["gebaeude"] or t["id"], []).append(t)
+        if gl_an and not fern:
+            try:
+                import ifcmap_geschosse as GS
+                gl_zahlen = GS.geschosszahl_je_gebaeude(d, je_gebaeude, getattr(d.cfg, "geschosslinien_quelle", "auto"))
+            except Exception as e:
+                log("  HINWEIS: Geschosslinien nicht moeglich (%s)" % str(e)[:100])
+                gl_zahlen = {}
         felder = {}
         zusammen = fern and fern_modus == "bloecke" and bool(getattr(d.cfg, "fern_zusammenfassen", True))
         zelle = max(30.0, float(getattr(d.cfg, "fern_zelle", 150.0) or 150.0))
@@ -3179,6 +3227,10 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
             if element("IfcBuildingElementProxy", prefix + str(gid), faces, lay, sto, gebaeude=True,
                        farbe=IFC_FARBEN["Gebaeude_Nah"], stil="Gebaeude", props=props):
                 n_geb += 1
+                if gl_zahlen and not fern and gid in gl_zahlen:
+                    g1, b1 = _geschosslinien_schreiben(d, {gid: teile}, gl_zahlen, element, sto)
+                    n_gl += g1
+                    n_glb += b1
             else:
                 leer.append(prefix + str(gid))
         for (ix, iy), fe in sorted(felder.items()):
@@ -3190,6 +3242,12 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         if felder:
             log("  Fernbereich: %d Gebaeude zu %d Elementen (Felder von %.0f m) zusammengefasst - schneller und kleiner in Archicad" %
                 (sum(fe["n"] for fe in felder.values()), len(felder), zelle))
+    if gl_an:
+        qs = {}
+        for gid, (n_, zg_, tr_, q_) in gl_zahlen.items():
+            qs[q_.split(" (")[0].split(" aus ")[0]] = qs.get(q_.split(" (")[0].split(" aus ")[0], 0) + 1
+        log("  Geschosslinien: %d Baender an %d Gebaeuden (Geschosszahl aus: %s; Teilung gleichmaessig ueber die Traufhoehe, keine gemessenen Geschosshoehen)"
+            % (n_glb, n_gl, ", ".join("%s %d" % (k, v) for k, v in sorted(qs.items())) or "keine Angaben"))
     if leer:
         log("  WARNUNG: %d Gebaeude ergaben keine Flaechen und fehlen in der IFC: %s%s" % (len(leer), ", ".join(leer[:8]), " ..." if len(leer) > 8 else ""))
 

@@ -1,4 +1,4 @@
-"""Projektmodell von Chris ArchItools.
+"""Projektmodell von Zacharias Tools.
 
 Ein Projekt ist EINE Datei (``<Name>.architools.json``) in einem Projektordner. Darin steht, was am Ende
 gewünscht ist (``ausgaben``), die gemeinsamen Gebietsangaben, die Einstellungen je Ausgabe und der ``stand``:

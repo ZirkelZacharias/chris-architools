@@ -119,6 +119,18 @@ def seiten(p):
                 hinweis("Das Gelände bleibt auf DGM-Höhe (dort stehen auch die Gebäude); nur die Fahrbahn sinkt.")
                 _haken("Brücken im IFC: Straße/Gehweg nur auf Brücken, die im LoD2 vorhanden sind (sonst weglassen)", u, "bruecken_ifc")
                 _wahl("Gelände in der IFC als", GELAENDE_TYPEN, u, "gelaende_typ")
+                gl = _haken("Geschosslinien: waagerechte Linien an den Wänden der Gebäude im Nahbereich (optional)", u, "geschosslinien")
+                with ui.column().classes("w-full gap-1") as gl_in:
+                    _wahl("Geschosszahl", {"auto": "aus den Daten, sonst aus der Traufhöhe geschätzt", "daten": "nur Gebäude mit echter Geschosszahl"},
+                          u, "geschosslinien_quelle", "w-96")
+                    with ui.row().classes("gap-2 items-center"):
+                        ui.label("nur Gebäude bis").classes("text-body2")
+                        _zahl("", u, "geschosslinien_radius", min=20, step=10, breite="w-20")
+                        ui.label("m um den Mittelpunkt").classes("text-body2")
+                    hinweis("Keine Fassade: Es gibt weder Fenster noch Türen. Die Geschosszahl kommt aus LoD2, ALKIS (Berlin) oder OpenStreetMap; "
+                            "fehlt sie, wird sie aus der Traufhöhe geteilt durch 3,1 m geschätzt (steht je Gebäude als Eigenschaft in der IFC). "
+                            "Die Linien teilen die Traufhöhe gleichmäßig – echte Geschosshöhen sind nicht bekannt.")
+                ausgrauen(gl_in, gl)
             with karte("Markante Gebäude – experimentell", OCKER, offen=False) as k_markant:
                 ui.label("EXPERIMENTELL: Diese Funktion klappt noch nicht immer – Gebäude können fehlen oder falsche Formen haben.") \
                     .classes("text-caption").style(f"color:{OCKER}")

@@ -1,4 +1,4 @@
-"""Chris ArchItools – Umgebung, Modellbau und Werkzeuge in einem Programm."""
+"""Zacharias Tools – Umgebung, Modellbau und Werkzeuge in einem Programm."""
 import json as _json
 import os as _os
 

@@ -1,1 +1,1 @@
-"""Modellbau-Teil von Chris ArchItools: Gelände per Lasercut, Gebäude per 3D-Druck."""
+"""Modellbau-Teil von Zacharias Tools: Gelände per Lasercut, Gebäude per 3D-Druck."""

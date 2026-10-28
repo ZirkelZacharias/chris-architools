@@ -38,14 +38,14 @@ jobs:
         shell: bash
         continue-on-error: true
         run: |
-          cd dist/ChrisArchItools/programm
+          cd dist/ZachariasTools/programm
           if [ -x python/bin/python3 ]; then PY=python/bin/python3; else PY=python/python.exe; fi
           "$PY" ../../../bau/dienste_test.py 2>&1 | tee ../../../dienste.txt
       - name: Dienste-Sonden (Attribute und Werte der Berliner Dienste)
         shell: bash
         continue-on-error: true
         run: |
-          cd dist/ChrisArchItools/programm
+          cd dist/ZachariasTools/programm
           if [ -x python/bin/python3 ]; then PY=python/bin/python3; else PY=python/python.exe; fi
           "$PY" ../../../bau/sonden.py 2>&1 | tee ../../../sonden.txt
       - name: Protokolle ins Repository schreiben
@@ -85,4 +85,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="stand-$(cat stand.txt)-$(date +%Y%m%d-%H%M)"
-          gh release create "$TAG" pakete/*.zip --title "Chris ArchItools Stand $(cat stand.txt)" --notes "Portable Pakete (kein Python nötig) für Windows und Mac."
+          gh release create "$TAG" pakete/*.zip --title "Zacharias Tools Stand $(cat stand.txt)" --notes "Portable Pakete (kein Python nötig) für Windows und Mac."

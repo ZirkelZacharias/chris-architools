@@ -69,7 +69,7 @@ p["formate"]={"zweid":["dxf","dwg","pdf"],"dreid":["ifc","glb"]}; u["extra"]=["r
 p["formate"]={"zweid":["dxf"],"dreid":["ifc"]}; u["extra"]=["radverkehr"]; u["ua_vegetationsraster"]=True; u["veg_raster_dateien"]=[VEG]; u["rad_wege"]=True
 p["ausgaben"].update(ifc=True, lageplan=True, schwarzplan=True, info_dwg=True, laser=True, druck=True, schnitt=True, hoehenlinien=True)
 u["wms_karten"] = ["luftbild"]                      # Kartenbild (Dienst gestellt)
-u["lp_text"] = True                                                       # Lageplan-Beschriftung
+u["geschosslinien"] = True; u["lp_text"] = True                                                       # Lageplan-Beschriftung
 mg = p["modell"]["gebaeude"]
 mg.update(modus="falt", material="Bristolkarton", staerke_mm=0.5, lasche_mm=3.0)       # Gebäude als Faltmodell (Laser)
 p["modell"]["laser"]["restplatten"] = [{"name": "Rest A", "b_mm": 400, "h_mm": 300, "anzahl": 1}]

@@ -224,7 +224,7 @@ class Werkzeuge:
         import architools_update as AU
         from .. import STAND
         z = {"pfad": ""}
-        hinweis(f"Installiert: Stand {STAND}. Eine Update-Datei (ChrisArchItools_Update_….zip) enthält nur geänderte und neue Dateien; "
+        hinweis(f"Installiert: Stand {STAND}. Eine Update-Datei (ZachariasTools_Update_….zip) enthält nur geänderte und neue Dateien; "
                 "Projekte und Einstellungen bleiben unberührt, ersetzte Dateien werden vorher gesichert (Ordner updates/_sicherung).")
         feld_pfad("Update-Datei", z, "pfad", typen=("Update (*.zip)",))
         ausgabe = ui.label("").classes("text-body2").style("white-space:pre-wrap")

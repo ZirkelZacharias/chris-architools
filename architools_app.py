@@ -1,4 +1,4 @@
-"""Startet Chris ArchItools:  python architools_app.py  [--browser] [--port 8765]"""
+"""Startet Zacharias Tools:  python architools_app.py  [--browser] [--port 8765]"""
 import os
 import sys
 

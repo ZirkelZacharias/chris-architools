@@ -7,7 +7,7 @@ Programm). Das Programm bleibt sonst unverändert; Projekte, Einstellungen und d
   * in der Oberfläche: Einstellungen → Programm-Update → Update einspielen.
 
 Ersetzte Dateien landen vorher in  updates/_sicherung/stand_<alt>/ ; eingespielte Updates in  updates/_eingespielt/ .
-Ablauf per Hand ist auch möglich: ZIP entpacken und den Ordner „ChrisArchItools“ über den vorhandenen kopieren
+Ablauf per Hand ist auch möglich: ZIP entpacken und den Ordner „ZachariasTools“ über den vorhandenen kopieren
 (stand.json wird dabei mit aktualisiert).
 """
 import hashlib
@@ -21,7 +21,8 @@ import zipfile
 HIER = os.path.dirname(os.path.abspath(__file__))
 STAND = os.path.join(HIER, "stand.json")
 UPDATES = os.path.join(HIER, "updates")
-WURZEL = "ChrisArchItools/"
+WURZEL = "ZachariasTools/"
+ALTE_WURZELN = ("ChrisArchItools/",)                 # so hiess das Programm bis Stand 3 (Update-Dateien dafuer bleiben gueltig)
 GESCHUETZT = (".venv", "projekte", "updates", ".git")
 
 
@@ -40,11 +41,11 @@ def _sha(daten):
 
 def _info(z):
     namen = z.namelist()
-    pre = WURZEL if any(n.startswith(WURZEL) for n in namen) else ""
+    pre = next((w for w in (WURZEL,) + ALTE_WURZELN if any(n.startswith(w) for n in namen)), "")
     for n in (pre + "update.json", "update.json"):
         if n in namen:
             return json.loads(z.read(n).decode("utf-8")), pre
-    raise ValueError("update.json fehlt – das ist keine Update-Datei von Chris ArchItools.")
+    raise ValueError("update.json fehlt – das ist keine Update-Datei von Zacharias Tools.")
 
 
 def pruefen(pfad):

@@ -130,7 +130,7 @@ async def _suchen(text):
         import urllib.request
         q = urllib.parse.urlencode({"q": text, "format": "json", "limit": 1})
         r = urllib.request.Request("https://nominatim.openstreetmap.org/search?" + q,
-                                   headers={"User-Agent": "ChrisArchItools/0.1 (Studienprojekt)"})
+                                   headers={"User-Agent": "ZachariasTools/0.1 (Studienprojekt)"})
         with urllib.request.urlopen(r, timeout=15) as f:
             d = json.loads(f.read().decode("utf-8"))
         return (float(d[0]["lat"]), float(d[0]["lon"])) if d else None

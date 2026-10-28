@@ -59,7 +59,7 @@ def fuss():
         if klicks["n"] >= 3:
             klicks["n"] = 0
             maskott_zeigen()
-    ui.label(f"Chris ArchItools {VERSION}").classes("cursor-default").style(
+    ui.label(f"Zacharias Tools {VERSION}").classes("cursor-default").style(
         "position:fixed; left:68px; bottom:4px; font-size:10px; color:#9aa4ad; z-index:10").on("click", kl)
 
 

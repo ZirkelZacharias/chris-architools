@@ -1,6 +1,6 @@
 """Baut das portable Paket (eigenes Python + alle Bibliotheken, keine Installation nötig) für das System, auf dem es läuft.
 
-  python bau/portable.py [--test]        ->  dist/ChrisArchItools_<System>.zip
+  python bau/portable.py [--test]        ->  dist/ZachariasTools_<System>.zip
 
 Läuft in GitHub Actions auf Windows, macOS (Apple Silicon) und macOS (Intel); lokal geht es auf Linux zum Ausprobieren.
 Voraussetzung: uv (https://docs.astral.sh/uv/) – holt ein eigenständiges, verschiebbares Python 3.12.
@@ -19,7 +19,7 @@ import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "dist")
-NAME = "ChrisArchItools"
+NAME = "ZachariasTools"
 PYVER = "3.12"
 PRUEF = ("import numpy, scipy, shapely, rasterio, pyogrio, contourpy, matplotlib, trimesh, ezdxf, ezdwg, pymupdf, pandas, pyproj, "
          "PIL, ifcopenshell, nicegui, webview; print('Bibliotheken ok')")
@@ -81,7 +81,7 @@ def bauen():
     build = int(os.environ.get("ARCHITOOLS_BUILD") or open(os.path.join(ROOT, "stand.txt")).read().strip())
     json.dump({"build": build, "version": "0.1", "zeit": time.strftime("%Y-%m-%d")}, open(os.path.join(prog, "stand.json"), "w"))
     # 4) Starter + Anleitung
-    start = "Chris ArchItools starten.bat" if win else "Chris ArchItools starten.command"
+    start = "Zacharias Tools starten.bat" if win else "Zacharias Tools starten.command"
     a = open(os.path.join(ROOT, "docs", "ANLEITUNG_portabel.md"), encoding="utf-8").read().replace("@START@", start)
     a = re.sub(r"<!--WINDOWS-->(.*?)<!--MAC-->(.*?)<!--ENDE-->", lambda m: m.group(1) if win else m.group(2), a, flags=re.S)
     open(os.path.join(ziel, "ANLEITUNG.md"), "w", encoding="utf-8").write(a)

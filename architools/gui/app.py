@@ -1,4 +1,4 @@
-"""Chris ArchItools – Oberfläche (NiceGUI, eigenes Fenster; Fallback: Browser)."""
+"""Zacharias Tools – Oberfläche (NiceGUI, eigenes Fenster; Fallback: Browser)."""
 import os
 
 from nicegui import ui
@@ -23,7 +23,7 @@ def seite():
     ui.colors(primary=AKZENT, secondary=TERRA, accent=OCKER)
     ui.query("body").style(f"background:{BG}; color:{TEXT}")
     p = Z.projekt()
-    ui.page_title(f"Chris ArchItools – {WASSERZEICHEN}")
+    ui.page_title(f"Zacharias Tools – {WASSERZEICHEN}")
 
     def speichern():
         try:
@@ -32,7 +32,7 @@ def seite():
             pass
 
     with ui.header().classes("items-center gap-3 py-2").style(f"background:{INK}"):
-        ui.label("Chris ArchItools").classes("text-h6 text-white cursor-default") \
+        ui.label("Zacharias Tools").classes("text-h6 text-white cursor-default") \
             .style("font-family: Georgia, serif; font-style: italic").on("click", eier.titel_klicks())
         ui.label(WASSERZEICHEN).style(
             "position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); text-decoration:underline; "
@@ -213,7 +213,7 @@ def start(native=None, port=None, show=True):
     wunsch = port or 8765
     if not _frei(wunsch):
         if _laeuft_schon(wunsch):
-            print(f"Chris ArchItools läuft schon (Port {wunsch}) – öffne die laufende Kopie im Browser.")
+            print(f"Zacharias Tools läuft schon (Port {wunsch}) – öffne die laufende Kopie im Browser.")
             import webbrowser
             webbrowser.open(f"http://127.0.0.1:{wunsch}/")
             return
@@ -229,7 +229,7 @@ def start(native=None, port=None, show=True):
     def _kennung():
         return {"programm": "ArchItools", "pfad": stil.PAKET, "stand": VERSION}
     ui.page("/")(seite)
-    kw = dict(title=f"Chris ArchItools – {WASSERZEICHEN}", reload=False, language="de", show_welcome_message=False,
+    kw = dict(title=f"Zacharias Tools – {WASSERZEICHEN}", reload=False, language="de", show_welcome_message=False,
               favicon="📐")
     if native:
         ui.run(native=True, window_size=(1500, 950), port=port, **kw)
