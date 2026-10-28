@@ -84,7 +84,7 @@ IFC_FARBEN = {  # ruhige, entsaettigte Palette (v2.2): helles Gelaende, graphitf
               "Landwirtschaft": (216, 210, 174), "Brache_Unland": (208, 194, 170), "Siedlung": (226, 219, 211),
               "Gelaende": (232, 228, 220), "Ohne_Nutzung": (232, 228, 220), "Sonstige": (224, 224, 224),
               "Gebaeude_Nah": (242, 240, 236), "Gebaeude_Fern": (242, 240, 236), "Bruecke": (200, 198, 194), "Gebaeude_Markant": (242, 240, 236), "Baeume": (128, 164, 124),
-              "Geschosslinie": (92, 98, 108)}
+              "Geschosslinie": (92, 98, 108), "Fenster": (128, 156, 178), "Tuer": (112, 92, 74)}
 KBS_NAMEN = {25831: "ETRS89 / UTM zone 31N", 25832: "ETRS89 / UTM zone 32N", 25833: "ETRS89 / UTM zone 33N",
              25834: "ETRS89 / UTM zone 34N"}
 
@@ -128,6 +128,7 @@ LAYER_NAH = "Gebaeude_Nah_LoD2_Daecher"
 LAYER_FERN = "Gebaeude_Fern_Bloecke_Traufe"
 LAYER_MARKANT = "Gebaeude_Markant_Detail"
 LAYER_GESCHOSSE = "Gebaeude_Geschosslinien"
+LAYER_FENSTER = "Gebaeude_Fenstermuster"
 MINTRAUFE_ANTEIL = 0.5
 
 
@@ -180,6 +181,8 @@ class Config:
     laerm_wert: str = "L_DEN"             # "L_DEN" (24-h-Mittel) | "L_N" (Nacht)
     geschosslinien: bool = False          # IFC: waagerechte Linien an den LoD2-Waenden fuer die Geschosse (Zahl aus LoD2/ALKIS/OSM, sonst geschaetzt)
     geschosslinien_quelle: str = "auto"   # "auto" = fehlende Zahl aus der Traufhoehe schaetzen, "daten" = nur Gebaeude mit echter Geschosszahl
+    fenstermuster: bool = False           # IFC: Fenster-/Tuermuster auf den LoD2-Waenden - ein MUSTER nach Wandmassen, KEINE Messung
+    fenstermuster_radius: float = 100.0   # nur Gebaeude bis zu diesem Abstand vom Mittelpunkt (m)
     geschosslinien_radius: float = 150.0  # nur Gebaeude bis zu diesem Abstand vom Mittelpunkt (m)
     sonne: bool = False                   # Sonnenbahn-Diagramm (IFC + DXF; je Datei ueber die Ebene "Sonne" abwaehlbar)
     sonne_radius: float = 0.0             # Radius des Diagramms in m; 0 = automatisch (40 % der kleineren Nahbereich-Seite)
@@ -3097,6 +3100,36 @@ def _geschosslinien_schreiben(d, je_gebaeude, zahlen, element, sto):
     return ng, nb
 
 
+def _fenstermuster_schreiben(d, je_gebaeude, element, sto):
+    """Fenster und Tueren (Muster, nicht gemessen) je Gebaeude als flache Elemente -> (Gebaeude, Fenster, Tueren)"""
+    import ifcmap_fenstermuster as FM
+    ng = nf = nt = 0
+    rad = float(getattr(d.cfg, "fenstermuster_radius", 100.0))
+    hinweis = "MUSTER nach Wandbreite und -hoehe, keine Messung: LoD2 enthaelt keine Fenster und Tueren"
+    for gid, teile in je_gebaeude.items():
+        waende = [w for t in teile for w in (t.get("wall") or [])]
+        if not waende:
+            continue
+        pts = np.vstack([np.asarray(e)[:, :2] for e, _ in waende])
+        c = pts.mean(axis=0)
+        if np.hypot(c[0] - d.ce, c[1] - d.cn) > rad:
+            continue
+        fen, tue, _info = FM.fassade(waende, c)
+        ok = False
+        if len(fen) and element("IfcBuildingElementProxy", "Fenstermuster_" + str(gid), list(fen), LAYER_FENSTER, sto, gebaeude=False,
+                                farbe=IFC_FARBEN["Fenster"], stil="Fenster",
+                                props={"Gebaeude_ID": str(gid), "Hinweis": hinweis}):
+            nf += len(fen)
+            ok = True
+        if len(tue) and element("IfcBuildingElementProxy", "Tuermuster_" + str(gid), list(tue), LAYER_FENSTER, sto, gebaeude=False,
+                                farbe=IFC_FARBEN["Tuer"], stil="Tuer",
+                                props={"Gebaeude_ID": str(gid), "Hinweis": hinweis}):
+            nt += len(tue)
+            ok = True
+        ng += int(ok)
+    return ng, nf, nt
+
+
 def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
     import ifcopenshell
     import ifcopenshell.api.root, ifcopenshell.api.unit, ifcopenshell.api.context, ifcopenshell.api.project
@@ -3213,6 +3246,8 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
     fern_modus = getattr(d.cfg, "fern_gebaeude", "bloecke")
     gl_an = bool(getattr(d.cfg, "geschosslinien", False)) and ebene_an(d.cfg, "ifc", "Gebaeude_Geschosse")
     gl_zahlen = {}
+    fm_an = bool(getattr(d.cfg, "fenstermuster", False)) and ebene_an(d.cfg, "ifc", "Gebaeude_Fenstermuster")
+    n_fm = n_fmf = n_fmt = 0
     leer = []                                             # Gebaeude, aus denen keine Flaechen entstanden
     # markante Gebaeude zuerst: nur was wirklich geschrieben wurde, wird unten aus den normalen Gebaeuden herausgenommen
     # (sonst verschwaende ein Gebaeude, dessen markantes Element leer bleibt oder dessen Ebene abgeschaltet ist)
@@ -3300,6 +3335,11 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
                     g1, b1 = _geschosslinien_schreiben(d, {gid: teile}, gl_zahlen, element, sto)
                     n_gl += g1
                     n_glb += b1
+                if fm_an and not fern:
+                    g2, f2, t2 = _fenstermuster_schreiben(d, {gid: teile}, element, sto)
+                    n_fm += g2
+                    n_fmf += f2
+                    n_fmt += t2
             else:
                 leer.append(prefix + str(gid))
         for (ix, iy), fe in sorted(felder.items()):
@@ -3317,6 +3357,9 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
             qs[q_.split(" (")[0].split(" aus ")[0]] = qs.get(q_.split(" (")[0].split(" aus ")[0], 0) + 1
         log("  Geschosslinien: %d Baender an %d Gebaeuden (Geschosszahl aus: %s; Teilung gleichmaessig ueber die Traufhoehe, keine gemessenen Geschosshoehen)"
             % (n_glb, n_gl, ", ".join("%s %d" % (k, v) for k, v in sorted(qs.items())) or "keine Angaben"))
+    if fm_an:
+        log("  Fenstermuster: %d Fenster und %d Tueren an %d Gebaeuden - ein MUSTER nach Wandbreite und -hoehe, KEINE Messung (LoD2 enthaelt keine Oeffnungen)"
+            % (n_fmf, n_fmt, n_fm))
     if leer:
         log("  WARNUNG: %d Gebaeude ergaben keine Flaechen und fehlen in der IFC: %s%s" % (len(leer), ", ".join(leer[:8]), " ..." if len(leer) > 8 else ""))
 

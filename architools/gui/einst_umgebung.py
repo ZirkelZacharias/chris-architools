@@ -131,6 +131,16 @@ def seiten(p):
                             "fehlt sie, wird sie aus der Traufhöhe geteilt durch 3,1 m geschätzt (steht je Gebäude als Eigenschaft in der IFC). "
                             "Die Linien teilen die Traufhöhe gleichmäßig – echte Geschosshöhen sind nicht bekannt.")
                 ausgrauen(gl_in, gl)
+                fm = _haken("Fenstermuster: Fenster und Türen als flache Rechtecke an den Wänden (optional, MUSTER – nicht gemessen)", u, "fenstermuster")
+                with ui.column().classes("w-full gap-1") as fm_in:
+                    with ui.row().classes("gap-2 items-center"):
+                        ui.label("nur Gebäude bis").classes("text-body2")
+                        _zahl("", u, "fenstermuster_radius", min=20, step=10, breite="w-20")
+                        ui.label("m um den Mittelpunkt").classes("text-body2")
+                    hinweis("Ein Muster, keine Fassade: LoD2 enthält keine Fenster und Türen, und es gibt keine offene Quelle dafür. Das Muster richtet sich nur "
+                            "nach Wandbreite und -höhe (Achse ca. 3 m, Fenster 1,2 × 1,4 m, Tür im Erdgeschoss). Die echte Lage der Fenster stimmt damit nicht. "
+                            "Jedes Element trägt den Vermerk „MUSTER“. Nicht im Schnitt.")
+                ausgrauen(fm_in, fm)
             with karte("Markante Gebäude – experimentell", OCKER, offen=False) as k_markant:
                 ui.label("EXPERIMENTELL: Diese Funktion klappt noch nicht immer – Gebäude können fehlen oder falsche Formen haben.") \
                     .classes("text-caption").style(f"color:{OCKER}")

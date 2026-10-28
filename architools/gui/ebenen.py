@@ -85,6 +85,8 @@ def ebenen_panel(box, p, d):
                   "Gebaeude_Markant", None)
         if getattr(d.cfg, "geschosslinien", False):
             reihe("Geschosslinien an den Wänden (nur Nahbereich)", "Gebaeude_Geschosse", None)
+        if getattr(d.cfg, "fenstermuster", False):
+            reihe("Fenstermuster an den Wänden (MUSTER, nicht gemessen; nur Nahbereich)", "Gebaeude_Fenstermuster", None)
         reihe("Bäume: %d (2D: nur Baumkronen als Kreise)" % len(d.baeume), "Baeume", "Baeume")
         reihe("Rahmen von Gebiet und Nahbereich", None, "Rahmen")
         reihe("Brücken (2D: oberhalb von Gelände, Wasser und Bahn)", None, "Bruecken")
