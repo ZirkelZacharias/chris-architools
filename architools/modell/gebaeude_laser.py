@@ -13,6 +13,7 @@ import math
 
 import numpy as np
 import shapely
+import shapely.affinity
 from shapely.geometry import LineString, Point, Polygon
 from shapely.geometry.polygon import orient
 
@@ -181,6 +182,56 @@ def dach_flaechen(b):
 
 
 # ------------------------------------------------------------------ Teile
+# ------------------------------------------------------------------ Fenstermuster (Rastergravur-Variante: gravierte Rechtecke)
+GESCHOSS_M, ACHSE_M = 3.1, 3.0
+FENSTER_B, FENSTER_H, BRUESTUNG = 1.2, 1.4, 0.9
+TUER_B, TUER_H = 1.0, 2.1
+MIN_FENSTER_MM = 0.8
+
+
+def fenster_muster(profil, L, massstab, x0=0.0):
+    """Gravur-Rechtecke (Polygone in mm, um x0 verschoben) als MUSTER auf einer Wand mit Oberkantenprofil `profil`.
+    KEINE Messung: nach Wandbreite und -hoehe (Achse 3 m, Fenster 1,2 x 1,4 m, Bruestung 0,9 m, Tuer im Erdgeschoss)."""
+    k = 1000.0 / float(massstab)                                  # mm je m im Modell
+    wand = wand_polygon(profil, L)
+    if wand.is_empty:
+        return []
+    smin, zmin, smax, zmax = wand.bounds
+    Wm, Hm = (smax - smin) / k, (zmax - zmin) / k
+    if Wm < 3.2 or Hm < 3.0:
+        return []
+    tops = []
+    for x in np.linspace(smin + 0.2 * k, smax - 0.2 * k, 9):
+        seg = wand.intersection(LineString([(x, zmin - 1), (x, zmax + 1)]))
+        if not seg.is_empty:
+            tops.append(seg.bounds[3])
+    if not tops:
+        return []
+    top = float(np.quantile(tops, 0.25))
+    nfl = max(1, int(round((top - zmin) / k / GESCHOSS_M)))
+    fh = (top - zmin) / nfl
+    nax = max(1, int(Wm // ACHSE_M))
+    a = (smax - smin) / nax
+    fb = min(FENSTER_B * k, 0.55 * a)
+    tuer_ax = nax // 2 if Wm >= 6.0 else -1
+    innen = wand.buffer(-0.15 * k)
+    out = []
+    for j in range(nfl):
+        z0 = zmin + j * fh
+        for i in range(nax):
+            sm = smin + a * (i + 0.5)
+            if j == 0 and i == tuer_ax:
+                b = (sm - TUER_B * k / 2, z0 + 0.2 * k, sm + TUER_B * k / 2, z0 + (0.2 + TUER_H) * k)
+            else:
+                b = (sm - fb / 2, z0 + BRUESTUNG * k, sm + fb / 2, z0 + (BRUESTUNG + FENSTER_H) * k)
+            if b[2] - b[0] < MIN_FENSTER_MM or b[3] - b[1] < MIN_FENSTER_MM:
+                continue
+            bx = shapely.box(*b)
+            if innen.contains(bx):
+                out.append(shapely.affinity.translate(bx, xoff=x0))
+    return out
+
+
 def _teil(tid, poly, b, art, ritzen=None):
     return {"id": tid, "poly": poly, "ritzen": list(ritzen or []), "gravieren": [], "gebaeude": b["nr"], "art": art}
 
@@ -193,14 +244,17 @@ def _beschriften(teil, hoehe=1.6):
     teil["gravieren"] += g
 
 
-def flaechen_teile(b, beschriften=True):
+def flaechen_teile(b, beschriften=True, massstab=None):
     """Ebene Wand- und Dachflächen, einzeln, ohne Laschen"""
     teile = []
     for j, (ri, i, prof, L) in enumerate(waende(b), 1):
         pg = wand_polygon(prof, L)
         if pg.is_empty or pg.area < MIN_TEIL_MM:
             continue
-        teile.append(_teil(f"{b['nr']}-W{j:02d}", shapely.union_all(polys(pg)), b, "Wand"))
+        t = _teil(f"{b['nr']}-W{j:02d}", shapely.union_all(polys(pg)), b, "Wand")
+        if massstab:
+            t["gravieren"] += fenster_muster(prof, L, massstab)
+        teile.append(t)
     for j, (pg, xyz) in enumerate(dach_flaechen(b), 1):
         teile.append(_teil(f"{b['nr']}-D{j:02d}", pg, b, "Dach"))
     if beschriften:
@@ -233,7 +287,7 @@ def _kante_gleich(p, q, r, s, tol=0.35):
     return (np.hypot(*(p - r)) < tol and np.hypot(*(q - s)) < tol) or (np.hypot(*(p - s)) < tol and np.hypot(*(q - r)) < tol)
 
 
-def falt_teile(b, breite, max_laenge, beschriften=True):
+def falt_teile(b, breite, max_laenge, beschriften=True, massstab=None):
     """Wandstreifen (Ringe, bei Bedarf geteilt) mit Faltlinien und einer Lasche je Streifen + Dachflächen mit Laschen"""
     teile = []
     # --- Wände je Ring als Streifen
@@ -255,8 +309,10 @@ def falt_teile(b, breite, max_laenge, beschriften=True):
         for gr in gruppen:
             nr += 1
             x = 0.0
-            oben, falten = [], []
+            oben, falten, fenster = [], [], []
             for prof, L in gr:
+                if massstab:
+                    fenster += fenster_muster(prof, L, massstab, x)
                 for s, z in prof:
                     oben.append((x + s, z))
                 falten.append(x)
@@ -279,6 +335,7 @@ def falt_teile(b, breite, max_laenge, beschriften=True):
                 pg = shapely.union_all(polys(pg.union(lash)))
                 ritz.append(LineString([(x, 0.0), (x, z_end)]))
             t = _teil(f"{b['nr']}-F{nr:02d}", pg, b, "Wandstreifen", ritz)
+            t["gravieren"] += fenster
             teile.append(t)
     # --- Dächer mit Laschen
     daecher = dach_flaechen(b)
@@ -332,6 +389,7 @@ def teile_fuer(buildings, cfg, t_mm, formate, rand_mm, log=print):
     breite = float(gc.get("lasche_mm") or 3.0)
     max_l = max(f[0] for f in formate) - 2 * rand_mm - 6.0
     beschr = bool(gc.get("teile_beschriften", True))
+    massstab = float(cfg["massstab"]) if gc.get("fenstermuster") else None       # Fenstermuster: nur bei Flaechen/Faltmodell
     alle = []
     n_geb = 0
     for b in buildings:
@@ -341,9 +399,9 @@ def teile_fuer(buildings, cfg, t_mm, formate, rand_mm, log=print):
             if modus == "stapel":
                 ts = stapel_teile(b, t_mm, beschr)
             elif modus == "flaeche":
-                ts = flaechen_teile(b, beschr)
+                ts = flaechen_teile(b, beschr, massstab)
             elif modus == "falt":
-                ts = falt_teile(b, breite, max_l, beschr)
+                ts = falt_teile(b, breite, max_l, beschr, massstab)
             else:
                 ts = []
         except Exception as e:
@@ -356,4 +414,6 @@ def teile_fuer(buildings, cfg, t_mm, formate, rand_mm, log=print):
             alle += ts
     names = {"stapel": "Stapelmodell", "flaeche": "Klebeflächen ohne Laschen", "falt": "Faltmodell"}
     log(f"  Gebäude als {names.get(modus, modus)}: {len(alle)} Teile für {n_geb} Gebäude")
+    if massstab and modus in ("flaeche", "falt"):
+        log("  Fenstermuster: gravierte Rechtecke an den Wänden - ein MUSTER nach Wandbreite und -höhe, KEINE Messung (LoD2 enthält keine Öffnungen)")
     return alle

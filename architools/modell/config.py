@@ -135,6 +135,7 @@ DEFAULTS = {
         "separat_ids": [],                 # gml:id – eigene Druckplatten (z. B. Ensemble als Einsatz)
         "beschriften": True,               # Gebäudenummer auf die Platte gravieren
         "teile_beschriften": True,         # Laserformen: Teilenummer auf jedes Teil gravieren
+        "fenstermuster": False,            # Flächen/Faltmodell: Fenster und Türen als gravierte Rechtecke - ein MUSTER nach Wandmaßen, KEINE Messung
         "beschriftung_hoehe_mm": 2.5,
         # Wie werden die Gebäude gebaut?  "druck" = 3D-Druck (STL), "stapel" = Stapelmodell aus Laserplatten,
         # "flaeche" = ebene Wand-/Dachflächen zum Kleben (ohne Laschen), "falt" = Faltmodell (Abwicklung mit Laschen)

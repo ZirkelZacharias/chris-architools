@@ -175,6 +175,9 @@ class ModellEinst:
                     ui.number("Laschenbreite mm", min=1, max=10, step=0.5).bind_value(g, "lasche_mm").classes("w-40") \
                         .bind_visibility_from(g, "modus", value="falt")
                 ui.checkbox("Teile-Nummern auf die Teile gravieren").bind_value(g, "teile_beschriften")
+                ui.checkbox("Fenstermuster gravieren (nur Flächen und Faltmodell; MUSTER, nicht gemessen)").bind_value(g, "fenstermuster") \
+                    .tooltip("LoD2 enthält keine Fenster und Türen. Das Muster richtet sich nur nach Wandbreite und -höhe (Achse ca. 3 m, "
+                             "Fenster 1,2 × 1,4 m). Die echte Lage der Fenster stimmt damit nicht.")
                 hinweis_f = hinweis("Faltmodell: Am besten dünner Karton (z. B. Bristolkarton 0,25–0,5 mm); die blauen Linien sind die Faltkanten, "
                                     "die Laschen kommen innen an die Nachbarwand.")
                 hinweis_f.bind_visibility_from(g, "modus", value="falt")

@@ -71,7 +71,7 @@ p["ausgaben"].update(ifc=True, lageplan=True, schwarzplan=True, info_dwg=True, l
 u["wms_karten"] = ["luftbild"]                      # Kartenbild (Dienst gestellt)
 u["geschosslinien"] = True; u["fenstermuster"] = True; u["lp_text"] = True                                                       # Lageplan-Beschriftung
 mg = p["modell"]["gebaeude"]
-mg.update(modus="falt", material="Bristolkarton", staerke_mm=0.5, lasche_mm=3.0)       # Gebäude als Faltmodell (Laser)
+mg.update(modus="falt", material="Bristolkarton", staerke_mm=0.5, lasche_mm=3.0, fenstermuster=True)       # Gebäude als Faltmodell (Laser)
 p["modell"]["laser"]["restplatten"] = [{"name": "Rest A", "b_mm": 400, "h_mm": 300, "anzahl": 1}]
 p["modell"]["holz"]["rahmen"]["aktiv"] = True; p["modell"]["holz"]["podest"]["aktiv"] = True
 import ifcmap_wms as WM, io
