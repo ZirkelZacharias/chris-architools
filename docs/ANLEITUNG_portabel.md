@@ -7,7 +7,8 @@ Kein Python und keine Installation nötig. Oben liegen nur der Starter und diese
 1. ZIP entpacken (an einen Ort mit viel Platz, z. B. `C:\ArchItools`; nicht in einen Ordner mit Leerzeichen und Umlauten mit Schreibschutz).
 2. Doppelklick auf **@START@**. Es öffnet sich das Programmfenster.
 3. Falls Windows warnt („Der Computer wurde durch Windows geschützt“): „Weitere Informationen“ → „Trotzdem ausführen“.
-4. Öffnet sich nichts: im Ordner **programm** die Datei **Mit Fehlerfenster starten.bat** ausführen und die Meldung weitergeben.
+4. Beim ersten Start gibt das Programm sich selbst für Windows frei (ca. 30 Sekunden, einmalig).
+5. Öffnet sich das Programmfenster nicht, startet das Programm automatisch im Browser. Zusätzlich im Ordner **programm**: **Im Browser starten.bat** und **Mit Fehlerfenster starten.bat** (zeigt Fehlermeldungen).
 <!--MAC-->
 1. ZIP entpacken (Doppelklick).
 2. Rechtsklick auf **@START@** → „Öffnen“ → „Öffnen“ (nur beim ersten Mal; macOS prüft unsignierte Programme). Sperrt macOS weiter, im Terminal:

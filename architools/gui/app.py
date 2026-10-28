@@ -165,6 +165,12 @@ def start(native=None, port=None, show=True):
             native = True
         except Exception:
             native = False
+    if native and os.name == "nt":
+        try:                                                  # pythonnet/.NET kann blockiert sein (aus dem Internet geladene Dateien)
+            import clr  # noqa: F401
+        except Exception as e:
+            print("Programmfenster nicht möglich (" + str(e)[:160] + ") – das Programm öffnet sich im Browser.")
+            native = False
     NATIVE["an"] = bool(native)
     # Port: ist 8765 belegt (z. B. von einer noch laufenden Kopie), nicht abbrechen
     wunsch = port or 8765

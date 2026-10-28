@@ -87,12 +87,20 @@ def bauen():
     open(os.path.join(ziel, "ANLEITUNG.md"), "w", encoding="utf-8").write(a)
     shutil.copy2(os.path.join(ROOT, "docs", "entscheidungen.md"), os.path.join(prog, "ENTSCHEIDUNGEN.md"))
     if win:
+        unblock = ('if not exist ".entsperrt" (\r\n'
+                   '  echo Beim ersten Start wird das Programm fuer Windows freigegeben - das dauert etwa eine halbe Minute ...\r\n'
+                   '  powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-ChildItem -Recurse -File -Include *.dll,*.exe,*.pyd,*.py | Unblock-File" >nul 2>&1\r\n'
+                   '  echo ok> .entsperrt\r\n)\r\n')
         open(os.path.join(ziel, start), "w", newline="\r\n").write(
-            '@echo off\r\ncd /d "%~dp0programm"\r\nset PYTHONUTF8=1\r\npython\\python.exe architools_update.py\r\n'
+            '@echo off\r\ncd /d "%~dp0programm"\r\nset PYTHONUTF8=1\r\n' + unblock +
+            'python\\python.exe architools_update.py\r\n'
             'start "" python\\pythonw.exe architools_app.py\r\n')
         open(os.path.join(prog, "Mit Fehlerfenster starten.bat"), "w", newline="\r\n").write(
-            '@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\nset PYTHONUTF8=1\r\npython\\python.exe architools_update.py\r\n'
+            '@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\nset PYTHONUTF8=1\r\n' + unblock +
+            'python\\python.exe architools_update.py\r\n'
             'python\\python.exe architools_app.py\r\npause\r\n')
+        open(os.path.join(prog, "Im Browser starten.bat"), "w", newline="\r\n").write(
+            '@echo off\r\ncd /d "%~dp0"\r\nset PYTHONUTF8=1\r\npython\\python.exe architools_app.py --browser\r\npause\r\n')
     else:
         p = os.path.join(ziel, start)
         open(p, "w", newline="\n").write(
@@ -126,6 +134,9 @@ def testen(py, ziel):
     """Prüft das fertige Paket mit seinem eigenen Python (so, wie es bei dir läuft)."""
     ok = True
     run([py, "-c", PRUEF], cwd=ziel)
+    if os.name == "nt":                                       # Programmfenster (pythonnet): nur melden, der Start fällt sonst auf den Browser zurück
+        r = subprocess.run([py, "-c", "import clr; print('pythonnet (Programmfenster) ok')"], cwd=ziel, capture_output=True, text=True)
+        print("pythonnet-Test:", (r.stdout + r.stderr).strip()[-600:], flush=True)
     run([py, os.path.join(ROOT, "bau", "smoke_e2e.py"), ziel], cwd=ziel)
     starter = [("python", py)]
     if os.name == "nt":
