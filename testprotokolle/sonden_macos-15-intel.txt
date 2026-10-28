@@ -1,0 +1,12 @@
+
+=== vorrangnetz ===
+  Typenliste nicht lesbar: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1011)>
+
+=== oepnv_ungestoert ===
+  Typenliste nicht lesbar: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1011)>
+
+=== radverkehrsnetz ===
+  Typenliste nicht lesbar: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1011)>
+
+=== ua_gebaeudehoehen ===
+  Typenliste nicht lesbar: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1011)>
