@@ -1,45 +1,45 @@
 + uv python install 3.12
 Downloading cpython-3.12.16-macos-aarch64-none (download) (23.9MiB)
  Downloaded cpython-3.12.16-macos-aarch64-none (download)
-Installed Python 3.12.16 in 1.21s
+Installed Python 3.12.16 in 1.15s
  + cpython-3.12.16-macos-aarch64-none (python3.12)
 Python: /Users/runner/.local/share/uv/python/cpython-3.12.16-macos-aarch64-none/bin/python3.12 -> /Users/runner/.local/share/uv/python/cpython-3.12.16-macos-aarch64-none
 + uv pip install --python /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools/python/bin/python3 --break-system-packages --no-progress -r /Users/runner/work/chris-architools/chris-architools/requirements.txt
 Using Python 3.12.16 environment at: dist/ChrisArchItools/python
-Resolved 96 packages in 300ms
+Resolved 96 packages in 166ms
 Downloading networkx (2.0MiB)
 Downloading pillow (4.6MiB)
-Downloading ifcopenshell (42.0MiB)
+Downloading pyobjc-core (6.1MiB)
 Downloading pygments (1.2MiB)
+Downloading ifcopenshell (42.0MiB)
+Downloading ezdwg (2.9MiB)
+Downloading ezdxf (3.0MiB)
+Downloading pyproj (4.8MiB)
+Downloading numpy (5.2MiB)
+Downloading shapely (1.5MiB)
+Downloading pydantic-core (1.9MiB)
+Downloading fonttools (3.0MiB)
+Downloading rasterio (22.4MiB)
+Downloading onnxruntime (19.9MiB)
 Downloading nicegui (8.1MiB)
 Downloading pyogrio (23.5MiB)
-Downloading ezdxf (3.0MiB)
-Downloading ezdwg (2.9MiB)
-Downloading fonttools (3.0MiB)
-Downloading shapely (1.5MiB)
-Downloading matplotlib (8.9MiB)
-Downloading onnxruntime (19.9MiB)
-Downloading pydantic-core (1.9MiB)
-Downloading numpy (5.2MiB)
-Downloading pyproj (4.8MiB)
-Downloading rasterio (22.4MiB)
 Downloading pymupdf (64.0MiB)
-Downloading pyobjc-core (6.1MiB)
-Downloading pandas (10.7MiB)
-Downloading uvloop (1.3MiB)
 Downloading scipy (19.5MiB)
+Downloading uvloop (1.3MiB)
+Downloading pandas (10.7MiB)
+Downloading matplotlib (8.9MiB)
  Downloaded pygments
  Downloaded uvloop
  Downloaded shapely
  Downloaded pydantic-core
  Downloaded networkx
  Downloaded ezdwg
- Downloaded fonttools
  Downloaded ezdxf
+ Downloaded fonttools
  Downloaded pillow
  Downloaded pyproj
- Downloaded numpy
  Downloaded pyobjc-core
+ Downloaded numpy
  Downloaded nicegui
  Downloaded matplotlib
  Downloaded pandas
@@ -49,8 +49,8 @@ Downloading scipy (19.5MiB)
  Downloaded pyogrio
  Downloaded ifcopenshell
  Downloaded pymupdf
-Prepared 96 packages in 1.29s
-Installed 96 packages in 204ms
+Prepared 96 packages in 1.68s
+Installed 96 packages in 210ms
  + affine==3.0.1
  + aiofiles==25.1.0
  + aiohappyeyeballs==2.7.1
@@ -147,7 +147,7 @@ Installed 96 packages in 204ms
  + websockets==17.3
  + wsproto==1.3.2
  + yarl==1.25.1
-Paket gebaut in 3 s
+Paket gebaut in 4 s
 + /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools/python/bin/python3 -c import numpy, scipy, shapely, rasterio, pyogrio, contourpy, matplotlib, trimesh, ezdxf, ezdwg, pymupdf, pandas, pyproj, PIL, ifcopenshell, nicegui, webview; print('Bibliotheken ok')
 Bibliotheken ok
 + /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools/python/bin/python3 /Users/runner/work/chris-architools/chris-architools/bau/smoke_e2e.py /Users/runner/work/chris-architools/chris-architools/dist/ChrisArchItools
@@ -185,9 +185,9 @@ Baeume (Berliner WFS):
   Vegetationsraster: 0 Baeume bekamen die Rasterhoehe, 2 fehlende Baeume ergaenzt (nur Spitzen >= 4 m, ausserhalb von Gebaeuden)
   OpenStreetMap: 1 Baeume ergaenzt, die es in den amtlichen Quellen nicht gibt (kein amtlicher Baum im Umkreis von 3 m)
   Baeume im Nahbereich samt Uebergangszone: 4 (davon 2 mit Kronendurchmesser aus den Daten, Rest Standard 6 m)
-  OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 3.5 s (28 Objekte)
+  OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 1.4 s (28 Objekte)
   Gleisachsen (OpenStreetMap): 6 Linien, 2049 m; Bruecken in OSM: 13
-    (19.2 s, im Hintergrund)
+    (16.6 s, im Hintergrund)
 Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - ungetestet:
   Quelle: amtlich (Berlin)
   radverkehrsnetz:radverkehrsnetz: 1 geladen, 1 im Rechteck (erstes Objekt bei Ost 393500 / Nord 5826520, Gebiet bei Ost 393600 / Nord 5826550)
@@ -196,7 +196,7 @@ Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - un
   Radfernwege: Attribute (Beispiel): {}
   radverkehrsnetz:stadtgruen: keine Objekte geliefert
   -> 2 Objekte uebernommen
-Zeiten: Gelaende lesen und ausduennen 0 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 19 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 19 s
+Zeiten: Gelaende lesen und ausduennen 0 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 16 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 17 s
 Gelaende nach Nutzung aufteilen:
   12 Bruecke(n) ohne LoD2-Koerper: dort keine Fahrbahn/kein Gehweg (bleibt weg)
   Gelaende wird aufgeteilt nach: Weg_Platz
@@ -215,7 +215,7 @@ IFC schreiben:
   Lageplan: ifcmap_lageplan.dxf (0.1 MB)
   DXF-Pruefung (R2010): 13 Schraffuren, 6 Polylinien, 0 Kreise - keine Beanstandungen
   Schwarzplan: ifcmap_schwarzplan.dxf (0.0 MB)
-Zeiten der Ausgabe: IFC schreiben 0 s; Arbeits-DXF (ifcmap_2d.dxf) 0 s; Lageplan 0 s; Schwarzplan 0 s
+Zeiten der Ausgabe: IFC schreiben 1 s; Arbeits-DXF (ifcmap_2d.dxf) 0 s; Lageplan 0 s; Schwarzplan 0 s
 
 Lokaler Nullpunkt: E0 = 394000, N0 = 5827000, Z0 = 47 m  (lokal = Ost-E0 / Nord-N0 / Hoehe-Z0; EPSG:25833, NHN)
 Fertig in 1 s.
@@ -255,7 +255,7 @@ Material: Graupappe 2 mm · Platte 800 × 500 mm
   Einsatz-PDFs: 1
 6/6  Druckplatten und Montageplan
   Druckplatte umgebung 1: 240 x 210 mm, 31 Teile, Ausnutzung 54 %
-Fertig in 27 s: 6 Laserplatten, 1 Druckplatten. Ausgabe: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/tmpasisl62n/ziel/MeinExport/modell
+Fertig in 33 s: 6 Laserplatten, 1 Druckplatten. Ausgabe: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/tmpjnzfsmgl/ziel/MeinExport/modell
 === Geländeschnitt ===
 Geländeschnitt von (393450, 5826550) nach (393750, 5826550)
   DGM: 390 x 190 Zellen, Auflösung 1.00 m, Höhe 48.2 – 56.7 m
@@ -266,9 +266,9 @@ Geländeschnitt von (393450, 5826550) nach (393750, 5826550)
   Bäume: 21 Objekte
   Ansicht dahinter (rechts, 100 m Tiefe): 19 Gebäude, 5 Bäume (5 davon im Schnitt)
   Schnitt 300 m lang, 1 Gebäudeschnitte, 19 Gebäude und 5 Bäume in der Ansicht dahinter, Gelände 50.1–56.1 m
-Fertig in 57 s
-FERTIG 57 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gravur'], 'schnitt': ['ordner', 'dateien', 'png', 'svg']}
-{"ifc": "2026-10-28 13:30", "lageplan": "2026-10-28 13:30", "schwarzplan": "2026-10-28 13:30", "info_dwg": "2026-10-28 13:30", "laser": "2026-10-28 13:30", "druck": "2026-10-28 13:30", "schnitt": "2026-10-28 13:30"}
+Fertig in 63 s
+FERTIG 63 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gravur'], 'schnitt': ['ordner', 'dateien', 'png', 'svg']}
+{"ifc": "2026-10-28 13:43", "lageplan": "2026-10-28 13:43", "schwarzplan": "2026-10-28 13:43", "info_dwg": "2026-10-28 13:43", "laser": "2026-10-28 13:43", "druck": "2026-10-28 13:43", "schnitt": "2026-10-28 13:43"}
 /E2E.architools.json 15079
 SMOKE-TEST OK
 Startseite antwortet (python): 200
