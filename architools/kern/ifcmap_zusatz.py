@@ -72,6 +72,26 @@ def seiten_groesse(datei, seite=1):
         return float(im.width), float(im.height)
 
 
+def massstab_erkennen(datei, seite=1):
+    """Massstab (N fuer 1:N) aus dem Text einer PDF-Seite lesen, z. B. "M 1:500" im Planstempel. -> Zahl oder None.
+    Bei mehreren Treffern gewinnt der haeufigste, bei Gleichstand der groesste Nenner unter 5000 (Lageplaene)."""
+    if not ist_pdf(datei) or _pdf() is None:
+        return None
+    try:
+        with _pdf_oeffnen(datei) as doc:
+            text = doc[max(0, seite - 1)].get_text()
+    except Exception:
+        return None
+    zaehl = {}
+    for m in re.finditer(r"(?<![\d.,:/])1\s*:\s*(\d{2,5})(?![\d:])", text):
+        n = int(m.group(1))
+        if 20 <= n <= 25000:
+            zaehl[n] = zaehl.get(n, 0) + 1
+    if not zaehl:
+        return None
+    return max(zaehl, key=lambda n: (zaehl[n], n if n < 5000 else 0))
+
+
 def vektor_anzahl(datei, seite=1):
     """Anzahl der Zeichenpfade einer PDF-Seite (0 = reines Bild/Scan)"""
     if not ist_pdf(datei):

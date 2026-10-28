@@ -91,9 +91,13 @@ class Gebiet:
         with ui.column().classes("w-full h-full no-wrap gap-1"):
             with ui.row().classes("w-full items-center gap-2"):
                 hinweis("Klick in die Karte:")
-                self.modus = ui.toggle(KARTENMODI, value="mitte").props("dense no-caps size=sm")
+                self.modus = ui.toggle(KARTENMODI, value="mitte", on_change=lambda e: self._hilfe_zeigen()).props("dense no-caps size=sm")
                 ui.space()
                 hinweis("Polygon zeichnen: Werkzeug links oben")
+            self.hilfe_box = ui.row().classes("w-full items-center no-wrap rounded-borders q-px-sm q-py-xs")
+            with self.hilfe_box:
+                ui.icon("ads_click", size="sm")
+                self.lbl_hilfe = ui.label("").classes("text-body2")
             with ui.element("div").classes("w-full relative").style("flex:1 1 auto; min-height:300px"):
                 lat, lon = en_zu_ll(*geb["mitte_en"])
                 self.karte = ui.leaflet(center=(lat, lon), zoom=self._zoom(), hide_drawn_items=True,
@@ -108,6 +112,8 @@ class Gebiet:
             self.rahmen_layer = None
             self.grund_layer = None
             self.flurst_layer = None
+            self.schnitt_layers = []
+            self._hilfe_zeigen()
 
     def _mitte_text(self):
         e, n = self.cfg["gebiet"]["mitte_en"]
@@ -244,26 +250,163 @@ class Gebiet:
         self.f_dreh.value = round(-konvergenz(e, n), 2)
 
     def _schnitt_punkt(self, en):
-        """Erster Klick = Anfang, zweiter Klick = Ende der Schnittlinie."""
+        """Klick im Modus „Schnittlinie“: neu = Anfang A, dann Ende B; sonst nur A oder nur B versetzen."""
+        from .. import schnitt as SC
+        s = self.p["schnitt"]
+        ziel = getattr(self, "_sch_ziel", "neu")
+        pkt = [round(en[0], 2), round(en[1], 2)]
+        if ziel in ("a", "b"):
+            (a, b) = SC.linie(self.p)
+            neu = [pkt, list(b)] if ziel == "a" else [list(a), pkt]
+            s["linie_en"] = [[round(v, 2) for v in neu[0]], [round(v, 2) for v in neu[1]]]
+            self._sch_fertig()
+            return
         pts = getattr(self, "_schnitt_pkt", [])
-        pts.append([round(en[0], 2), round(en[1], 2)])
+        pts.append(pkt)
         if len(pts) >= 2:
-            self.p["schnitt"]["linie_en"] = [pts[0], pts[1]]
+            s["linie_en"] = [pts[0], pts[1]]
             pts = []
-            ui.notify("Schnittlinie gesetzt", type="positive")
+            self._sch_fertig()
         else:
-            ui.notify("Anfangspunkt gesetzt – jetzt den Endpunkt anklicken", type="info")
+            self._hilfe_zeigen()
         self._schnitt_pkt = pts
         self._schnitt_zeichnen()
 
+    def _sch_fertig(self):
+        self._schnitt_pkt = []
+        self.modus.value = "mitte"
+        ui.notify("Schnittlinie gesetzt", type="positive")
+        self._schnitt_zeichnen()
+        self._sch_info()
+        self._hilfe_zeigen()
+
+    def _sch_modus(self, ziel):
+        self._sch_ziel = ziel
+        self._schnitt_pkt = []
+        self.modus.value = "schnitt"
+        self._hilfe_zeigen()
+        self._schnitt_zeichnen()
+
+    def _hilfe_zeigen(self):
+        m = self.modus.value
+        offen = len(getattr(self, "_schnitt_pkt", []))
+        ziel = getattr(self, "_sch_ziel", "neu")
+        if m == "schnitt":
+            t = {"neu": ("Schnittlinie: Klicke den Anfang (A)" if offen == 0 else "Schnittlinie: jetzt das Ende (B) anklicken"),
+                 "a": "Klicke die neue Stelle für den Anfang (A)", "b": "Klicke die neue Stelle für das Ende (B)"}[ziel]
+            farbe = ("#fff4e5", "#c8643b")
+        else:
+            t = {"mitte": "Klick in die Karte setzt den Mittelpunkt", "drehen": "Klick: dorthin zeigt die Oberkante des Rahmens",
+                 "flurstueck": "Klick wählt oder entfernt ein Flurstück"}.get(m, "")
+            farbe = ("#f1f5f5", "#1f6f78")
+        self.lbl_hilfe.text = t
+        self.hilfe_box.style(f"background:{farbe[0]}; border-left:5px solid {farbe[1]}")
+
+    def _sch_info(self):
+        from .. import schnitt as SC
+        if not hasattr(self, "lbl_sch"):
+            return
+        (a, b) = SC.linie(self.p)
+        L = math.hypot(b[0] - a[0], b[1] - a[1])
+        wink = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
+        eigene = bool(self.p["schnitt"].get("linie_en"))
+        self.lbl_sch.text = (f"{'Eigene Linie' if eigene else 'Standardlinie quer durch die Mitte'}: {L:.0f} m lang, Richtung A → B {wink:.0f}° "
+                             f"(0° = nach Osten, 90° = nach Norden)")
+
+    def _sch_preset(self, grad):
+        s = self.p["schnitt"]
+        e, n = self.cfg["gebiet"]["mitte_en"]
+        r = float(s.get("laenge_m") or 200.0) / 2
+        a = math.radians(grad)
+        s["linie_en"] = [[round(e - r * math.cos(a), 2), round(n - r * math.sin(a), 2)],
+                         [round(e + r * math.cos(a), 2), round(n + r * math.sin(a), 2)]]
+        self._schnitt_zeichnen()
+        self._sch_info()
+
+    def _sch_tauschen(self):
+        from .. import schnitt as SC
+        s = self.p["schnitt"]
+        a, b = SC.linie(self.p)
+        s["linie_en"] = [list(b), list(a)]
+        s["seite"] = "rechts" if (s.get("seite") or "links") != "rechts" else "links"          # Blick bleibt auf derselben Seite
+        self._schnitt_zeichnen()
+        self._sch_info()
+
+    def _sch_zurueck(self):
+        self.p["schnitt"]["linie_en"] = None
+        self._schnitt_pkt = []
+        self._schnitt_zeichnen()
+        self._sch_info()
+
     def _schnitt_zeichnen(self):
-        if getattr(self, "schnitt_layer", None) is not None:
-            self.karte.remove_layer(self.schnitt_layer)
-            self.schnitt_layer = None
-        l = (self.p["schnitt"] or {}).get("linie_en")
-        if l and self.p["ausgaben"].get("schnitt"):
-            ll = [list(en_zu_ll(x, y)) for x, y in l]
-            self.schnitt_layer = self.karte.generic_layer(name="polyline", args=[ll, {"color": "#c8643b", "weight": 4, "dashArray": "10 6"}])
+        from .. import schnitt as SC
+        for lay in getattr(self, "schnitt_layers", []) or []:
+            self.karte.remove_layer(lay)
+        self.schnitt_layers = []
+        if not self.p["ausgaben"].get("schnitt"):
+            return
+        s = self.p["schnitt"]
+        a, b = SC.linie(self.p)
+        eigene = bool(s.get("linie_en"))
+        L = math.hypot(b[0] - a[0], b[1] - a[1])
+        if L < 1e-6:
+            return
+        if s.get("ansicht", True):
+            _, n = SC._normale(a, b, s.get("seite") or "links")
+            t = float(s.get("tiefe_m") or 100.0)
+            ecke = [a, b, (b[0] + n[0] * t, b[1] + n[1] * t), (a[0] + n[0] * t, a[1] + n[1] * t)]
+            self.schnitt_layers.append(self.karte.generic_layer(
+                name="polygon", args=[[list(en_zu_ll(x, y)) for x, y in ecke],
+                                      {"color": "#c8643b", "weight": 1, "dashArray": "4 4", "fillOpacity": 0.12, "interactive": False}]))
+        ll = [list(en_zu_ll(x, y)) for x, y in (a, b)]
+        self.schnitt_layers.append(self.karte.generic_layer(
+            name="polyline", args=[ll, {"color": "#c8643b", "weight": 4, "dashArray": None if eigene else "10 6", "interactive": False}]))
+        for txt, pt in (("A", ll[0]), ("B", ll[1])):
+            lay = self.karte.generic_layer(name="circleMarker", args=[pt, {"radius": 8, "color": "#c8643b", "weight": 3,
+                                                                           "fillColor": "#ffffff", "fillOpacity": 1}])
+            lay.run_method("bindTooltip", txt, {"permanent": True, "direction": "top", "offset": [0, -6]})
+            self.schnitt_layers.append(lay)
+        for pt in getattr(self, "_schnitt_pkt", []):
+            self.schnitt_layers.append(self.karte.generic_layer(
+                name="circleMarker", args=[list(en_zu_ll(*pt)), {"radius": 8, "color": "#c8643b", "weight": 3, "fillColor": "#c8643b", "fillOpacity": 0.6}]))
+
+    def _karte_schnitt(self):
+        s = self.p["schnitt"]
+        for k_, v in (("ansicht", True), ("tiefe_m", 100.0), ("seite", "links"), ("baeume", True)):
+            if k_ not in s or (k_ == "tiefe_m" and not s.get(k_)):
+                s[k_] = v
+        neu = lambda *_: (self._schnitt_zeichnen(), self._sch_info())
+        with karte("Geländeschnitt: Linie und Blick", TERRA) as k:
+            ui.button("Schnittlinie in der Karte zeichnen", icon="timeline", on_click=lambda: self._sch_modus("neu")) \
+                .props("unelevated no-caps color=orange-9").classes("w-full") \
+                .tooltip("Danach in der Karte den Anfang (A) und das Ende (B) anklicken")
+            self.lbl_sch = hinweis("")
+            with ui.row().classes("gap-1 items-center"):
+                ui.button("A versetzen", on_click=lambda: self._sch_modus("a")).props("flat dense no-caps")
+                ui.button("B versetzen", on_click=lambda: self._sch_modus("b")).props("flat dense no-caps")
+                ui.button("A ↔ B tauschen", icon="swap_horiz", on_click=self._sch_tauschen).props("flat dense no-caps") \
+                    .tooltip("Richtung umkehren (die Blickseite bleibt auf derselben Kartenseite)")
+                ui.button("Zurücksetzen", icon="restart_alt", on_click=self._sch_zurueck).props("flat dense no-caps")
+            with ui.row().classes("gap-2 items-end"):
+                ui.label("Schnell:").classes("text-caption")
+                ui.button("Ost–West", on_click=lambda: self._sch_preset(0)).props("outline dense no-caps")
+                ui.button("Nord–Süd", on_click=lambda: self._sch_preset(90)).props("outline dense no-caps")
+                ui.number("Länge m", step=50, min=20).bind_value(s, "laenge_m").classes("w-28")
+            ui.separator()
+            ui.label("Blick: Was hinter dem Schnitt zu sehen ist").classes("text-weight-medium")
+            ui.checkbox("Dahinterliegende Gebäude als Ansicht zeigen").bind_value(s, "ansicht").on_value_change(neu)
+            with ui.row().classes("gap-3 items-center"):
+                ui.label("Blick nach").classes("text-body2")
+                ui.toggle({"links": "links", "rechts": "rechts"}).bind_value(s, "seite").props("dense no-caps size=sm") \
+                    .bind_enabled_from(s, "ansicht").on_value_change(neu)
+                ui.number("Tiefe m", step=25, min=10).bind_value(s, "tiefe_m").classes("w-28").bind_enabled_from(s, "ansicht") \
+                    .on_value_change(neu).tooltip("So weit hinter der Schnittlinie werden Gebäude und Bäume gezeichnet")
+            hinweis("„Links“ und „rechts“ gelten in Richtung A → B. Die orange Fläche in der Karte zeigt, was gezeichnet wird.")
+            ui.checkbox("Gebäude im Schnitt zeigen").bind_value(s, "gebaeude")
+            ui.checkbox("Bäume markieren (dunkelgrün im Schnitt, hellgrün dahinter)").bind_value(s, "baeume") \
+                .bind_enabled_from(s, "ansicht")
+        self._sch_info()
+        return k
 
     def _umgebung_rahmen(self):
         """Rechteck der Umgebung (IFC/Pläne) und Nahbereich in der Karte (blau)."""
@@ -330,6 +473,9 @@ class Gebiet:
                 umg = ui.column().classes("w-full")
                 with umg:
                     self._karte_umgebung()
+                sch = ui.column().classes("w-full")
+                with sch:
+                    self._karte_schnitt()
                 mod = ui.column().classes("w-full gap-3")
                 with mod:
                     self._karte_massstab()
@@ -338,6 +484,7 @@ class Gebiet:
                 def sichtbar():
                     umg.set_visibility(any(ausg.get(k) for k in ("ifc", "lageplan", "schwarzplan", "info_dwg")))
                     mod.set_visibility(bool(ausg.get("laser") or ausg.get("druck")))
+                    sch.set_visibility(bool(ausg.get("schnitt")))
                     self._rahmen()
                 self._sichtbar = sichtbar
                 ui.timer(1.0, lambda: self._pruefen(sichtbar))

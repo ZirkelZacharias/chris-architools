@@ -72,43 +72,15 @@ def formate_karte(p):
 def schnitt_karte(p):
     s = p["schnitt"]
     with ui.column().classes("w-full") as wurzel:
-        with karte("Geländeschnitt", TERRA):
+        with karte("Geländeschnitt: Ausgabe", TERRA):
             with ui.row().classes("gap-2 items-end"):
                 ui.select(MASSSTAEBE, label="Maßstab", new_value_mode="add-unique", with_input=True) \
                     .bind_value(s, "massstab").classes("w-32")
                 ui.number("Abstand m", step=0.1, min=0.1).bind_value(s, "abstand_m").classes("w-28") \
                     .tooltip("Rasterabstand entlang der Linie")
-            ui.checkbox("Gebäude im Schnitt zeigen").bind_value(s, "gebaeude")
-            for k, v in (("ansicht", True), ("tiefe_m", 100.0), ("seite", "links"), ("baeume", True)):
-                if k not in s or (k == "tiefe_m" and not s.get(k)):
-                    s[k] = v
-            ui.checkbox("Dahinterliegende Gebäude als Ansicht zeigen").bind_value(s, "ansicht")
-            with ui.row().classes("gap-2 items-end"):
-                ui.number("Tiefe m", step=25, min=10).bind_value(s, "tiefe_m").classes("w-28") \
-                    .bind_enabled_from(s, "ansicht").tooltip("So weit hinter der Schnittlinie werden Gebäude und Bäume gezeichnet")
-                ui.select({"links": "links der Linie", "rechts": "rechts der Linie"}, label="Blick nach") \
-                    .bind_value(s, "seite").classes("w-44").bind_enabled_from(s, "ansicht") \
-                    .tooltip("Richtung der Linie: erster → zweiter Punkt")
-            ui.checkbox("Bäume markieren (dunkelgrün im Schnitt, hellgrün dahinter)").bind_value(s, "baeume") \
-                .bind_enabled_from(s, "ansicht")
-            ui.select({"dxf": "DXF (empfohlen)", "dwg": "DWG", "pdf": "PDF", "svg": "SVG"}, multiple=True, label="Formate") \
-                .bind_value(s, "format").classes("w-64")
-            lbl = hinweis("")
-
-            def text():
-                if s.get("linie_en"):
-                    (a, b), (c, d) = s["linie_en"]
-                    lbl.text = f"Linie: ({a:.0f}, {b:.0f}) → ({c:.0f}, {d:.0f}) – gesetzt in der Karte"
-                else:
-                    lbl.text = "Noch keine Linie gesetzt: dann quer durch die Mitte (Richtung/Länge unten)."
-            ui.timer(1.0, text)
-            with ui.row().classes("gap-2 items-end"):
-                ui.number("Richtung ° (0 = Ost–West)", step=15).bind_value(s, "richtung_grad").classes("w-52") \
-                    .bind_enabled_from(s, "linie_en", backward=lambda v: not v)
-                ui.number("Länge m", step=50, min=20).bind_value(s, "laenge_m").classes("w-28") \
-                    .bind_enabled_from(s, "linie_en", backward=lambda v: not v)
-                ui.button("Linie zurücksetzen", icon="restart_alt", on_click=lambda: s.__setitem__("linie_en", None)).props("flat dense")
-            hinweis("Eigene Linie: Seite „Gebiet“ → Karte → „Schnittlinie“ wählen und zwei Punkte anklicken.")
+                ui.select({"dxf": "DXF (empfohlen)", "dwg": "DWG", "pdf": "PDF", "svg": "SVG"}, multiple=True, label="Formate") \
+                    .bind_value(s, "format").classes("w-64")
+            hinweis("Die Schnittlinie zeichnest du auf der Seite „Gebiet“ direkt in der Karte – dort stellst du auch die Blickrichtung ein.")
     return wurzel
 
 
