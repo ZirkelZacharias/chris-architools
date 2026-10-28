@@ -55,6 +55,7 @@ SCHNITT_STANDARD = {
     "ansicht": True,                  # Gebäude und Bäume HINTER der Schnittlinie als Ansicht zeigen
     "tiefe_m": 100.0,                 # so weit hinter der Linie
     "seite": "links",                 # Blickseite: "links" oder "rechts" der Linie (Abwicklung auch "beide")
+    "fassade": False,                 # Fenster und Türen als Muster in die Ansicht dahinter (nicht gemessen)
     "baeume": True,                   # Bäume markieren (dunkelgrün = von der Linie getroffen, hellgrün = dahinter)
     "format": ["dxf"],
 }

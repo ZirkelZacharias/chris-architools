@@ -45,7 +45,7 @@ def szene_fuer_punkte(p, pts, tiefe, log):
     return pipeline.szene_laden(cfg, log)
 
 
-def berechnen(szene, pts, seiten, tiefe, baeume_zeigen, abstand=0.5):
+def berechnen(szene, pts, seiten, tiefe, baeume_zeigen, abstand=0.5, fassade=False):
     """-> dict(s, zg, laenge, knicke=[s je Punkt], seiten={seite: dict(gebaeude=[(poly,u)], baeume=[…])})"""
     s_all, zg_all, knicke = [], [], [0.0]
     off = 0.0
@@ -66,9 +66,10 @@ def berechnen(szene, pts, seiten, tiefe, baeume_zeigen, abstand=0.5):
         for a, b, o, L in seg:
             if L < 1e-6:
                 continue
-            r = SC.ansicht_dahinter(szene, a, b, True, tiefe, seite, baeume_zeigen)
+            r = SC.ansicht_dahinter(szene, a, b, True, tiefe, seite, baeume_zeigen, fassade=fassade)
             for g in r["gebaeude"]:
-                geb.append({"poly": g["poly"], "u": g["u"], "o": o, "id": g.get("id")})
+                geb.append({"poly": g["poly"], "u": g["u"], "o": o, "id": g.get("id"),
+                            "fenster": g.get("fenster"), "tueren": g.get("tueren")})
             for t in r["baeume"]:
                 t = dict(t)
                 t["s"] += o
@@ -124,6 +125,12 @@ def zeichnen(r, p, ordner, name, log=print):
             grau = int(236 - 40 * (1 - min(u / umax, 1.0)))
             svg.append(f'<polygon fill="rgb({grau},{grau},{grau})" stroke="#555" stroke-width="0.15" points="'
                        + " ".join(f"{X(a):.3f},{Y(sd, z):.3f}" for a, z in ring) + '"/>')
+        for kl, fb in (("fenster", "#b9c7cf"), ("tueren", "#7d8a91")):
+            for g in r["seiten"][sd]["gebaeude"]:
+                if g.get(kl) is not None:
+                    for ring in _ringe(g[kl], g["o"]):
+                        svg.append(f'<polygon fill="{fb}" stroke="#8c8c8c" stroke-width="0.06" points="'
+                                   + " ".join(f"{X(a):.3f},{Y(sd, z):.3f}" for a, z in ring) + '"/>')
         for t in r["seiten"][sd]["baeume"]:
             svg.append('<polygon fill="#bfdcb8" fill-opacity="0.85" stroke="#5a9a5a" stroke-width="0.15" points="'
                        + " ".join(f"{X(a):.3f},{Y(sd, z):.3f}" for a, z in SC._krone(t, 1.0, zbasis)) + '"/>')
@@ -165,11 +172,18 @@ def zeichnen(r, p, ordner, name, log=print):
         for sd in seiten:
             doc.layers.add(f"ABWICKLUNG_{sd.upper()}_GEBAEUDE", color=8)
             doc.layers.add(f"ABWICKLUNG_{sd.upper()}_BAEUME", color=94)
+            doc.layers.add(f"ABWICKLUNG_{sd.upper()}_FASSADE", color=9)
         for sd in seiten:
             b0 = basis[sd] - zbasis
             for ring, u in ringe[sd]:
                 msp.add_lwpolyline([(a, z + b0) for a, z in ring], close=True,
                                    dxfattribs={"layer": f"ABWICKLUNG_{sd.upper()}_GEBAEUDE"})
+            for g in r["seiten"][sd]["gebaeude"]:
+                for kl in ("fenster", "tueren"):
+                    if g.get(kl) is not None:
+                        for ring in _ringe(g[kl], g["o"]):
+                            msp.add_lwpolyline([(a, z + b0) for a, z in ring], close=True,
+                                               dxfattribs={"layer": f"ABWICKLUNG_{sd.upper()}_FASSADE"})
             for t in r["seiten"][sd]["baeume"]:
                 lay = f"ABWICKLUNG_{sd.upper()}_BAEUME"
                 msp.add_lwpolyline([(a, z + b0) for a, z in SC._krone(t, 1.0, zbasis)], close=True, dxfattribs={"layer": lay})
@@ -199,6 +213,12 @@ def zeichnen(r, p, ordner, name, log=print):
             a_, z_ = zip(*ring)
             g = 0.93 - 0.16 * (1 - min(u / umax, 1.0))
             ax.fill(a_, z_, color=(g, g, g), ec="#555", lw=0.4)
+        for kl, fb in (("fenster", "#b9c7cf"), ("tueren", "#7d8a91")):
+            for g in r["seiten"][sd]["gebaeude"]:
+                if g.get(kl) is not None:
+                    for ring in _ringe(g[kl], g["o"]):
+                        a_, z_ = zip(*ring)
+                        ax.fill(a_, z_, color=fb, ec="#8c8c8c", lw=0.15)
         for t in r["seiten"][sd]["baeume"]:
             a_, z_ = zip(*SC._krone(t, 1.0, zbasis))
             ax.fill(a_, z_, color="#bfdcb8", ec="#5a9a5a", lw=0.5, alpha=0.9)
@@ -233,7 +253,8 @@ def erzeugen(p, log=print, prog=lambda *a: None):
     prog(0.05, "Daten für die Abwicklung laden …")
     szene = szene_fuer_punkte(p, pts, tiefe, log)
     prog(0.6, "Abwicklung berechnen …")
-    r = berechnen(szene, pts, seiten, tiefe, bool(s.get("baeume", True)), float(s.get("abstand_m") or 0.5))
+    r = berechnen(szene, pts, seiten, tiefe, bool(s.get("baeume", True)), float(s.get("abstand_m") or 0.5),
+                  bool(s.get("fassade", False)))
     prog(0.8, "Zeichnen …")
     from .projekt import ausgabe_ordner, sicher
     ordner = ausgabe_ordner(p, "schnitt")

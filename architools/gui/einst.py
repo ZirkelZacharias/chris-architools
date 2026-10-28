@@ -179,13 +179,13 @@ def _springen(ziel):
     ui.run_javascript(js)
 
 
-def seite(p):
+def seite(p, wechsel=None):
     ausg = p["ausgaben"]
     with ui.row().classes("w-full items-center gap-1 q-px-sm").style("max-width:960px; margin:0 auto"):
         ui.label("Springe zu:").classes("text-caption").style(f"color:{GRAU}")
         for text, ziel in SPRUNG:
             ui.chip(text, on_click=lambda z=ziel: _springen(z)).props("dense outline clickable color=primary")
-    with ui.scroll_area().style(f"height:calc({HOEHE} - 36px)"):
+    with ui.scroll_area().style(f"height:calc({HOEHE} - 96px)"):
         with ui.column().classes("w-full gap-3 pr-3").style("max-width:960px; margin:0 auto"):
             leer = ui.card().classes("w-full")
             with leer:
@@ -204,3 +204,7 @@ def seite(p):
                 hk.set_visibility(bool(ausg.get("hoehenlinien")))
             ui.timer(0.4, pruefen)
             pruefen()
+    if wechsel:
+        with ui.row().classes("w-full justify-end").style("max-width:960px; margin:0 auto; padding:6px 12px 0"):
+            ui.button("Weiter: Vorschau & Export", icon="arrow_forward", on_click=lambda: wechsel("export")) \
+                .props("unelevated no-caps color=primary")

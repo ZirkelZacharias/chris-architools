@@ -83,7 +83,8 @@ IFC_FARBEN = {  # ruhige, entsaettigte Palette (v2.2): helles Gelaende, graphitf
               "Gewaesser": (138, 176, 204), "Wald": (104, 134, 112), "Gehoelz": (132, 158, 120), "Gruen": (172, 194, 156),
               "Landwirtschaft": (216, 210, 174), "Brache_Unland": (208, 194, 170), "Siedlung": (226, 219, 211),
               "Gelaende": (232, 228, 220), "Ohne_Nutzung": (232, 228, 220), "Sonstige": (224, 224, 224),
-              "Gebaeude_Nah": (242, 240, 236), "Gebaeude_Fern": (242, 240, 236), "Bruecke": (200, 198, 194), "Gebaeude_Markant": (242, 240, 236), "Baeume": (128, 164, 124)}
+              "Gebaeude_Nah": (242, 240, 236), "Gebaeude_Fern": (242, 240, 236), "Bruecke": (200, 198, 194), "Gebaeude_Markant": (242, 240, 236), "Baeume": (128, 164, 124),
+              "Fassade_Fenster": (70, 84, 98), "Fassade_Tuer": (104, 78, 56)}
 KBS_NAMEN = {25831: "ETRS89 / UTM zone 31N", 25832: "ETRS89 / UTM zone 32N", 25833: "ETRS89 / UTM zone 33N",
              25834: "ETRS89 / UTM zone 34N"}
 
@@ -126,6 +127,7 @@ FNP_PALETTE = [(240, 190, 150), (250, 220, 120), (170, 210, 140), (110, 170, 110
 LAYER_NAH = "Gebaeude_Nah_LoD2_Daecher"
 LAYER_FERN = "Gebaeude_Fern_Bloecke_Traufe"
 LAYER_MARKANT = "Gebaeude_Markant_Detail"
+LAYER_FASSADE = "Gebaeude_Fassade_Fenster_Tueren"
 MINTRAUFE_ANTEIL = 0.5
 
 
@@ -176,6 +178,8 @@ class Config:
     extra: list = field(default_factory=list)             # Berlin-Zusatzdaten (nur 2D-DXF): "denkmal", "fnp", "laerm", "oepnv", "gewaesser"
     laerm_art: str = "gesamtlaerm"        # "gesamtlaerm" | "strasse" | "ubahn" | "industrie" | "flug"
     laerm_wert: str = "L_DEN"             # "L_DEN" (24-h-Mittel) | "L_N" (Nacht)
+    fassade: bool = False                 # Fenster und Tueren als flache Rechtecke andeuten (nur Muster, nicht gemessen; nur IFC, nur Nahbereich)
+    fassade_radius: float = 150.0         # nur Gebaeude bis zu diesem Abstand vom Mittelpunkt (m) - mehr Rechenlast in ArchiCAD
     sonne: bool = False                   # Sonnenbahn-Diagramm (IFC + DXF; je Datei ueber die Ebene "Sonne" abwaehlbar)
     sonne_radius: float = 0.0             # Radius des Diagramms in m; 0 = automatisch (40 % der kleineren Nahbereich-Seite)
     sonne_modus: str = "wende"            # "wende" = 21.6./21.3.+9./21.12.;  "monate" = der 21. jedes Monats
@@ -198,6 +202,9 @@ class Config:
     grundrisse_abgleich: bool = True      # 2D-Plaene: in ALKIS fehlende Grundrisse aus LoD2/OpenStreetMap ergaenzen
     zusatzplaene_aktiv: bool = False            # Zusatzplaene (PDF/Bilder, verortet) als eigene DXF ausgeben
     zusatzplaene: list = field(default_factory=list)      # Liste der Zusatzplaene (siehe ifcmap_zusatz.py)
+    wms_karten: list = field(default_factory=list)        # optionale Kartenbilder (Luftbild, historische Karten, Umweltatlas), siehe ifcmap_wms.py
+    wms_eigene: str = ""                                  # weitere WMS-Dienste, je Zeile: Name | Adresse | Ebene1,Ebene2
+    wms_aufloesung: float = 0.25                          # Meter je Pixel (hoechstens 4096 Pixel Kantenlaenge)
     # --- Lageplan / Schwarzplan
     buergersteige: str = "fgn"            # Lageplan: "fgn" = Fussgaengernetz (Berlin), "naeherung" = aus der Strassenbreite (ueberall), "keine"
     gehweg_breite: float = 2.5            # Breite des Buergersteigs (m) - bei "fgn" Pufferbreite um die Mittellinie, bei "naeherung" Streifen am Strassenrand
@@ -2980,6 +2987,26 @@ def _flaeche(faces):
     return a
 
 
+def _fassade_schreiben(d, teile, gid, element, sto):
+    """Fenster und Tueren eines Gebaeudes als zwei flache Elemente (nur Nahbereich, nur im Radius). -> Anzahl Rechtecke"""
+    import ifcmap_fassade as FA
+    waende = [w for t in teile for w in (t.get("wall") or [])]
+    if not waende:
+        return 0
+    pts = np.vstack([np.asarray(e)[:, :2] for e, _ in waende])
+    c = pts.mean(axis=0)
+    if np.hypot(c[0] - d.ce, c[1] - d.cn) > float(getattr(d.cfg, "fassade_radius", 150.0)):
+        return 0
+    fen, tue, info = FA.fassade(waende, c)
+    n = 0
+    for arr, nm, farbe, stil in ((fen, "Fenster_", IFC_FARBEN["Fassade_Fenster"], "Fassade_Fenster"),
+                                 (tue, "Tueren_", IFC_FARBEN["Fassade_Tuer"], "Fassade_Tuer")):
+        if len(arr) and element("IfcBuildingElementProxy", nm + str(gid), list(arr), LAYER_FASSADE, sto, gebaeude=False, farbe=farbe, stil=stil,
+                                props={"Gebaeude_ID": str(gid), "Hinweis": "Muster (angedeutet), nicht gemessen", "Rechtecke": int(len(arr))}):
+            n += len(arr)
+    return n
+
+
 def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
     import ifcopenshell
     import ifcopenshell.api.root, ifcopenshell.api.unit, ifcopenshell.api.context, ifcopenshell.api.project
@@ -3092,6 +3119,7 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         return el
 
     n_geb = n_gel = n_baum = 0
+    n_fass = 0
     fern_modus = getattr(d.cfg, "fern_gebaeude", "bloecke")
     leer = []                                             # Gebaeude, aus denen keine Flaechen entstanden
     # markante Gebaeude zuerst: nur was wirklich geschrieben wurde, wird unten aus den normalen Gebaeuden herausgenommen
@@ -3169,6 +3197,8 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
             if element("IfcBuildingElementProxy", prefix + str(gid), faces, lay, sto, gebaeude=True,
                        farbe=IFC_FARBEN["Gebaeude_Nah"], stil="Gebaeude", props=props):
                 n_geb += 1
+                if not fern and getattr(d.cfg, "fassade", False) and ebene_an(d.cfg, "ifc", "Gebaeude_Fassade"):
+                    n_fass += _fassade_schreiben(d, teile, gid, element, sto)
             else:
                 leer.append(prefix + str(gid))
         for (ix, iy), fe in sorted(felder.items()):
@@ -3180,6 +3210,9 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         if felder:
             log("  Fernbereich: %d Gebaeude zu %d Elementen (Felder von %.0f m) zusammengefasst - schneller und kleiner in Archicad" %
                 (sum(fe["n"] for fe in felder.values()), len(felder), zelle))
+    if n_fass:
+        log("  Fassadenandeutung: %d Fenster-/Tuerrechtecke (Muster, nicht gemessen) bei Gebaeuden bis %.0f m vom Mittelpunkt"
+            % (n_fass, float(getattr(d.cfg, "fassade_radius", 150.0))))
     if leer:
         log("  WARNUNG: %d Gebaeude ergaben keine Flaechen und fehlen in der IFC: %s%s" % (len(leer), ", ".join(leer[:8]), " ..." if len(leer) > 8 else ""))
 
@@ -4745,6 +4778,15 @@ def exportiere(d, log=print, prog=_noop, protokoll=None):
         except Exception as e:
             log("  FEHLER bei den Zusatzplaenen: %s" % e)
         ZE.append(("Zusatzplaene", time.time() - t_zu))
+    if cfg.dxf2d and (getattr(cfg, "wms_karten", None) or getattr(cfg, "wms_eigene", "")):
+        prog(0.96, "Kartenbilder laden ...")
+        t_wm = time.time()
+        try:
+            import ifcmap_wms as WM
+            erzeugt.extend(WM.schreibe_wms(d, cfg, cfg.ausgabe, log, praefix="test_" if cfg.test else ""))
+        except Exception as e:
+            log("  FEHLER bei den Kartenbildern: %s" % e)
+        ZE.append(("Kartenbilder", time.time() - t_wm))
     if cfg.xyz and d.px is not None:
         pfad = os.path.join(cfg.ausgabe, "gelaende_punkte.xyz")
         o = np.lexsort((d.px, d.py))

@@ -156,7 +156,7 @@ def seite():
         with ui.tab_panel("gebiet").classes("py-2"):
             Gebiet(p, speichern, wechsel).seite()
         with ui.tab_panel("einst").classes("py-2"):
-            einst.seite(p)
+            einst.seite(p, wechsel)
         with ui.tab_panel("export").classes("py-2"):
             export.seite(p, speichern)
         with ui.tab_panel("layout").classes("py-2"):

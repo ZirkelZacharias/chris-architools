@@ -183,10 +183,12 @@ def read_citygml(paths, bounds, log=print):
             for k, v in el.attrib.items():
                 if _local(k) == "id":
                     bid = v
-            roofs, grounds, mh = [], [], None
+            roofs, grounds, walls, mh = [], [], [], None
             for sub in el.iter():
                 n = _local(sub.tag)
-                if n == "RoofSurface":
+                if n == "WallSurface":
+                    walls += _polygons(sub)
+                elif n == "RoofSurface":
                     roofs += _polygons(sub)
                 elif n == "GroundSurface":
                     grounds += _polygons(sub)
@@ -212,7 +214,7 @@ def read_citygml(paths, bounds, log=print):
                 el.clear()
                 continue
             zmin = min(e[:, 2].min() for e, _ in grounds) if grounds else pts[:, 2].min()
-            out.append({"id": bid or f"bldg_{len(out)}", "roofs": roofs, "grounds": grounds,
+            out.append({"id": bid or f"bldg_{len(out)}", "roofs": roofs, "grounds": grounds, "walls": walls,
                         "zmin": float(zmin), "zmax": float(pts[:, 2].max()),
                         "measured_height": mh})
             n_file += 1

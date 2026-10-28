@@ -68,6 +68,16 @@ if g.get("grundriss_datei") and not os.path.isabs(g["grundriss_datei"]): g["grun
 p["formate"]={"zweid":["dxf","dwg","pdf"],"dreid":["ifc","glb"]}; u["extra"]=["radverkehr"]; u["ua_gebaeudehoehen"]=True; u["ua_vegetationshoehen"]=True
 p["formate"]={"zweid":["dxf"],"dreid":["ifc"]}; u["extra"]=["radverkehr"]; u["ua_vegetationsraster"]=True; u["veg_raster_dateien"]=[VEG]; u["rad_wege"]=True
 p["ausgaben"].update(ifc=True, lageplan=True, schwarzplan=True, info_dwg=True, laser=True, druck=True, schnitt=True, hoehenlinien=True)
+u["fassade"] = True; u["wms_karten"] = ["luftbild"]                      # Fassadenandeutung + Kartenbild (Dienst gestellt)
+import ifcmap_wms as WM, io
+from PIL import Image
+_CAP = b'<WMT_MS_Capabilities version="1.1.1"><Capability><Layer><SRS>EPSG:25833</SRS><Layer><Name>x</Name><Title>x</Title></Layer></Layer></Capability></WMT_MS_Capabilities>'
+def _wms_fake(url, ctx, timeout=90):
+    if "GetCapabilities" in url:
+        return _CAP, "text/xml"
+    w = int(url.split("WIDTH=")[1].split("&")[0]); h = int(url.split("HEIGHT=")[1].split("&")[0])
+    b = io.BytesIO(); Image.new("RGB", (w, h), (120, 160, 200)).save(b, "PNG"); return b.getvalue(), "image/png"
+WM._holen = _wms_fake
 p["schnitt"]["seite"]="rechts"; p["ziel"]={"ordner":os.path.join(TMP,"ziel"),"name":"MeinExport"}
 p["schnitt"]["linie_en"] = [[393450, 5826550], [393750, 5826550]]
 t0 = time.time()
@@ -84,6 +94,13 @@ p["schnitt"].update(art="abwicklung", seite="beide", tiefe_m=60.0, linie_en=[[39
 ab = L.schnitt_export(p, log)
 assert any("Abwicklung" in os.path.basename(f) for f in ab["dateien"]), ab
 print("ABWICKLUNG OK", [os.path.basename(f) for f in ab["dateien"]])
+p["schnitt"]["fassade"] = True
+ab2 = L.schnitt_export(p, log)
+assert ab2["dateien"], ab2
+print("ABWICKLUNG MIT FASSADE OK")
+wm = [f for r_, _, fs_ in os.walk(TMP) for f in fs_ if f.startswith("ifcmap_zusatz_Karte_") and f.endswith(".dxf")]
+assert wm, "Kartenbild-DXF fehlt"
+print("KARTENBILD OK")
 kl = [f for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f in fs_ if f.endswith("zuschnitt_und_kosten.txt")]
 assert kl, "Kostenliste fehlt"
 print("KOSTENLISTE OK")

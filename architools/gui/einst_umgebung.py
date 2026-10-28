@@ -119,6 +119,16 @@ def seiten(p):
                 hinweis("Das Gelände bleibt auf DGM-Höhe (dort stehen auch die Gebäude); nur die Fahrbahn sinkt.")
                 _haken("Brücken im IFC: Straße/Gehweg nur auf Brücken, die im LoD2 vorhanden sind (sonst weglassen)", u, "bruecken_ifc")
                 _wahl("Gelände in der IFC als", GELAENDE_TYPEN, u, "gelaende_typ")
+                fa = _haken("Fassaden andeuten: Fenster und Türen als flache Rechtecke auf den Wänden der Gebäude im Nahbereich",
+                            u, "fassade")
+                with ui.row().classes("gap-2 items-center") as fa_in:
+                    ui.label("nur Gebäude bis").classes("text-body2")
+                    _zahl("", u, "fassade_radius", min=20, step=10, breite="w-20")
+                    ui.label("m um den Mittelpunkt").classes("text-body2")
+                hinweis("Nur ein MUSTER nach Wandbreite und Geschosshöhe – nicht gemessen und nicht aus Luftbild/DOM abgelesen "
+                        "(das LoD2 enthält keine Öffnungen). Balkone lassen sich daraus nicht ableiten. Mehr Elemente = "
+                        "mehr Rechenlast in Archicad.")
+                ausgrauen(fa_in, fa)
             with karte("Markante Gebäude – experimentell", OCKER, offen=False) as k_markant:
                 ui.label("EXPERIMENTELL: Diese Funktion klappt noch nicht immer – Gebäude können fehlen oder falsche Formen haben.") \
                     .classes("text-caption").style(f"color:{OCKER}")
@@ -200,6 +210,29 @@ def seiten(p):
                     ui.select(LAERM_ARTEN, label="Lärmkarte: Art").bind_value(u, "laerm_art").classes("w-64")
                     ui.select(LAERM_WERTE, label="Wert").bind_value(u, "laerm_wert").classes("w-56")
                 hinweis("Quelle automatisch: amtlich (Berlin), sonst OpenStreetMap – ÖPNV, Gewässer und Denkmäler gibt es so überall.")
+            with karte("Kartenbilder zum Daruntermalen (nur Informations-DWG, optional)", TERRA, offen=False):
+                from .. import projekt as _P
+                _P.kern()
+                import ifcmap_wms as _WM
+                for key, (text, *_r) in _WM.WMS_KATALOG.items():
+                    def wms_umschalten(e, key=key):
+                        lst = u.setdefault("wms_karten", [])
+                        if e.value and key not in lst:
+                            lst.append(key)
+                        elif not e.value and key in lst:
+                            lst.remove(key)
+                    ui.checkbox(text + " – ungetestet", value=key in (u.get("wms_karten") or []), on_change=wms_umschalten)
+                with ui.row().classes("gap-2 items-center"):
+                    ui.label("Auflösung:").classes("text-body2")
+                    _zahl("", u, "wms_aufloesung", min=0.05, max=5, step=0.05, breite="w-20")
+                    ui.label("m je Pixel (höchstens 4096 Pixel Kantenlänge)").classes("text-body2")
+                ui.textarea("Weitere WMS-Dienste (je Zeile: Name | Adresse | Ebene1,Ebene2 – Ebenen optional)") \
+                    .bind_value(u, "wms_eigene").classes("w-full").props("autogrow outlined dense")
+                hinweis("Das sind Rasterbilder (kein Vektor): je Karte eine eigene DXF mit eingebettetem Bild samt PNG und World-File, im "
+                        "selben Nullpunkt. Nur Berlin; weitere Umweltatlas-Themenpläne (Klima, Grünvolumen …) lassen sich über "
+                        "„Weitere WMS-Dienste“ mit der Adresse https://gdi.berlin.de/services/wms/<Dienstname> ergänzen. "
+                        "Abruf noch nicht gegen die Live-Dienste getestet. Karten liegen als Bild vor – bitte Quelle und Lizenz "
+                        "(Geoportal Berlin) beim Veröffentlichen angeben.")
 
         with abschnitt(_wenn_aus(p, "info_dwg", "lageplan", "schwarzplan")):
             from . import zusatzplan

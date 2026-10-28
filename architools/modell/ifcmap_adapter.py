@@ -140,8 +140,9 @@ def _gebaeude(K, d):
         gruppen.setdefault(t.get("gebaeude") or t.get("id"), []).append(t)
     out = []
     for gid, teile in gruppen.items():
-        roofs, grounds, hs = [], [], []
+        roofs, grounds, hs, walls = [], [], [], []
         for t in teile:
+            walls += [(np.asarray(e), [np.asarray(h) for h in hh]) for e, hh in t.get("wall") or []]
             roofs += [(np.asarray(e), [np.asarray(h) for h in hh]) for e, hh in t.get("roof") or []]
             grounds += [(np.asarray(e), [np.asarray(h) for h in hh]) for e, hh in t.get("ground") or []]
             if t.get("roofz"):
@@ -155,7 +156,7 @@ def _gebaeude(K, d):
         if not roofs and hs:
             mh = max(hs) - zmin
             zmax = zmin + mh
-        out.append({"id": str(gid), "roofs": roofs, "grounds": grounds, "zmin": float(zmin),
+        out.append({"id": str(gid), "roofs": roofs, "grounds": grounds, "walls": walls, "zmin": float(zmin),
                     "zmax": float(zmax), "measured_height": mh,
                     "quelle": teile[0].get("quelle", "LoD2")})
     return out
