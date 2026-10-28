@@ -139,6 +139,8 @@ def seite():
 def _frei(port):
     import socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as so:
+        if os.name != "nt":                                   # unter Linux/Mac zählt ein gerade erst beendetes Programm nicht als „belegt“
+            so.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             so.bind(("127.0.0.1", port))
             return True

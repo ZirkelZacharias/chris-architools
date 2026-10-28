@@ -74,7 +74,7 @@ def seiten(p):
     with ui.column().classes("w-full gap-3") as wurzel:
         # -------------------------------------------------- Gebiet und Daten (immer, wenn Umgebung gewählt)
         with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg")):
-            with karte("Koordinatensystem", AKZENT, offen=False):
+            with karte("Koordinatensystem", AKZENT, offen=False) as k_koord:
                 hinweis("Größe von Gebiet, Nah- und Mittelbereich stellst du auf der Seite „Gebiet“ ein (dort siehst du sie in der Karte).")
                 _wahl("Koordinatensystem", KBS, u, "epsg")
             with karte("Daten", SCHIEFER):
@@ -119,7 +119,7 @@ def seiten(p):
                 hinweis("Das Gelände bleibt auf DGM-Höhe (dort stehen auch die Gebäude); nur die Fahrbahn sinkt.")
                 _haken("Brücken im IFC: Straße/Gehweg nur auf Brücken, die im LoD2 vorhanden sind (sonst weglassen)", u, "bruecken_ifc")
                 _wahl("Gelände in der IFC als", GELAENDE_TYPEN, u, "gelaende_typ")
-            with karte("Markante Gebäude – experimentell", OCKER, offen=False):
+            with karte("Markante Gebäude – experimentell", OCKER, offen=False) as k_markant:
                 ui.label("EXPERIMENTELL: Diese Funktion klappt noch nicht immer – Gebäude können fehlen oder falsche Formen haben.") \
                     .classes("text-caption").style(f"color:{OCKER}")
                 mk = _haken("Markante Gebäude besonders detailliert darstellen", u, "markant")
@@ -204,6 +204,14 @@ def seiten(p):
         with abschnitt(_wenn_aus(p, "info_dwg", "lageplan", "schwarzplan")):
             from . import zusatzplan
             zusatzplan.liste_karte(p)
+
+        # -------------------------------------------------- Erweitert: selten gebrauchte Karten wandern hierher
+        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg")):
+            ui.label("Erweitert – selten gebraucht").classes("text-subtitle2 q-mt-md").style(f"color:{GRAU}").props("id=erweitert-anker")
+            erweitert = ui.column().classes("w-full gap-3")
+        k_koord.move(erweitert)
+        k_markant.move(erweitert)
+        regeln.append((k_markant, _wenn_aus(p, "ifc")))
 
         # -------------------------------------------------- Sonnenbank-Flavour (Sonnenbahn)
         with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg")):

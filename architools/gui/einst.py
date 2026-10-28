@@ -84,9 +84,26 @@ def schnitt_karte(p):
     return wurzel
 
 
+SPRUNG = [("Formate", "Dateiformate"), ("Daten", "Daten"), ("IFC", "Archicad-IFC"), ("Pläne", "Lageplan und Schwarzplan"),
+          ("Informations-DWG", "Informations-DWG"), ("Zusatzpläne", "Zusatzpläne"), ("Modellbau", "Modell: Daten"),
+          ("Schnitt", "Geländeschnitt"), ("Erweitert", "#erweitert-anker")]
+
+
+def _springen(ziel):
+    js = ("(()=>{const t=%r; let el=null; if(t.startsWith('#')){el=document.querySelector(t);} else {"
+          "el=[...document.querySelectorAll('.q-expansion-item')].find(e=>e.offsetParent&&e.innerText.trim().startsWith(t));"
+          "if(el&&!el.classList.contains('q-expansion-item--expanded')){const h=el.querySelector('.q-item'); if(h)h.click();}}"
+          "if(el)el.scrollIntoView({behavior:'smooth',block:'start'});})()") % ziel
+    ui.run_javascript(js)
+
+
 def seite(p):
     ausg = p["ausgaben"]
-    with ui.scroll_area().style(f"height:{HOEHE}"):
+    with ui.row().classes("w-full items-center gap-1 q-px-sm").style("max-width:960px; margin:0 auto"):
+        ui.label("Springe zu:").classes("text-caption").style(f"color:{GRAU}")
+        for text, ziel in SPRUNG:
+            ui.chip(text, on_click=lambda z=ziel: _springen(z)).props("dense outline clickable color=primary")
+    with ui.scroll_area().style(f"height:calc({HOEHE} - 36px)"):
         with ui.column().classes("w-full gap-3 pr-3").style("max-width:960px; margin:0 auto"):
             leer = ui.card().classes("w-full")
             with leer:
