@@ -72,7 +72,8 @@ jobs:
 
   release:
     needs: bauen
-    if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.veroeffentlichen || contains(github.event.head_commit.message, '[release]') }}
+    # läuft auch, wenn ein Mac-Runner wegen Auslastung ausfällt (dann fehlt dessen Zip, der Hinweis steht in den Release-Notizen)
+    if: ${{ always() && (startsWith(github.ref, 'refs/tags/') || inputs.veroeffentlichen || contains(github.event.head_commit.message, '[release]')) && (needs.bauen.result == 'success' || needs.bauen.result == 'failure' || needs.bauen.result == 'cancelled') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,4 +86,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="stand-$(cat stand.txt)-$(date +%Y%m%d-%H%M)"
-          gh release create "$TAG" pakete/*.zip --title "Zacharias Tools Stand $(cat stand.txt)" --notes "Portable Pakete (kein Python nötig) für Windows und Mac."
+          ls pakete/*.zip
+          [ "$(ls pakete/*.zip | wc -l)" -ge 1 ] || exit 1
+          NOTE="Portable Pakete (kein Python nötig) für Windows und Mac."
+          [ "$(ls pakete/*.zip | wc -l)" -ge 3 ] || NOTE="$NOTE Achtung: Ein Paket fehlt (Mac-Runner bei GitHub ausgelastet) - es wird nachgeliefert."
+          gh release create "$TAG" pakete/*.zip --title "Zacharias Tools Stand $(cat stand.txt)" --notes "$NOTE"
