@@ -8,9 +8,10 @@ import traceback
 from nicegui import app, run, ui
 
 # Farbwelt wie IFCmap / Modellbau-Toolbox
-BG, KARTE, AKZENT, AKZENT_HELL = "#f4f1ec", "#ffffff", "#1f6f78", "#dcebec"
-TEXT, GRAU, LINIE = "#1c2630", "#6c7680", "#e3ded5"
-INK, TERRA, OCKER, SALBEI, SCHIEFER = "#18232e", "#c8643b", "#d19a2b", "#5f8f6b", "#3d6a9e"
+# Schlichte Farbwelt: Graphit und Weiß, zwei Akzente – Petrol (Auswahl, Navigation) und Terrakotta (Hauptaktion, Zeichnen)
+BG, KARTE, AKZENT, AKZENT_HELL = "#f6f6f4", "#ffffff", "#1f6f78", "#e5f0f1"
+TEXT, GRAU, LINIE = "#1d2329", "#6b737b", "#e4e4df"
+INK, TERRA, OCKER, SALBEI, SCHIEFER = "#1d2329", "#c8643b", "#d19a2b", "#5f8f6b", "#3d6a9e"
 FARBE_LASER, FARBE_DRUCK = "#d6bf96", "#7fb3c4"
 
 WASSERZEICHEN = "Archicad-Bildungsversion"
@@ -19,7 +20,7 @@ BILD = os.path.join(PAKET, "system", "bilder", "abschluss.jpg")
 MASKOTT = os.path.join(PAKET, "system", "bilder", "maskottchen.gif")
 NATIVE = {"an": False}
 FREIGABE = set()                         # Ordner, deren Dateien die Oberfläche anzeigen darf
-HOEHE = "calc(100vh - 150px)"            # Arbeitsbereich unter Kopf und Reitern
+HOEHE = "calc(100vh - 156px)"            # Arbeitsbereich unter Kopf und Reitern
 
 AKTION_TEXT = {"ritzen": "ritzen (blau)", "gravieren": "gravieren (schwarze Fläche)",
                "schneiden": "schneiden (rot)", "aus": "aus"}
@@ -27,7 +28,7 @@ MASSSTAEBE = {50: "1:50", 100: "1:100", 200: "1:200", 250: "1:250", 500: "1:500"
               1250: "1:1250", 2000: "1:2000", 2500: "1:2500", 5000: "1:5000", 10000: "1:10000"}
 
 CSS = f"""
-.stempel {{ position:absolute; z-index:650; pointer-events:none; right:10px; bottom:24px;
+.stempel {{ position:absolute; z-index:650; pointer-events:none; left:12px; bottom:52px;
   border:1px solid #3f4fae; color:#3f4fae; padding:1px 6px;
   font: 600 8px/1.2 Arial, sans-serif; letter-spacing:.05em; opacity:.4; background:rgba(255,255,255,.35); }}
 .log-bild {{ background-image: linear-gradient(rgba(255,255,255,.88), rgba(255,255,255,.88)), url('/bild/abschluss.jpg');
@@ -37,9 +38,18 @@ CSS = f"""
 .fertig-stempel {{ position:absolute; right:28px; bottom:22px; transform: rotate(-6deg);
   border:4px solid {SALBEI}; color:{SALBEI}; padding:4px 18px; font: 700 28px Arial; letter-spacing:.12em;
   background: rgba(255,255,255,.75); pointer-events:none; z-index:5; }}
-.ausgabe-kachel {{ border-left: 6px solid var(--kachel, {AKZENT}); transition: box-shadow .15s, transform .15s; cursor:pointer; }}
-.ausgabe-kachel:hover {{ box-shadow: 0 4px 14px rgba(24,35,46,.18); transform: translateY(-1px); }}
-.ausgabe-kachel.an {{ background: {AKZENT_HELL}; box-shadow: 0 0 0 2px var(--kachel, {AKZENT}) inset; }}
+.ausgabe-kachel {{ border: 1.5px solid {LINIE}; transition: border-color .15s, background .15s; cursor:pointer; }}
+.ausgabe-kachel:hover {{ border-color: #b9c4c6; }}
+.ausgabe-kachel.an {{ background: {AKZENT_HELL}; border-color: {AKZENT}; }}
+body, .q-field, .q-btn, .q-tab {{ font-family: -apple-system, "Segoe UI", "Helvetica Neue", Roboto, Arial, sans-serif; }}
+.q-card {{ box-shadow: none !important; border: 1px solid {LINIE}; border-radius: 12px; }}
+.q-expansion-item {{ border: 1px solid {LINIE}; border-radius: 12px; background:#fff; overflow:hidden; }}
+.q-expansion-item .q-item {{ min-height: 44px; }}
+.schwebend {{ position:absolute; z-index:1200; }}
+.glas {{ background: rgba(255,255,255,.96); border-radius: 12px; box-shadow: 0 4px 18px rgba(20,30,40,.18); }}
+.q-tabs--dense .q-tab {{ min-height: 42px; }}
+.schritt-tab {{ color:{GRAU}; text-transform:none; }}
+.q-btn.hauptaktion {{ background: {TERRA} !important; color:#fff; font-weight:600; }}
 
 @keyframes zeiger {{ 0%,100% {{ transform: translateX(0); }} 50% {{ transform: translateX(-3px); }} }}
 .maskott {{ position:fixed; right:18px; bottom:42px; z-index:3000; cursor:pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); }}
@@ -145,8 +155,7 @@ async def waehlen(art="datei", mehrere=False, typen=(), name="projekt.architools
 # ------------------------------------------------------------------ Bausteine
 def karte(titel, farbe=AKZENT, offen=True):
     """Aufklappbare Karte im IFCmap-Stil (farbiger Streifen links)."""
-    return ui.expansion(titel, value=offen).classes("w-full bg-white rounded-lg shadow-sm") \
-        .style(f"border-left: 5px solid {farbe}").props("header-class=text-weight-bold dense")
+    return ui.expansion(titel, value=offen).classes("w-full").props("header-class=text-weight-medium dense")
 
 
 def ausgrauen(bereich, schalter):
@@ -162,6 +171,14 @@ def ausgrauen(bereich, schalter):
 
 def hinweis(text):
     return ui.label(text).classes("text-caption").style(f"color:{GRAU}")
+
+
+def hinweis_info(kurz, lang):
+    """Kurzer Hinweis, der ganze Erklärtext steht im Info-Symbol (schont die Übersicht)."""
+    with ui.row().classes("items-center gap-1 no-wrap"):
+        ui.label(kurz).classes("text-caption").style(f"color:{GRAU}")
+        ic = ui.icon("info_outline", size="xs").style(f"color:{GRAU}; cursor:help")
+        ic.tooltip(lang).classes("text-body2").style("max-width:360px")
 
 
 def feld_pfad(label, obj, key, art="datei", typen=(), mehrere=False):

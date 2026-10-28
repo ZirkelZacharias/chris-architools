@@ -6,14 +6,15 @@ import os
 from nicegui import run, ui
 
 from .stil import (AKZENT, GRAU, INK, MASSSTAEBE, OCKER, SALBEI, SCHIEFER, TERRA, WASSERZEICHEN, ausgrauen, en_zu_ll,
-                   feld_pfad, hinweis, karte, ll_zu_en, mm_text, HOEHE)
+                   feld_pfad, hinweis, hinweis_info, karte, ll_zu_en, mm_text, HOEHE, LINIE)
 
 KARTENMODI = {"mitte": "Mittelpunkt setzen", "drehen": "Ausrichten", "flurstueck": "Flurstücke wählen",
               "schnitt": "Schnittlinie"}
 
 
 class Gebiet:
-    def __init__(self, proj, speichern=None):
+    def __init__(self, proj, speichern=None, wechsel=None):
+        self.wechsel = wechsel or (lambda *_: None)
         self.p = proj
         self.cfg = proj["modell"]
         self.speichern = speichern or (lambda: None)
@@ -87,33 +88,52 @@ class Gebiet:
         self._auswahl_text()
 
     def _kartenbereich(self):
+        """Karte füllt die ganze Fläche; Suche, Klick-Modus und Hinweis schweben darüber."""
         geb = self.cfg["gebiet"]
-        with ui.column().classes("w-full h-full no-wrap gap-1"):
-            with ui.row().classes("w-full items-center gap-2"):
-                hinweis("Klick in die Karte:")
-                self.modus = ui.toggle(KARTENMODI, value="mitte", on_change=lambda e: self._hilfe_zeigen()).props("dense no-caps size=sm")
-                ui.space()
-                hinweis("Polygon zeichnen: Werkzeug links oben")
-            self.hilfe_box = ui.row().classes("w-full items-center no-wrap rounded-borders q-px-sm q-py-xs")
+        lat, lon = en_zu_ll(*geb["mitte_en"])
+        self.karte = ui.leaflet(center=(lat, lon), zoom=self._zoom(), hide_drawn_items=True,
+                                draw_control={"draw": {"polygon": True, "rectangle": True, "marker": False,
+                                                       "circlemarker": False, "polyline": False, "circle": False},
+                                              "edit": {"edit": False, "remove": False}}) \
+            .classes("absolute-full").style("height:100%; width:100%")
+        ui.html(f'<div class="stempel">{WASSERZEICHEN.upper()}</div>')
+        with ui.column().classes("schwebend gap-2").style("top:12px; left:64px; max-width:calc(100% - 560px)"):
+            with ui.row().classes("items-center gap-2 no-wrap"):
+                self.such = ui.input(placeholder="Adresse oder Koordinate suchen …").props("dense outlined clearable bg-color=white") \
+                    .classes("glas").style("width:300px")
+                self.such.on("keydown.enter", self._suchen)
+                ui.button(icon="search", on_click=self._suchen).props("unelevated round dense color=white text-color=dark").classes("glas")
+                self.modus = ui.toggle(KARTENMODI, value="mitte", on_change=lambda e: self._hilfe_zeigen()) \
+                    .props("dense no-caps unelevated toggle-color=primary color=white text-color=dark").classes("glas")
+            self.hilfe_box = ui.row().classes("items-center no-wrap q-px-sm q-py-xs glas").style("width:fit-content")
             with self.hilfe_box:
                 ui.icon("ads_click", size="sm")
                 self.lbl_hilfe = ui.label("").classes("text-body2")
-            with ui.element("div").classes("w-full relative").style("flex:1 1 auto; min-height:300px"):
-                lat, lon = en_zu_ll(*geb["mitte_en"])
-                self.karte = ui.leaflet(center=(lat, lon), zoom=self._zoom(), hide_drawn_items=True,
-                                        draw_control={"draw": {"polygon": True, "rectangle": True, "marker": False,
-                                                               "circlemarker": False, "polyline": False, "circle": False},
-                                                      "edit": {"edit": False, "remove": False}}) \
-                    .classes("w-full h-full absolute-full")
-                ui.html(f'<div class="stempel">{WASSERZEICHEN.upper()}</div>')
-            self.karte.on("map-click", self._karte_klick)
-            self.karte.on("draw:created", self._gezeichnet)
-            self.marker = self.karte.marker(latlng=(lat, lon))
-            self.rahmen_layer = None
-            self.grund_layer = None
-            self.flurst_layer = None
-            self.schnitt_layers = []
-            self._hilfe_zeigen()
+        self.info_box = ui.row().classes("schwebend glas q-px-sm q-py-xs items-center no-wrap").style("left:12px; bottom:12px")
+        with self.info_box:
+            ui.icon("straighten", size="xs").style(f"color:{AKZENT}")
+            self.lbl_info = ui.label("").classes("text-body2 text-weight-medium")
+        self.karte.on("map-click", self._karte_klick)
+        self.karte.on("draw:created", self._gezeichnet)
+        self.marker = self.karte.marker(latlng=(lat, lon))
+        self.rahmen_layer = None
+        self.grund_layer = None
+        self.flurst_layer = None
+        self.schnitt_layers = []
+        self._hilfe_zeigen()
+
+    async def _suchen(self, *_):
+        from .zusatzplan import _suchen
+        r = await _suchen(self.such.value)
+        if not r:
+            ui.notify("Nichts gefunden – Adresse oder „Breite, Länge“ eintippen.", type="warning")
+            return
+        self.cfg["gebiet"]["mitte_en"] = [round(v, 2) for v in ll_zu_en(*r)]
+        self.marker.move(*r)
+        self.karte.set_center(tuple(r))
+        self.karte.set_zoom(max(self._zoom(), 16))
+        self._mitte_text()
+        self._rahmen()
 
     def _mitte_text(self):
         e, n = self.cfg["gebiet"]["mitte_en"]
@@ -239,6 +259,14 @@ class Gebiet:
                                 + (f"  ·  {d:g}° gedreht" if d else "") + "  (dicke Linie = Oberkante)")
         self._umgebung_rahmen()
         self._schnitt_zeichnen()
+        if hasattr(self, "lbl_info"):
+            u = self.p["umgebung"]
+            teile = []
+            if any(self.p["ausgaben"].get(k) for k in ("ifc", "lageplan", "schwarzplan", "info_dwg")):
+                teile.append(f"Umgebung {float(u.get('breite') or 0):.0f} × {float(u.get('hoehe') or 0):.0f} m")
+            if modell_an:
+                teile.append(f"Modell 1:{float(self.cfg['massstab']):g} · {b:.0f} × {h:.0f} m")
+            self.lbl_info.text = "  ·  ".join(teile) or "Wähle auf der Startseite, was exportiert wird"
         x0, y0, x1, y1 = poly.bounds
         self.cfg["ausschnitt"] = {"xmin": x0, "ymin": y0, "xmax": x1, "ymax": y1}
 
@@ -298,9 +326,9 @@ class Gebiet:
         else:
             t = {"mitte": "Klick in die Karte setzt den Mittelpunkt", "drehen": "Klick: dorthin zeigt die Oberkante des Rahmens",
                  "flurstueck": "Klick wählt oder entfernt ein Flurstück"}.get(m, "")
-            farbe = ("#f1f5f5", "#1f6f78")
+            farbe = ("#ffffff", "#1f6f78")
         self.lbl_hilfe.text = t
-        self.hilfe_box.style(f"background:{farbe[0]}; border-left:5px solid {farbe[1]}")
+        self.hilfe_box.style(f"background:{farbe[0]}; border-left:5px solid {farbe[1]}; width:fit-content")
 
     def _sch_info(self):
         from .. import schnitt as SC
@@ -435,7 +463,7 @@ class Gebiet:
                 ui.button(icon="my_location", on_click=lambda: self._mitte_eingabe()).props("flat dense round") \
                     .tooltip("Mittelpunkt übernehmen")
             self._mitte_text()
-            hinweis("Gilt für alle Ausgaben. In der Karte klicken setzt den Mittelpunkt ebenfalls.")
+            hinweis("Gilt für alle Ausgaben – oder einfach in die Karte klicken.")
 
     def _karte_umgebung(self):
         u = self.p["umgebung"]
@@ -456,30 +484,42 @@ class Gebiet:
                 ui.label("Mittelbereich (m)").classes("w-24 text-caption")
                 ui.number("Ost–West", min=0, step=50).bind_value(u, "mittel_breite").classes("w-28")
                 ui.number("Nord–Süd", min=0, step=50).bind_value(u, "mittel_hoehe").classes("w-28")
-            hinweis("Blau durchgezogen = Gebiet, blau gestrichelt = Nahbereich (feines Gelände, Dachformen, Bäume). Mittelbereich "
-                    "(0 = aus): optionaler dritter Bereich dazwischen. Die Rechtecke liegen im UTM-Gitter (so wie in Archicad mit "
-                    "Koordinaten); die Karte ist nach wahrem Norden ausgerichtet – darum wirken sie etwa 1,2° schief.")
+            hinweis_info("Durchgezogen = Gebiet, gestrichelt = Nahbereich.",
+                         "Nahbereich: feines Gelände, Dachformen, Bäume. Mittelbereich (0 = aus): optionaler dritter Bereich dazwischen. "
+                         "Die Rechtecke liegen im UTM-Gitter (so wie in Archicad mit Koordinaten); die Karte ist nach wahrem Norden "
+                         "ausgerichtet – darum wirken sie etwa 1,2° schief.")
         return k
 
     def seite(self):
-        """Linke Spalte mit den Karten, rechts die Karte."""
+        """Die Karte füllt die Seite; die Einstellungen schweben als einklappbares Feld rechts."""
         ausg = self.p["ausgaben"]
-        with ui.row().classes("w-full no-wrap gap-4").style(f"height:{HOEHE}"):
-            links = ui.scroll_area().classes("h-full").style("width:560px; min-width:480px")
-            rechts = ui.column().classes("grow h-full no-wrap gap-1").style("min-width:0")
-        with links:
-            with ui.column().classes("w-full gap-3 pr-3"):
-                self._karte_mitte()
-                umg = ui.column().classes("w-full")
-                with umg:
-                    self._karte_umgebung()
-                sch = ui.column().classes("w-full")
-                with sch:
-                    self._karte_schnitt()
-                mod = ui.column().classes("w-full gap-3")
-                with mod:
-                    self._karte_massstab()
-                    self._karte_einsatz()
+        with ui.element("div").classes("w-full relative").style(f"height:{HOEHE}; overflow:hidden; border-radius:14px; border:1px solid {LINIE}"):
+            self._kartenbereich()
+            panel = ui.column().classes("schwebend glas gap-0 no-wrap").style("top:12px; right:12px; bottom:30px; width:440px; max-width:46%")
+            oeffner = ui.button(icon="tune", on_click=lambda: (panel.set_visibility(True), oeffner.set_visibility(False))) \
+                .props("unelevated round color=white text-color=dark").classes("schwebend glas").style("top:12px; right:12px")
+            oeffner.set_visibility(False)
+            with panel:
+                with ui.row().classes("w-full items-center no-wrap q-px-md q-pt-sm"):
+                    ui.label("Gebiet und Maße").classes("text-subtitle1 text-weight-medium grow")
+                    ui.button(icon="chevron_right", on_click=lambda: (panel.set_visibility(False), oeffner.set_visibility(True))) \
+                        .props("flat round dense").tooltip("Feld einklappen – mehr Karte")
+                with ui.scroll_area().classes("w-full").style("flex:1 1 0; min-height:0"):
+                    with ui.column().classes("w-full gap-2 q-px-sm q-pb-sm"):
+                        self._karte_mitte()
+                        umg = ui.column().classes("w-full")
+                        with umg:
+                            self._karte_umgebung()
+                        sch = ui.column().classes("w-full")
+                        with sch:
+                            self._karte_schnitt()
+                        mod = ui.column().classes("w-full gap-2")
+                        with mod:
+                            self._karte_massstab()
+                            self._karte_einsatz()
+                with ui.row().classes("w-full justify-end q-pa-sm").style(f"border-top:1px solid {LINIE}"):
+                    ui.button("Weiter: Einstellungen", icon="arrow_forward", on_click=lambda: self.wechsel("einst")) \
+                        .props("unelevated no-caps color=primary")
 
                 def sichtbar():
                     umg.set_visibility(any(ausg.get(k) for k in ("ifc", "lageplan", "schwarzplan", "info_dwg")))
@@ -488,8 +528,6 @@ class Gebiet:
                     self._rahmen()
                 self._sichtbar = sichtbar
                 ui.timer(1.0, lambda: self._pruefen(sichtbar))
-        with rechts:
-            self._kartenbereich()
         ui.timer(0.5, self._rahmen, once=True)
         ui.timer(0.3, sichtbar, once=True)
 

@@ -12,6 +12,9 @@ from .ergebnis import ergebnis_zeigen
 from .stil import (AKZENT, GRAU, HOEHE, INK, LINIE, SALBEI, Lauf, feld_pfad, hinweis, karte, oeffnen, szene3d, url)
 
 
+AKTION = {}                                  # vom Kopf aus erreichbar: Export starten
+
+
 def seite(p, speichern):
     ausg = p["ausgaben"]
     wahl = {k: True for k in P.AUSGABEN}            # was jetzt exportiert wird (innerhalb der Gewählten)
@@ -20,7 +23,7 @@ def seite(p, speichern):
     erg_ber = {}
 
     with ui.row().classes("w-full no-wrap gap-4").style(f"height:{HOEHE}"):
-        links = ui.scroll_area().classes("h-full").style("width:500px; min-width:440px")
+        linkspalte = ui.column().classes("h-full no-wrap gap-2").style("width:500px; min-width:440px")
         rechts = ui.column().classes("grow h-full no-wrap gap-1").style("min-width:0")
 
     # ---------------------------------------------------------------- rechts
@@ -65,6 +68,14 @@ def seite(p, speichern):
             status = ui.label("").classes("text-caption").style(f"color:{GRAU}; min-width:260px")
 
     # ---------------------------------------------------------------- links
+    with linkspalte:
+        links = ui.scroll_area().classes("w-full").style("flex:1 1 0; min-height:0")
+        with ui.row().classes("w-full gap-2 items-center no-wrap q-pr-sm").style(f"border-top:1px solid {LINIE}; padding-top:8px"):
+            b_vor = ui.button("Vorschau laden", icon="visibility", on_click=lambda: vorschau()).props("outline no-caps size=md")
+            b_exp = ui.button("Exportieren", icon="rocket_launch", on_click=lambda: exportieren()).props("unelevated no-caps size=md color=secondary") \
+                .classes("grow")
+            sp = ui.spinner(size="md").style(f"color:{AKZENT}")
+            sp.set_visibility(False)
     with links:
         with ui.column().classes("w-full gap-3 pr-3"):
             with karte("Was wird jetzt ausgegeben?", AKZENT):
@@ -94,15 +105,10 @@ def seite(p, speichern):
                 ui.timer(1.0, pfad_zeigen)
             with karte("Optionen", GRAU, offen=False):
                 ui.checkbox("Testausschnitt (150 × 150 m, schnell zum Ausprobieren – nur Umgebung)").bind_value(opt, "test")
-            with ui.row().classes("w-full gap-2 items-center"):
-                b_vor = ui.button("Vorschau laden", icon="visibility", on_click=lambda: vorschau()).props("outline size=lg")
-                b_exp = ui.button("Exportieren", icon="play_arrow", on_click=lambda: exportieren()).props("unelevated size=lg") \
-                    .style(f"background:{AKZENT}!important")
-                sp = ui.spinner(size="lg").style(f"color:{AKZENT}")
-                sp.set_visibility(False)
             hinweis("„Vorschau laden“ holt die Umgebungsdaten und zeigt Plan und 3D-Modell – bei Lasercut/3D-Druck auch das Modell "
                     "(Umschalter im Reiter 3D-Ansicht). Das rechnet genauso lange wie der Export.")
 
+    AKTION["start"] = lambda: exportieren()
     lauf = Lauf(logel, [b_vor, b_exp], sp, fertig, balken, status)
     lauf.pop_67 = eier.log_67(logel)
     lauf.bericht_pfad = lambda: os.path.join(P.ausgabe_basis(p), "bericht.txt")         # immer da, auch nach Fehlern

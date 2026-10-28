@@ -15,7 +15,7 @@ def seite(wechsel, neu_laden):
     with ui.scroll_area().style(f"height:{HOEHE}"):
         with ui.column().classes("w-full gap-4 pr-3").style("max-width:1180px; margin:0 auto"):
             # ---------------- Projekt
-            with ui.card().classes("w-full").style(f"border-left:6px solid {AKZENT}"):
+            with ui.card().classes("w-full"):
                 ui.label("Projekt").classes("text-h6")
                 with ui.row().classes("w-full items-end gap-3 no-wrap"):
                     ui.input("Name des Projekts").bind_value(p, "name").classes("w-72")
@@ -106,9 +106,9 @@ def seite(wechsel, neu_laden):
                         card = ui.card().classes("ausgabe-kachel").style(f"--kachel:{farbe}")
                         with card:
                             with ui.row().classes("items-center no-wrap gap-2 w-full"):
-                                ui.icon(icon).style(f"color:{farbe}; font-size:30px")
+                                ui.icon(icon).style(f"color:{AKZENT}; font-size:30px")
                                 ui.label(titel).classes("text-subtitle1 text-weight-medium grow")
-                                haken = ui.icon("check_box_outline_blank").style(f"color:{farbe}; font-size:26px")
+                                haken = ui.icon("check_box_outline_blank").style(f"color:{AKZENT}; font-size:26px")
                             ui.label(text).classes("text-body2").style(f"color:{GRAU}")
                             stand = ui.label("").classes("text-caption").style(f"color:{GRAU}")
 

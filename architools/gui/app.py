@@ -7,7 +7,7 @@ from .. import VERSION
 from . import eier, einst, export, start as start_seite, stil, zustand as Z
 from .einst_modell import ModellEinst
 from .gebiet import Gebiet
-from .stil import AKZENT, BG, CSS, INK, NATIVE, OCKER, SCHIEFER, TERRA, TEXT, WASSERZEICHEN
+from .stil import AKZENT, BG, CSS, GRAU, INK, LINIE, NATIVE, OCKER, SCHIEFER, TERRA, TEXT, WASSERZEICHEN
 from .werkzeuge import Werkzeuge
 
 ABLAUF = [("start", "1 · Start", "flag"), ("gebiet", "2 · Gebiet", "map"),
@@ -38,13 +38,34 @@ def seite():
             "position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); text-decoration:underline; "
             "text-underline-offset:3px; color:#c9d3dd; font-size:13px; letter-spacing:.06em; pointer-events:none")
         ui.space()
-        lbl = ui.label("").classes("text-caption text-white")
-        ui.timer(0.8, lambda: setattr(lbl, "text", p["name"] + ("" if p.get("_pfad") else "  (noch nicht gespeichert)")))
+        lbl = ui.label("").classes("text-caption").style("color:#c9d3dd")
+        stand = {"zeit": ""}
 
-        def sp():
-            speichern()
-            ui.notify(f"Gespeichert: {p.get('_pfad', '')}", type="positive")
-        ui.button("Speichern", icon="save", on_click=sp).props("flat color=white dense")
+        def status():
+            if p.get("_pfad"):
+                lbl.text = f"{p['name']}  ·  gespeichert {stand['zeit']}" if stand["zeit"] else p["name"]
+            else:
+                lbl.text = p["name"] + "  ·  noch nicht gespeichert"
+        ui.timer(0.8, status)
+
+        def sp(still=False):
+            try:
+                Z.speichern(p)
+            except Exception as e:
+                ui.notify(f"Speichern nicht möglich: {e}", type="negative")
+                return
+            import time
+            stand["zeit"] = time.strftime("%H:%M")
+            if not still:
+                ui.notify(f"Gespeichert: {p.get('_pfad', '')}", type="positive")
+        ui.button(icon="save", on_click=lambda: sp()).props("flat round color=white dense").tooltip("Speichern (geschieht auch automatisch)")
+
+        def beenden():
+            sp(True)
+            from nicegui import app as _a
+            _a.shutdown()
+        ui.button(icon="power_settings_new", on_click=beenden).props("flat round color=white dense") \
+            .tooltip("Programm beenden (speichert vorher)")
 
     panels = None
     tabs_w = None
@@ -86,11 +107,11 @@ def seite():
                     ui.tooltip(t).props("anchor=center right self=center left")
                 items[k] = it
 
-    with ui.row().classes("w-full items-center no-wrap gap-0").style(f"background:{AKZENT}"):
+    with ui.row().classes("w-full items-center no-wrap gap-0 q-px-sm").style(f"background:#fff; border-bottom:1px solid {LINIE}"):
         with ui.tabs(value="start", on_change=lambda e: (not sperre["an"]) and e.value and wechsel(e.value)) \
-                .props("align=left active-color=white indicator-color=white dense").style("color:#dcebec") as tabs_w:
+                .props("align=left active-color=primary indicator-color=primary dense inline-label no-caps").style(f"color:{GRAU}") as tabs_w:
             for k, t, ic in ABLAUF:
-                ui.tab(k, label=t, icon=ic)
+                ui.tab(k, label=t, icon=ic).classes("schritt-tab")
 
     me = ModellEinst(p)
     wz = Werkzeuge(p, me)
@@ -98,7 +119,7 @@ def seite():
         with ui.tab_panel("start").classes("py-2"):
             start_seite.seite(wechsel, lambda *a, **k: None)
         with ui.tab_panel("gebiet").classes("py-2"):
-            Gebiet(p, speichern).seite()
+            Gebiet(p, speichern, wechsel).seite()
         with ui.tab_panel("einst").classes("py-2"):
             einst.seite(p)
         with ui.tab_panel("export").classes("py-2"):
@@ -112,7 +133,29 @@ def seite():
         with ui.tab_panel("prog").classes("py-2"):
             wz.seite_einstellungen()
     eier.fuss()
-    ui.timer(45, lambda: speichern() if p.get("_pfad") else None)
+    ui.timer(12, lambda: sp(True) if p.get("_pfad") else None)
+
+
+def _frei(port):
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as so:
+        try:
+            so.bind(("127.0.0.1", port))
+            return True
+        except OSError:
+            return False
+
+
+def _laeuft_schon(port):
+    """Antwortet auf diesem Port schon dieselbe Programmkopie? -> True"""
+    import json
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/_architools", timeout=2) as r:
+            d = json.loads(r.read().decode("utf-8"))
+        return d.get("programm") == "ArchItools" and d.get("pfad") == stil.PAKET
+    except Exception:
+        return False
 
 
 def start(native=None, port=None, show=True):
@@ -123,10 +166,29 @@ def start(native=None, port=None, show=True):
         except Exception:
             native = False
     NATIVE["an"] = bool(native)
+    # Port: ist 8765 belegt (z. B. von einer noch laufenden Kopie), nicht abbrechen
+    wunsch = port or 8765
+    if not _frei(wunsch):
+        if _laeuft_schon(wunsch):
+            print(f"Chris ArchItools läuft schon (Port {wunsch}) – öffne die laufende Kopie im Browser.")
+            import webbrowser
+            webbrowser.open(f"http://127.0.0.1:{wunsch}/")
+            return
+        for p_ in range(wunsch + 1, wunsch + 60):
+            if _frei(p_):
+                print(f"Port {wunsch} ist belegt – nehme Port {p_}.")
+                wunsch = p_
+                break
+    port = wunsch
+    from nicegui import app as _app
+
+    @_app.get("/_architools")
+    def _kennung():
+        return {"programm": "ArchItools", "pfad": stil.PAKET, "stand": VERSION}
     ui.page("/")(seite)
     kw = dict(title=f"Chris ArchItools – {WASSERZEICHEN}", reload=False, language="de", show_welcome_message=False,
               favicon="📐")
     if native:
-        ui.run(native=True, window_size=(1500, 950), port=port or 8765, **kw)
+        ui.run(native=True, window_size=(1500, 950), port=port, **kw)
     else:
-        ui.run(port=port or 8765, show=show, **kw)
+        ui.run(port=port, show=show, **kw)
