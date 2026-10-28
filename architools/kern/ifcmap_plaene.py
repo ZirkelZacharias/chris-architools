@@ -479,6 +479,14 @@ def zeichne(z, d, variante, log=print):
         for (x, y, kr, ho, st, _) in d.baeume:
             z.kreis(x, y, max(kr, 1.0) / 2, l_k, rgb=S["krone"])
 
+    # --- Beschriftung (nur Lageplan)
+    if lage and getattr(cfg, "lp_text", False):
+        try:
+            import ifcmap_beschriftung as BE
+            BE.zeichne(z, d, log)
+        except Exception as e:
+            log("  FEHLER bei der Lageplan-Beschriftung (%s) - Plan ohne Beschriftung" % str(e)[:120])
+
     # --- Sonnenbahnen, Rahmen
     if getattr(cfg, "sonne", False) and an("Sonne"):
         try:

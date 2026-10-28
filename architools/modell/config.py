@@ -81,6 +81,38 @@ DEFAULTS = {
         "ringe_teilen": True,              # lange dünne Ringteile in Stücke teilen (packt dichter)
         "teilstueck_mm": 250.0,
         "ausgabe_dxf": False,              # zusätzlich DXF (z. B. zur Kontrolle in ArchiCAD)
+        # Restplatten: werden zuerst belegt; was darauf nicht passt, kommt auf das gewählte Format.
+        # [{"name": "Rest 1", "b_mm": 400, "h_mm": 300, "anzahl": 1}, ...]  (gleiches Material und gleiche Stärke)
+        "restplatten": [],
+    },
+
+    # Rastergravur (EXPERIMENTELL): Bild als Linienraster (schwarze Streifen) auf die Geländeschichten.
+    "raster_bild": {
+        "aktiv": False,
+        "quelle": "luftbild",              # WMS-Schlüssel (luftbild, luftbild_1998, k5 ...) oder "datei"
+        "datei": "",                       # Bilddatei (GeoTIFF mit Georeferenz oder JPG/PNG auf den Ausschnitt gestreckt)
+        "weite_mm": 0.5,                   # Zeilenabstand; kleiner = feiner, aber mehr Objekte und längere Laserzeit
+        "kontrast": 1.0,
+        "helligkeit": 0.0,                 # -1 … +1; positiv = heller
+        "teststreifen": True,              # 100 × 100 mm Probestück in drei Stufen mitlasern
+    },
+
+    # Holz: Rahmenleisten ums Modell und Grundpodest (nur Zuschnittliste und Zeichnung, kein Laser)
+    "holz": {
+        "rahmen": {
+            "aktiv": False,
+            "breite_mm": 20.0,             # Breite der Leiste von oben gesehen
+            "hoehe_mm": None,              # Höhe der Leiste; None = Höhe des Geländestapels
+            "gehrung": True,               # Ecken auf Gehrung (45°); sonst stumpf
+        },
+        "podest": {
+            "aktiv": False,
+            "hoehe_mm": 80.0,              # Gesamthöhe des Podests (Oberkante Deckplatte)
+            "deckplatte_mm": 12.0,         # Stärke der Deckplatte
+            "ueberstand_mm": 20.0,         # Deckplatte steht so weit über das Modell (bzw. den Rahmen) hinaus
+            "rahmenholz_breite_mm": 12.0,  # Stärke der Rahmenbretter
+            "stuetz_abstand_mm": 300.0,    # Stützrahmen im Unterbau höchstens in diesem Abstand
+        },
     },
 
     # Markierungen aus eigenen Dateien. aktion: "ritzen", "gravieren", "schneiden", "aus"
@@ -102,7 +134,19 @@ DEFAULTS = {
         "platzhalter_ids": [],             # gml:id – nur Umriss gravieren (z. B. eigener Entwurf)
         "separat_ids": [],                 # gml:id – eigene Druckplatten (z. B. Ensemble als Einsatz)
         "beschriften": True,               # Gebäudenummer auf die Platte gravieren
+        "teile_beschriften": True,         # Laserformen: Teilenummer auf jedes Teil gravieren
         "beschriftung_hoehe_mm": 2.5,
+        # Wie werden die Gebäude gebaut?  "druck" = 3D-Druck (STL), "stapel" = Stapelmodell aus Laserplatten,
+        # "flaeche" = ebene Wand-/Dachflächen zum Kleben (ohne Laschen), "falt" = Faltmodell (Abwicklung mit Laschen)
+        "modus": "druck",
+        "material": "",                    # Laser-Material der Gebäudeteile; leer = wie das Gelände
+        "staerke_mm": None,                # Stärke dazu; None = wie das Gelände (bei anderem Material Pflicht)
+        "lasche_mm": 3.0,                  # Breite der Klebelaschen (nur Faltmodell)
+        "stifte": False,                   # 3D-Druck: Löcher für Steckstifte unter den Gebäuden und im Gelände
+        "stift_d_mm": 2.0,                 # Ø des Stifts (Draht, Rundholz, Zahnstocher)
+        "stift_laenge_mm": 4.0,            # so tief stecken die Stifte (je Seite die Hälfte, mind. 2 mm)
+        "stift_spiel_mm": 0.2,             # Luft im Loch (Durchmesser + Spiel)
+        "stift_abstand_mm": 40.0,          # ab dieser Gebäudegröße mehrere Stifte (Abstand)
     },
 
     # Weitere Bauwerke (Brücken, Mauern, Bahnsteige ...) als Extrusion

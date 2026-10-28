@@ -28,7 +28,7 @@ EBENEN_STANDARD = {
     "Teile-IDs": "gravieren",
     "Rippen-/Klotzmarken": "ritzen",
 }
-AKTIONEN = ("ritzen", "gravieren", "schneiden", "aus")
+AKTIONEN = ("ritzen", "gravieren", "raster", "schneiden", "aus")
 
 
 def aktion(cfg, name):
@@ -38,7 +38,7 @@ def aktion(cfg, name):
     return e or EBENEN_STANDARD.get(name, "ritzen")
 
 
-def _anwenden(geom, typ, akt, region, d_mm=1.5, breite_mm=0.0):
+def _anwenden(geom, typ, akt, region, d_mm=1.5, breite_mm=0.0, raster=None):
     """Geometrie einer Ebene auf eine Platte anwenden. -> (ritz-Linien, Gravurflächen, Schnittlöcher)"""
     rz, gv, cut = [], [], []
     if akt == "aus" or geom.is_empty:
@@ -51,19 +51,26 @@ def _anwenden(geom, typ, akt, region, d_mm=1.5, breite_mm=0.0):
             c = pt.buffer(rr, 16)
             if akt == "schneiden":
                 cut.append(c)
-            elif akt == "gravieren":
+            elif akt in ("gravieren", "raster"):
                 gv.append(c)
             else:
                 rz += lines(c.exterior)
     elif typ == "flaeche":
-        if akt == "gravieren":
+        if akt == "raster":
+            from .rastergravur import flaechen_raster
+            gv += flaechen_raster(geom.intersection(region.buffer(-0.3)), *(raster or (50.0, 0.8)))
+        elif akt == "gravieren":
             gv += polys(geom.intersection(region))
         elif akt == "schneiden":
             cut += polys(geom.intersection(region.buffer(-1.0)))
         else:
             rz += lines(geom.boundary.intersection(region))
     else:                                          # Linie
-        if akt == "gravieren":
+        if akt == "raster":
+            from .rastergravur import flaechen_raster
+            gv += flaechen_raster(geom.buffer(max(breite_mm, 1.5) / 2.0, cap_style="flat").intersection(region.buffer(-0.3)),
+                                  *(raster or (50.0, 0.8)))
+        elif akt == "gravieren":
             gv += polys(geom.buffer(max(breite_mm, 0.8) / 2.0, cap_style="flat").intersection(region))
         else:                                      # schneiden von offenen Linien ergibt keinen Sinn -> ritzen
             rz += lines(geom.intersection(region))
@@ -181,6 +188,12 @@ def make_parts(P, buildings, features, cfg, log=print):
     a_geb = aktion(cfg, "Gebäudeumrisse")
     a_nr = aktion(cfg, "Gebäudenummern")
     a_mk = aktion(cfg, "Rippen-/Klotzmarken")
+    rasterbild = cfg.get("_rasterbild")             # Funktion Region -> Gravurpolygone (Rastergravur Bild, experimentell)
+    stift_t = stift_r = None
+    if gb.get("stifte") and gb.get("modus", "druck") == "druck" and any(b.get("stifte") for b in buildings):
+        stift_t = max(2.0, float(gb.get("stift_laenge_mm") or 4.0) / 2.0)
+        stift_r = (float(gb.get("stift_d_mm") or 2.0) + float(gb.get("stift_spiel_mm") or 0.2)) / 2.0
+        log(f"  Steckstifte: Löcher Ø {2 * stift_r:.1f} mm, {stift_t:.0f} mm tief unter {sum(1 for b in buildings if b.get('stifte'))} Gebäuden")
     parts = []
     for k in range(n + 1):
         part = M[k]
@@ -190,6 +203,13 @@ def make_parts(P, buildings, features, cfg, log=print):
                   if cover.contains(p) and part.buffer(-(r_h + 1.5)).contains(p)]
             if hs:
                 part = part.difference(shapely.union_all(hs))
+        if stift_t is not None:                      # Steckstift-Löcher unter den Gebäuden (Sacklöcher -> durchgeschnitten)
+            sl = []
+            for b in buildings:
+                if b.get("stifte") and 0 <= b["layer"] - k < max(1, math.ceil(stift_t / t - 1e-6)):
+                    sl += [Point(x, y).buffer(stift_r, 16) for x, y in b["stifte"]]
+            if sl:
+                part = part.difference(shapely.union_all(sl))
         visible = Q[k].difference(Q[k + 1]) if k < n else Q[k]
         rz, gv, cut = [], [], []
         if k < n:
@@ -217,12 +237,18 @@ def make_parts(P, buildings, features, cfg, log=print):
             if fg.is_empty or not fg.intersects(visible):
                 continue
             r_, g_, c_ = _anwenden(fg, feat["typ"], feat["aktion"], visible, feat.get("d", 1.5),
-                                   feat.get("breite_mm", 0.0))
+                                   feat.get("breite_mm", 0.0), feat.get("raster"))
             rz += r_
             gv += g_
             cut += c_
         if cut:
             part = part.difference(shapely.union_all(cut))
+        raster_mm2 = 0.0
+        if rasterbild is not None:
+            reg = visible.intersection(part.buffer(-0.3))
+            if not reg.is_empty:
+                gv += rasterbild(reg)
+                raster_mm2 = reg.area
         txt_r, txt_g = [], []
         if gb.get("beschriften", True):
             for b in buildings:
@@ -236,7 +262,8 @@ def make_parts(P, buildings, features, cfg, log=print):
             parts.append({"layer": k, "nr": i, "poly": comp,
                           "ritzen": [x for l in rz + txt_r if l.intersects(c2) for x in lines(l.intersection(c2))],
                           "gravieren": [x for p in gv + txt_g if p.intersects(comp) for x in polys(p.intersection(comp))],
-                          "hidden": Q[k + 1] if k < n else None})
+                          "hidden": Q[k + 1] if k < n else None,
+                          "raster_mm2": raster_mm2 * comp.area / max(part.area, 1.0) if raster_mm2 else 0.0})
     log(f"  {len(parts)} Laserteile auf {n + 1} Schichten (inkl. Grundplatte), Bauweise: {weise}")
     stuetzen = []
     for k, p in blocks:

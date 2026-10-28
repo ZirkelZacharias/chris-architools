@@ -28,7 +28,12 @@ def _stueck_je_platte(teil, platte):
     return max(int(W // w) * int(H // h), int(W // h) * int(H // w))
 
 
-def text(cfg, stats, platten, platten_e, drucke):
+def _modus_name(m):
+    return {"druck": "3D-Druck", "stapel": "Stapelmodell", "flaeche": "ebene Klebeflächen ohne Laschen",
+            "falt": "Faltmodell"}.get(m, str(m))
+
+
+def text(cfg, stats, platten, platten_e, drucke, platten_g=()):
     """-> Text der Liste"""
     pr = BIB.preise()
     L = []
@@ -47,10 +52,17 @@ def text(cfg, stats, platten, platten_e, drucke):
         add("-" * 60)
         add(f"Material: {sorte}, {st:g} mm")
         n_form = {}
+        rest_pl = [p for p in alle_pl if p.get("rest")]
         for p in alle_pl:
+            if p.get("rest"):
+                continue
             n_form[tuple(p["format"])] = n_form.get(tuple(p["format"]), 0) + 1
         for (w, h), c in n_form.items():
-            add(f"Zuschnitte für den Laser: {c} × {w:.0f} × {h:.0f} mm  (davon Gelände {len(platten)}, Einsatz {len(platten_e)})")
+            add(f"Zuschnitte für den Laser: {c} × {w:.0f} × {h:.0f} mm  (davon Gelände {len(platten) - len(rest_pl)}, Einsatz {len(platten_e)})")
+        for p in rest_pl:
+            add(f"Restplatte „{p['rest']}“ ({p['format'][0]:.0f} × {p['format'][1]:.0f} mm): vorhanden, wird belegt – kein Kauf nötig")
+        if stats.get("gebaeude_modus", "druck") != "druck" and not platten_g:
+            add(f"Gebäude als Laserteile ({_modus_name(stats['gebaeude_modus'])}): {stats.get('n_geb_teile', 0)} Teile liegen auf diesen Platten")
         flaeche_m2 = sum(w * h * c for (w, h), c in n_form.items()) / 1e6
         add(f"Plattenfläche gesamt: {_z(flaeche_m2)} m²  (reine Teilefläche {_z(stats['teile_flaeche'] / 1e6, 3)} m²)")
         hp = pr["handelsplatte_mm"]
@@ -75,6 +87,10 @@ def text(cfg, stats, platten, platten_e, drucke):
             add(f"Laserkosten (Schätzung): ca. {_eur(lz['netto'])} netto = {_eur(lz['netto'] * (1 + lz['mwst']))} brutto "
                 f"({_z(lz['preis_min'])} €/min zzgl. MwSt.)")
             summe_netto += lz["netto"]
+            if (cfg.get("raster_bild") or {}).get("aktiv"):
+                gz = lz.get("teile", {}).get("gravieren", 0) / 60
+                add(f"  darin Gravur/Rastergravur: ca. {gz:.0f} min – Rastergravur ist EXPERIMENTELL; sie kostet nach Fläche, nicht nach Bildinhalt. "
+                    "Erst den Teststreifen (100 × 100 mm) lasern lassen und die Werkstatt nach Zeit und Bitmap/Vektor fragen.")
         add("")
         add("Platte | Teile | Belegung | Laserzeit (ca.)")
         for i, p in enumerate(alle_pl, 1):
@@ -84,10 +100,29 @@ def text(cfg, stats, platten, platten_e, drucke):
                 zt = BL.laserzeit([p], sorte, st)[0] / 60
             except Exception:
                 zt = float("nan")
-            name = f"{i:02d}" if i <= len(platten) else f"E{i - len(platten):02d}"
+            name = (("R" + str(p["rest"])[:4]) if p.get("rest") else f"{i:02d}") if i <= len(platten) else f"E{i - len(platten):02d}"
             add(f"{name:>6} | {len(p['teile']):>5} | {belegt:>6.0f} % | {_z(zt, 1):>6} min")
         add("")
-    if drucke or stats.get("n_druck"):
+    if platten_g:
+        add("LASERCUT – GEBÄUDE (anderes Material)")
+        add("-" * 60)
+        sg = stats.get("gebaeude_material", "")
+        add(f"Material: {sg}, Gebäude als {_modus_name(stats.get('gebaeude_modus'))}: {stats.get('n_geb_teile', 0)} Teile")
+        ng = {}
+        for p in platten_g:
+            ng[tuple(p["format"])] = ng.get(tuple(p["format"]), 0) + 1
+        for (w, h), c in ng.items():
+            add(f"Zuschnitte für den Laser: {c} × {w:.0f} × {h:.0f} mm")
+        sorte_g = (cfg["gebaeude"].get("material") or "")
+        st_g = float(cfg["gebaeude"].get("staerke_mm") or 0) or None
+        pm2 = pr["material_eur_m2_je_mm"].get(sorte_g)
+        if pm2 is not None and st_g:
+            hp = pr["handelsplatte_mm"]
+            fl = sum(w * h * c for (w, h), c in ng.items()) / 1e6
+            add(f"Materialkosten (Schätzung): ca. {_eur(fl * pm2 * st_g)} brutto (nur Plattenfläche, ohne Verschnitt zur Handelsplatte)")
+            summe_netto += fl * pm2 * st_g / (1 + BIB.WERKSTATT["mwst"])
+        add("")
+    if stats.get("gebaeude_modus", "druck") == "druck" and (drucke or stats.get("n_druck")):
         add("3D-DRUCK")
         add("-" * 60)
         add(f"Gebäude gedruckt: {stats['n_druck']}, Druckplatten: {stats['n_druckplatten']} ({cfg['druck'].get('geraet', '')}, "
@@ -98,6 +133,11 @@ def text(cfg, stats, platten, platten_e, drucke):
         add(f"Filamentkosten (Schätzung): ca. {_eur(fk)} brutto  ({_z(pr['filament_eur_kg'], 0)} €/kg)")
         summe_netto += fk / (1 + BIB.WERKSTATT["mwst"])
         add("")
+    if stats.get("holz"):
+        add("HOLZ (Rahmenleisten / Podest)")
+        add("-" * 60)
+        add("Zuschnittliste und Zeichnung liegen im Ordner „holz“. Holz wird nicht gelasert; Holzpreise sind hier nicht eingerechnet.")
+        add("")
     add("SUMME (Schätzung)")
     add("-" * 60)
     mw = BIB.WERKSTATT["mwst"]
@@ -107,8 +147,8 @@ def text(cfg, stats, platten, platten_e, drucke):
     return "\n".join(L) + "\n"
 
 
-def schreiben(pfad, cfg, stats, platten, platten_e, drucke):
-    t = text(cfg, stats, platten, platten_e, drucke)
+def schreiben(pfad, cfg, stats, platten, platten_e, drucke, platten_g=()):
+    t = text(cfg, stats, platten, platten_e, drucke, platten_g)
     with open(pfad, "w", encoding="utf-8") as f:
         f.write(t)
     return t

@@ -29,8 +29,8 @@ AUSGABEN = {
                     "Figur-Grund-Plan: Gebäude schwarz auf weiß.", "umgebung", "umgebung"),
     "info_dwg": ("Informations-DWG", "layers", "#5f8f6b",
                  "Alle Geodaten als Ebenen in einer 2D-Zeichnung (Nutzung, Flurstücke, Höhen …).", "umgebung", "umgebung"),
-    "druck": ("Gebäude 3D-Druck", "view_in_ar", "#7fb3c4",
-              "Gebäude als druckbare Platten für den 3D-Drucker (STL).", "modell", "modell/druck"),
+    "druck": ("Gebäude für das Modell", "view_in_ar", "#7fb3c4",
+              "Gebäude als 3D-Druck (STL) oder als Laserteile: Stapelmodell, Klebeflächen, Faltmodell.", "modell", "modell/druck"),
     "laser": ("Gelände Lasercut", "grid_view", "#d19a2b",
               "Geländeschichten als Laser-PDFs, Montageplan, Steckrippen.", "modell", "modell/laser"),
     "schnitt": ("Geländeschnitt", "show_chart", "#c8643b",
@@ -55,7 +55,6 @@ SCHNITT_STANDARD = {
     "ansicht": True,                  # Gebäude und Bäume HINTER der Schnittlinie als Ansicht zeigen
     "tiefe_m": 100.0,                 # so weit hinter der Linie
     "seite": "links",                 # Blickseite: "links" oder "rechts" der Linie (Abwicklung auch "beide")
-    "fassade": False,                 # Fenster und Türen als Muster in die Ansicht dahinter (nicht gemessen)
     "baeume": True,                   # Bäume markieren (dunkelgrün = von der Linie getroffen, hellgrün = dahinter)
     "format": ["dxf"],
 }

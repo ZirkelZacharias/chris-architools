@@ -254,17 +254,27 @@ def seite(p, speichern):
             ui.space()
             eier.icon(48)                                                   # Zirkel Zacharias schaut zu – wortlos
         u = r.get("umgebung")
+        zu = {}
         if u:
-            ui.label("Umgebung").classes("text-h6 mt-2")
-            if u.get("fehler"):
-                ui.label("Fehler: " + u["fehler"]).style("color:#b00020")
-            for f in u.get("dateien", []):
+            from ..laufen import _ausgabe_zuordnen
+            zu = _ausgabe_zuordnen(u.get("dateien", []))
+
+        def datei_liste(titel, dateien, fehler=None):
+            ui.label(titel).classes("text-h6 mt-2")
+            if fehler:
+                ui.label("Fehler: " + fehler).style("color:#b00020")
+            for f in dateien:
                 with ui.row().classes("items-center gap-2 no-wrap"):
                     ui.icon("description").style(f"color:{GRAU}")
                     ui.label(os.path.basename(f)).classes("text-body2")
                     ui.label(f"{os.path.getsize(f) / 1e6:.1f} MB" if os.path.exists(f) else "").classes("text-caption") \
                         .style(f"color:{GRAU}")
                     ui.button(icon="open_in_new", on_click=lambda f=f: oeffnen(f)).props("flat dense round")
+        # Reihenfolge: 3D-IFC, Lageplan, Modellbau, Schnitt/Höhenlinien, ganz am Ende die gewählten Zusatz-DWGs
+        if u and (u.get("fehler") or zu.get("ifc")):
+            datei_liste("Umgebung in 3D (IFC)", zu.get("ifc", []), u.get("fehler"))
+        if u and zu.get("lageplan"):
+            datei_liste("Lageplan", zu["lageplan"])
         m = r.get("modell")
         if m:
             if m.get("fehler"):
@@ -285,3 +295,6 @@ def seite(p, speichern):
                         ui.label(os.path.basename(f)).classes("text-body2")
                         ui.button(icon="open_in_new", on_click=lambda f=f: oeffnen(f)).props("flat dense round")
                 ui.image(url(s["png"])).classes("w-full bg-white")
+        if u and (zu.get("schwarzplan") or zu.get("info_dwg")):
+            datei_liste("Zusätzliche Pläne (DXF/DWG)", zu.get("schwarzplan", []) + zu.get("info_dwg", []))
+

@@ -119,16 +119,6 @@ def seiten(p):
                 hinweis("Das Gelände bleibt auf DGM-Höhe (dort stehen auch die Gebäude); nur die Fahrbahn sinkt.")
                 _haken("Brücken im IFC: Straße/Gehweg nur auf Brücken, die im LoD2 vorhanden sind (sonst weglassen)", u, "bruecken_ifc")
                 _wahl("Gelände in der IFC als", GELAENDE_TYPEN, u, "gelaende_typ")
-                fa = _haken("Fassaden andeuten: Fenster und Türen als flache Rechtecke auf den Wänden der Gebäude im Nahbereich",
-                            u, "fassade")
-                with ui.row().classes("gap-2 items-center") as fa_in:
-                    ui.label("nur Gebäude bis").classes("text-body2")
-                    _zahl("", u, "fassade_radius", min=20, step=10, breite="w-20")
-                    ui.label("m um den Mittelpunkt").classes("text-body2")
-                hinweis("Nur ein MUSTER nach Wandbreite und Geschosshöhe – nicht gemessen und nicht aus Luftbild/DOM abgelesen "
-                        "(das LoD2 enthält keine Öffnungen). Balkone lassen sich daraus nicht ableiten. Mehr Elemente = "
-                        "mehr Rechenlast in Archicad.")
-                ausgrauen(fa_in, fa)
             with karte("Markante Gebäude – experimentell", OCKER, offen=False) as k_markant:
                 ui.label("EXPERIMENTELL: Diese Funktion klappt noch nicht immer – Gebäude können fehlen oder falsche Formen haben.") \
                     .classes("text-caption").style(f"color:{OCKER}")
@@ -190,6 +180,24 @@ def seiten(p):
                         "Schatten über die Ebene „Schatten“ abwählen.")
                 lp_regel = _wenn_aus(p, "lageplan")
                 regeln.append((lp, lp_regel))
+
+        # -------------------------------------------------- Lageplan-Beschriftung
+        with abschnitt(_wenn_aus(p, "lageplan")):
+            with karte("Lageplan-Beschriftung", SCHIEFER, offen=False):
+                bt = _haken("Lageplan beschriften (jede Art auf eigener Ebene, Schrift 2,5 mm auf dem Papier)", u, "lp_text")
+                with ui.column().classes("w-full gap-0") as bt_in:
+                    _haken("Flurstücksnummern (ALKIS, nur Berlin – braucht den Haken „ALKIS-Zusatzdaten“ bei Informations-DWG/Daten)", u, "lp_text_flurstuecke")
+                    _haken("Hausnummern (OpenStreetMap)", u, "lp_text_hausnummern")
+                    _haken("Straßennamen (OpenStreetMap)", u, "lp_text_strassen")
+                    _haken("Gebäudehöhen: Traufe und First (LoD2)", u, "lp_text_hoehen")
+                    _wahl("Höhen angeben", {"gelaende": "über Gelände (Tr = Traufe, Fi = First)", "nhn": "in m ü. NHN"},
+                          u, "lp_text_hoehen_art", "w-80")
+                    with ui.row().classes("gap-2 items-center"):
+                        ui.label("Maßstab für die Schrifthöhe 1:").classes("text-body2")
+                        _zahl("", u, "lp_text_massstab", min=50, step=50, breite="w-24")
+                    hinweis("Wo OpenStreetMap oder ALKIS nichts liefern, bleibt der Text weg (steht im Protokoll). Noch nicht gegen die "
+                            "Live-Dienste getestet.")
+                ausgrauen(bt_in, bt)
 
         # -------------------------------------------------- Informations-DWG
         with abschnitt(_wenn_aus(p, "info_dwg")):

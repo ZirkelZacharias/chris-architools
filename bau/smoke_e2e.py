@@ -68,7 +68,12 @@ if g.get("grundriss_datei") and not os.path.isabs(g["grundriss_datei"]): g["grun
 p["formate"]={"zweid":["dxf","dwg","pdf"],"dreid":["ifc","glb"]}; u["extra"]=["radverkehr"]; u["ua_gebaeudehoehen"]=True; u["ua_vegetationshoehen"]=True
 p["formate"]={"zweid":["dxf"],"dreid":["ifc"]}; u["extra"]=["radverkehr"]; u["ua_vegetationsraster"]=True; u["veg_raster_dateien"]=[VEG]; u["rad_wege"]=True
 p["ausgaben"].update(ifc=True, lageplan=True, schwarzplan=True, info_dwg=True, laser=True, druck=True, schnitt=True, hoehenlinien=True)
-u["fassade"] = True; u["wms_karten"] = ["luftbild"]                      # Fassadenandeutung + Kartenbild (Dienst gestellt)
+u["wms_karten"] = ["luftbild"]                      # Kartenbild (Dienst gestellt)
+u["lp_text"] = True                                                       # Lageplan-Beschriftung
+mg = p["modell"]["gebaeude"]
+mg.update(modus="falt", material="Bristolkarton", staerke_mm=0.5, lasche_mm=3.0)       # Gebäude als Faltmodell (Laser)
+p["modell"]["laser"]["restplatten"] = [{"name": "Rest A", "b_mm": 400, "h_mm": 300, "anzahl": 1}]
+p["modell"]["holz"]["rahmen"]["aktiv"] = True; p["modell"]["holz"]["podest"]["aktiv"] = True
 import ifcmap_wms as WM, io
 from PIL import Image
 _CAP = b'<WMT_MS_Capabilities version="1.1.1"><Capability><Layer><SRS>EPSG:25833</SRS><Layer><Name>x</Name><Title>x</Title></Layer></Layer></Capability></WMT_MS_Capabilities>'
@@ -94,16 +99,20 @@ p["schnitt"].update(art="abwicklung", seite="beide", tiefe_m=60.0, linie_en=[[39
 ab = L.schnitt_export(p, log)
 assert any("Abwicklung" in os.path.basename(f) for f in ab["dateien"]), ab
 print("ABWICKLUNG OK", [os.path.basename(f) for f in ab["dateien"]])
-p["schnitt"]["fassade"] = True
-ab2 = L.schnitt_export(p, log)
-assert ab2["dateien"], ab2
-print("ABWICKLUNG MIT FASSADE OK")
 wm = [f for r_, _, fs_ in os.walk(TMP) for f in fs_ if f.startswith("ifcmap_zusatz_Karte_") and f.endswith(".dxf")]
 assert wm, "Kartenbild-DXF fehlt"
 print("KARTENBILD OK")
 kl = [f for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f in fs_ if f.endswith("zuschnitt_und_kosten.txt")]
 assert kl, "Kostenliste fehlt"
 print("KOSTENLISTE OK")
+gl = [f for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f in fs_ if "Gebaeude_Bristolkarton" in f and f.endswith(".pdf")]
+assert gl, "Gebäude-Laserplatte (Faltmodell) fehlt"
+hz = [f for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f in fs_ if f.endswith("holz_zuschnitt.txt")]
+assert hz, "Holz-Zuschnittliste fehlt"
+rp = [f for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f in fs_ if "Restplatte01" in f and f.endswith(".pdf")]
+assert rp, "Restplatten-PDF fehlt"
+lt = [f for r_, _, fs_ in os.walk(TMP) for f in fs_ if f.endswith("lageplan.dxf") or f.endswith("Lageplan.dxf")]
+print("GEBAEUDE-LASER, HOLZ, RESTPLATTEN OK")
 
 fehler = [k for k, v in erg.items() if isinstance(v, dict) and v.get("fehler")]
 fehlend = [k for k in MUSS if k not in p["stand"]]

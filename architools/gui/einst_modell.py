@@ -149,6 +149,143 @@ class ModellEinst:
                     .bind_enabled_from(g, "passloecher")
                 ui.number("Schrift mm").bind_value(g, "beschriftung_hoehe_mm").classes("w-24")
 
+    GEB_MODI = {"druck": "3D-Druck (STL für den Drucker)",
+                "stapel": "Stapelmodell (Schichten aus Pappe, Laser)",
+                "flaeche": "Flächen zum Kleben (ohne Laschen, Laser)",
+                "falt": "Faltmodell (mit Laschen, Laser)"}
+
+    def _karte_gebaeude(self):
+        g = self.cfg["gebaeude"]
+        g.setdefault("modus", "druck")
+        ist_druck = lambda m: m == "druck"
+        ist_laser = lambda m: m != "druck"
+        with karte("Gebäude: Form im Modell", AKZENT):
+            ui.select(self.GEB_MODI, label="Gebäude werden gebaut als").bind_value(g, "modus").classes("w-full")
+            # --- Laserformen
+            with ui.column().classes("w-full gap-1").bind_visibility_from(g, "modus", backward=ist_laser):
+                hinweis("Die Laserteile liegen in wahrer Größe auf den Platten; jedes Teil trägt die Gebäudenummer und seine Teilenummer. "
+                        "Bei Stapelmodell und Flächen entspricht jede Dachfläche ihrer wahren Form (keine Draufsicht).")
+                mats = BIB.alle("materialien")
+                with ui.row().classes("gap-2 items-end"):
+                    g.setdefault("material", "")
+                    ui.select({"": "wie Gelände", **{k: k for k in mats}}, label="Material der Gebäude").bind_value(g, "material") \
+                        .classes("min-w-[220px]")
+                    ui.number("Stärke mm (leer = wie Gelände)", min=0.1, max=10, step=0.1).bind_value(g, "staerke_mm") \
+                        .classes("w-56").props("clearable")
+                    ui.number("Laschenbreite mm", min=1, max=10, step=0.5).bind_value(g, "lasche_mm").classes("w-40") \
+                        .bind_visibility_from(g, "modus", value="falt")
+                ui.checkbox("Teile-Nummern auf die Teile gravieren").bind_value(g, "teile_beschriften")
+                hinweis_f = hinweis("Faltmodell: Am besten dünner Karton (z. B. Bristolkarton 0,25–0,5 mm); die blauen Linien sind die Faltkanten, "
+                                    "die Laschen kommen innen an die Nachbarwand.")
+                hinweis_f.bind_visibility_from(g, "modus", value="falt")
+            # --- 3D-Druck
+            with ui.column().classes("w-full gap-1").bind_visibility_from(g, "modus", backward=ist_druck):
+                with ui.row().classes("gap-2"):
+                    ui.number("Nahzone Radius m (leer = alles LoD2)").bind_value(g, "nahzone_radius_m").classes("w-64") \
+                        .tooltip("Außerhalb werden Gebäude als einfache Blöcke gedruckt")
+                    ui.number("Min. Wand mm").bind_value(g, "min_breite_mm").classes("w-28")
+                    ui.select({"gravieren": "nur auf Platte", "verstaerken": "verstärken"}, label="Zu kleine Bauten") \
+                        .bind_value(g, "zu_klein").classes("w-40")
+                self.drucker(self.cfg["druck"])
+                with ui.row().classes("gap-2 items-center"):
+                    sw = ui.checkbox("Steckstifte (Gebäude abnehmbar)").bind_value(g, "stifte") \
+                        .tooltip("Unter jedem Gebäude stehen Zapfen, die in Löcher der Geländeplatten greifen")
+                    st = ui.row().classes("gap-2 items-center")
+                    with st:
+                        ui.number("Ø mm", min=1, step=0.5).bind_value(g, "stift_d_mm").classes("w-20")
+                        ui.number("Länge mm", min=1, step=0.5).bind_value(g, "stift_laenge_mm").classes("w-24")
+                        ui.number("Spiel mm", min=0, step=0.1).bind_value(g, "stift_spiel_mm").classes("w-24") \
+                            .tooltip("Das Loch ist um diesen Betrag größer als der Stift")
+                        ui.number("Abstand mm", min=10, step=5).bind_value(g, "stift_abstand_mm").classes("w-28") \
+                            .tooltip("Bei langen Gebäuden alle x mm ein weiterer Stift")
+                    ausgrauen(st, sw)
+
+    def _karte_restplatten(self):
+        lc = self.cfg["laser"]
+        rp = lc.setdefault("restplatten", [])
+        with karte("Lasercut: Restplatten verwerten", SALBEI, offen=bool(rp)):
+            hinweis("Angebrochene Platten (gleiches Material und gleiche Stärke wie oben) hier anlegen. Das Programm belegt sie zuerst "
+                    "mit den passenden Teilen, alles Übrige kommt auf das oben gewählte Plattenformat.")
+            box = ui.column().classes("w-full gap-1")
+
+            def zeichnen():
+                box.clear()
+                with box:
+                    for r in rp:
+                        with ui.row().classes("w-full items-end no-wrap gap-1"):
+                            ui.input("Name").bind_value(r, "name").props("dense").classes("w-32")
+                            ui.number("Breite mm", min=20).bind_value(r, "b_mm").props("dense").classes("w-28")
+                            ui.number("Höhe mm", min=20).bind_value(r, "h_mm").props("dense").classes("w-28")
+                            ui.number("Anzahl", min=1, step=1).bind_value(r, "anzahl").props("dense").classes("w-20")
+                            ui.button(icon="close", on_click=lambda r=r: (rp.remove(r), zeichnen())).props("flat dense round")
+                    ui.button("Restplatte hinzufügen", icon="add",
+                              on_click=lambda: (rp.append({"name": f"Rest {len(rp) + 1}", "b_mm": 400, "h_mm": 300, "anzahl": 1}),
+                                                zeichnen())).props("flat dense")
+            zeichnen()
+
+    def _karte_holz(self):
+        hc = self.cfg.setdefault("holz", {})
+        rc = hc.setdefault("rahmen", {})
+        pc = hc.setdefault("podest", {})
+        for k, v in (("aktiv", False), ("breite_mm", 20.0), ("hoehe_mm", None), ("gehrung", True)):
+            rc.setdefault(k, v)
+        for k, v in (("aktiv", False), ("hoehe_mm", 80.0), ("deckplatte_mm", 12.0), ("ueberstand_mm", 20.0),
+                     ("rahmenholz_breite_mm", 12.0), ("stuetz_abstand_mm", 300.0)):
+            pc.setdefault(k, v)
+        with karte("Holz: Rahmenleisten und Grundpodest (Zuschnittliste)", OCKER, offen=False):
+            hinweis("Es entstehen eine Zuschnittliste (Text und CSV) und eine Zeichnung – gelasert wird nichts. Maße ohne Sägezugabe.")
+            sw = ui.checkbox("Rahmenleisten ums Modell").bind_value(rc, "aktiv")
+            b1 = ui.row().classes("gap-2 items-center")
+            with b1:
+                ui.number("Leistenbreite mm", min=5).bind_value(rc, "breite_mm").classes("w-36").tooltip("Breite von oben gesehen")
+                ui.number("Leistenhöhe mm (leer = Höhe des Geländestapels)", min=3).bind_value(rc, "hoehe_mm").classes("w-80").props("clearable")
+                ui.checkbox("Gehrung (45°)").bind_value(rc, "gehrung")
+            ausgrauen(b1, sw)
+            sw2 = ui.checkbox("Grundpodest aus Holz (Deckplatte, Rahmenbretter, bei Bedarf Stützrahmen – kein Boden)").bind_value(pc, "aktiv")
+            b2 = ui.row().classes("gap-2 items-center")
+            with b2:
+                ui.number("Podesthöhe mm", min=20).bind_value(pc, "hoehe_mm").classes("w-36").tooltip("Gesamthöhe bis Oberkante Deckplatte")
+                ui.number("Deckplatte mm", min=4).bind_value(pc, "deckplatte_mm").classes("w-32")
+                ui.number("Überstand mm", min=0).bind_value(pc, "ueberstand_mm").classes("w-32").tooltip("Deckplatte steht über Modell bzw. Rahmen hinaus")
+                ui.number("Brettstärke mm", min=4).bind_value(pc, "rahmenholz_breite_mm").classes("w-32")
+                ui.number("Stützabstand mm", min=100).bind_value(pc, "stuetz_abstand_mm").classes("w-36").tooltip("Stützrahmen im Unterbau höchstens in diesem Abstand")
+            ausgrauen(b2, sw2)
+
+    def _karte_raster(self):
+        rb = self.cfg.setdefault("raster_bild", {})
+        for k, v in (("aktiv", False), ("quelle", "luftbild"), ("datei", ""), ("weite_mm", 0.5), ("kontrast", 1.0),
+                     ("helligkeit", 0.0), ("teststreifen", True)):
+            rb.setdefault(k, v)
+        try:
+            from .. import projekt as _P
+            _P.kern()
+            import ifcmap_wms as _WM
+            quellen = {k: v for k, v in _WM.WMS_NAMEN.items() if not k.startswith("ua_")}
+        except Exception:
+            quellen = {"luftbild": "Luftbild (Berlin)"}
+        with karte("Lasercut: Rastergravur eines Bildes (experimentell)", TERRA, offen=False):
+            sw = ui.checkbox("Luftbild / Bild als Rastergravur auf die Geländeschichten").bind_value(rb, "aktiv")
+            box = ui.column().classes("w-full gap-1")
+            with box:
+                hinweis("Experimentell und an der Werkstatt noch nicht getestet. Das Bild wird als Linienraster aus schwarzen Streifen "
+                        "geschrieben (die Werkstatt nimmt Gravur nur als schwarze Fläche). Jede Schicht bekommt nur ihren sichtbaren Ring; "
+                        "zusammengesetzt ergibt das wieder ein durchgehendes Bild. Die Gravur kostet nach Fläche, nicht nach Bildinhalt – "
+                        "eine ganze 80 × 50-Platte kann rund eine Stunde dauern. Erst den Teststreifen lasern lassen. "
+                        "Hell wirkt es auf Finnpappe, Bristolkarton und Sperrholz; auf Graupappe ist der Kontrast schwach.")
+                with ui.row().classes("gap-2 items-end"):
+                    ui.select({**quellen, "datei": "eigene Bilddatei"}, label="Bildquelle").bind_value(rb, "quelle").classes("min-w-[260px]")
+                    ui.number("Zeilenabstand mm", min=0.25, max=3, step=0.05).bind_value(rb, "weite_mm").classes("w-40") \
+                        .tooltip("Kleiner = feiner, aber mehr Objekte und längere Laserzeit")
+                    ui.number("Kontrast", min=0.3, max=3, step=0.1).bind_value(rb, "kontrast").classes("w-28")
+                    ui.number("Helligkeit −1…+1", min=-1, max=1, step=0.1).bind_value(rb, "helligkeit").classes("w-40")
+                datei = ui.column().classes("w-full")
+                with datei:
+                    feld_pfad("Bilddatei (GeoTIFF mit Georeferenz, sonst JPG/PNG auf den Ausschnitt gestreckt)", rb, "datei",
+                              typen=("Bilder (*.tif;*.tiff;*.jpg;*.jpeg;*.png)",))
+                datei.bind_visibility_from(rb, "quelle", value="datei")
+                ui.checkbox("Teststreifen 100 × 100 mm in drei Stufen mitlasern").bind_value(rb, "teststreifen")
+            ausgrauen(box, sw)
+
     def _ebenen_tabelle(self):
         cfg = self.cfg
         eb = cfg.setdefault("ebenen", {})
@@ -182,7 +319,9 @@ class ModellEinst:
                         .bind_enabled_from(e, "aktion", backward=lambda v: v == "gravieren") \
                         .tooltip("Nur für „gravieren“: Linien werden zu Flächen dieser Breite")
                 else:
-                    ui.label("")
+                    e.setdefault("raster_grau", 50.0)
+                    ui.number("Grau %", min=5, max=100, step=5).bind_value(e, "raster_grau").props("dense").classes("w-20") \
+                        .bind_visibility_from(e, "aktion", value="raster").tooltip("Grauwert der Rastergravur (Streifenbreite im Zeilenabstand 0,8 mm)")
             with ui.grid(columns=3).classes("w-full gap-x-3 gap-y-0 items-center"):
                 for name in IFCMAP_EBENEN:
                     zeile(name)
@@ -230,6 +369,9 @@ class ModellEinst:
                                 .bind_enabled_from(m, "aktion", backward=lambda a: a != "aus")
                             ui.number("Ø mm").bind_value(m, "punkt_d_mm").props("dense").classes("w-16") \
                                 .bind_enabled_from(m, "aktion", backward=lambda a: a != "aus")
+                            m.setdefault("raster_grau", 50.0)
+                            ui.number("Grau %", min=5, max=100, step=5).bind_value(m, "raster_grau").props("dense").classes("w-16") \
+                                .bind_visibility_from(m, "aktion", value="raster")
                             ui.button(icon="close", on_click=lambda m=m: (cfg["markierungen"].remove(m), neu_zeichnen())) \
                                 .props("flat dense round")
                     ui.button("Markierung hinzufügen", icon="add",
@@ -291,6 +433,8 @@ class ModellEinst:
                 with karte("Lasercut: Material und Platte", OCKER):
                     self.material_format(cfg["laser"])
                     self.lbl_schicht2 = ui.label("").classes("text-body2").style(f"color:{AKZENT}")
+                self._karte_restplatten()
+                self._karte_raster()
                 self._karte_bauweise()
                 with karte("Lasercut: Was wird geritzt, graviert, geschnitten?", SCHIEFER):
                     self._ebenen_tabelle()
@@ -303,18 +447,12 @@ class ModellEinst:
                     ui.checkbox("Gebäude auf höheren Schichten aussparen (stehen eben)").bind_value(g, "gebaeude_aussparen")
                     ui.checkbox("lange dünne Ringe teilen (packt dichter)").bind_value(cfg["laser"], "ringe_teilen")
                     ui.checkbox("zusätzlich DXF (Kontrolle in Archicad)").bind_value(cfg["laser"], "ausgabe_dxf")
+            with abschnitt(lambda: ausg.get("laser") or ausg.get("druck")):
+                self._karte_holz()
             with abschnitt(lambda: ausg.get("druck")):
-                with karte("3D-Druck: Gebäude und Drucker", AKZENT):
-                    g = cfg["gebaeude"]
-                    with ui.row().classes("gap-2"):
-                        ui.number("Nahzone Radius m (leer = alles LoD2)").bind_value(g, "nahzone_radius_m").classes("w-64") \
-                            .tooltip("Außerhalb werden Gebäude als einfache Blöcke gedruckt")
-                        ui.number("Min. Wand mm").bind_value(g, "min_breite_mm").classes("w-28")
-                        ui.select({"gravieren": "nur auf Platte", "verstaerken": "verstärken"}, label="Zu kleine Bauten") \
-                            .bind_value(g, "zu_klein").classes("w-40")
-                    self.drucker(cfg["druck"])
+                self._karte_gebaeude()
                 if not ausg.get("laser"):
-                    with karte("3D-Druck: Maßstab", TERRA):
+                    with karte("Maßstab", TERRA):
                         hinweis("Der Maßstab steht auf der Seite „Gebiet“.")
         ui.timer(0.5, self._schicht_info)
 

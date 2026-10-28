@@ -177,7 +177,23 @@ def _util(s):
     return sum(p[0].area for p in s["placements"]) / (s["format"][0] * s["format"][1])
 
 
-def nest(items, formats, margin, gap, res, log=print, label="Platte", filler=None, n_filler=0, tries=3):
+def _restplatten(items, fest, margin, gap, res, log, label):
+    """Restplatten zuerst belegen: je Restplatte werden die groessten Teile gepackt, die noch draufpassen.
+    -> (Platten, uebrige Items). fest: [(Name, (B, H))]"""
+    sheets, rest = [], list(items)
+    for name, (fw, fh) in sorted(fest, key=lambda f: -f[1][0] * f[1][1]):
+        if not rest:
+            break
+        pl, rs, occ = _pack(sorted(rest, key=lambda i: -i.area), fw, fh, margin, gap, res)
+        if not pl:
+            log(f"  {label} {name} ({fw:.0f} x {fh:.0f} mm): nichts passt darauf - nicht benutzt")
+            continue
+        sheets.append({"format": (fw, fh), "placements": pl, "filler": [], "occ": occ, "rest": name})
+        rest = rs
+    return sheets, rest
+
+
+def nest(items, formats, margin, gap, res, log=print, label="Platte", filler=None, n_filler=0, tries=3, fest=None):
     """Verteilt items auf Platten. formats: [(B, H)].
 
     filler: Geometrie eines Kleinteils (z. B. Stützklotz), das n_filler-mal in Lücken gesetzt wird.
@@ -193,6 +209,9 @@ def nest(items, formats, margin, gap, res, log=print, label="Platte", filler=Non
         b = i.geom.bounds
         return max(b[2] - b[0], b[3] - b[1])
 
+    rest_sheets = []
+    if fest:
+        rest_sheets, items = _restplatten(items, fest, margin, gap, res, log, "Restplatte")
     orders = [lambda i: -i.area, lambda i: -bbox_area(i), lambda i: -maxdim(i)][:max(1, tries)]
     best = None
     for key in orders:
@@ -201,12 +220,14 @@ def nest(items, formats, margin, gap, res, log=print, label="Platte", filler=Non
         if best is None or score < best[0]:
             best = (score, sh, rest, left)
     _, sheets, rest, left = best
+    sheets = sheets + rest_sheets
     fa = filler.area if filler is not None else 0
     for n, s in enumerate(sheets, 1):
         W, H = s["format"]
         a = sum(p[0].area for p in s["placements"]) + fa * len(s["filler"])
         extra = f" + {len(s['filler'])} Stützklötze" if s["filler"] else ""
-        log(f"  {label} {n}: {W:.0f} x {H:.0f} mm, {len(s['placements'])} Teile{extra}, "
+        bez = f"Restplatte {s['rest']}" if s.get("rest") else f"{label} {n}"
+        log(f"  {bez}: {W:.0f} x {H:.0f} mm, {len(s['placements'])} Teile{extra}, "
             f"Ausnutzung {100 * a / (W * H):.0f} %")
     if rest:
         log(f"  Warnung: {len(rest)} Teile passen auf kein {label}nformat")

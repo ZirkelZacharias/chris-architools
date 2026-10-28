@@ -74,27 +74,48 @@ def bereinigen(teil, min_steg=WERKSTATT["min_steg_mm"], protokoll=None):
 
 def _verschieben(teil, ang, dx, dy):
     mv = lambda g: N.place(g, ang, dx, dy)
-    return {"id": teil.get("id", ""), "poly": mv(teil["poly"]),
+    return {"id": teil.get("id", ""), "poly": mv(teil["poly"]), "raster_mm2": teil.get("raster_mm2", 0.0),
             "ritzen": [mv(l) for l in teil.get("ritzen", [])],
             "gravieren": [mv(g) for g in teil.get("gravieren", [])]}
 
 
-def anordnen(teile, formate, cfg, log=print, filler=None, n_filler=0):
+def restplatten(cfg):
+    """Restplatten aus den Lasercut-Einstellungen -> [(Name, (B, H))], je Stueck ein Eintrag (B >= H)"""
+    out = []
+    for r in (cfg.get("laser", {}).get("restplatten") or []):
+        try:
+            b, h = float(r.get("b_mm") or 0), float(r.get("h_mm") or 0)
+            n = int(r.get("anzahl") or 1)
+        except (TypeError, ValueError):
+            continue
+        if b < 20 or h < 20 or n < 1:
+            continue
+        b, h = max(b, h), min(b, h)
+        name = str(r.get("name") or "Rest").strip() or "Rest"
+        for k in range(n):
+            out.append((name if n == 1 else f"{name} ({k + 1})", (b, h)))
+    return out
+
+
+def anordnen(teile, formate, cfg, log=print, filler=None, n_filler=0, fest=None):
     """Teile auf Platten verteilen. Rückgabe: Liste Platten dict(format, teile=[verschobene Teile])."""
     lc = cfg["laser"]
     items = [N.Item(i, t["poly"], lc.get("drehungen", [0, 90, 180, 270])) for i, t in enumerate(teile)]
     sheets, rest = N.nest(items, formate, float(lc.get("rand_mm", WERKSTATT["rand_mm"])),
                           float(lc.get("abstand_mm", 2.0)), float(lc.get("nesting_raster_mm", 1.0)),
-                          log, "Laserplatte", filler=filler, n_filler=n_filler)
+                          log, "Laserplatte", filler=filler, n_filler=n_filler, fest=fest)
     out = []
     for si, s in enumerate(sheets, 1):
         drin = []
         for it, ang, dx, dy in s["placements"]:
-            teile[it.key]["platte"] = si
+            teile[it.key]["platte"] = ("R-" + str(s["rest"])) if s.get("rest") else si
             drin.append(_verschieben(teile[it.key], ang, dx, dy))
         for dx, dy in s.get("filler", []):
             drin.append({"id": "", "poly": N.place(filler, 0, dx, dy), "ritzen": [], "gravieren": []})
-        out.append({"format": s["format"], "teile": drin})
+        pl_ = {"format": s["format"], "teile": drin}
+        if s.get("rest"):
+            pl_["rest"] = s["rest"]
+        out.append(pl_)
     if rest:
         log(f"  WARNUNG: {len(rest)} Teile passen auf keine Platte: "
             + ", ".join(str(teile[i.key].get('id')) for i in rest[:10]))
@@ -177,6 +198,7 @@ def laserzeit(platten, material, staerke):
         sch += a
         rz += b_
         fl += sum(g.area for t in pl["teile"] for g in t.get("gravieren", []))
+        fl += sum(max(0.0, t.get("raster_mm2", 0.0) - sum(g.area for g in t.get("gravieren", []))) * 0.5 for t in pl["teile"])
         kont += sum(1 + len(t["poly"].interiors) + len(t.get("ritzen", [])) for t in pl["teile"])
     teile = {"schneiden": sch / v, "ritzen": rz / B.RITZEN_MM_S, "gravieren": fl * B.GRAVUR_S_MM2,
              "anfahren": kont * B.JE_KONTUR_S}
@@ -188,8 +210,14 @@ def pdfs_schreiben(ordner, basis, platten, titel="", log=print):
     """Eine PDF je Platte (Werkstatt-Vorgabe): <basis>_Platte01.pdf, <basis>_Platte02.pdf, …"""
     pfade = []
     n = len(platten)
+    k_rest = 0
     for i, pl in enumerate(platten, 1):
-        p = os.path.join(ordner, f"{basis}_Platte{i:02d}.pdf")
+        if pl.get("rest"):
+            k_rest += 1
+            nm = "".join(c if c.isalnum() else "_" for c in str(pl["rest"]))
+            p = os.path.join(ordner, f"{basis}_Restplatte{k_rest:02d}_{nm}.pdf")
+        else:
+            p = os.path.join(ordner, f"{basis}_Platte{i:02d}.pdf")
         pdf_schreiben(p, [pl], f"{titel} – Platte {i} von {n}")
         for m in pruefen(p, [pl]):
             log(f"  PRÜFUNG Platte {i}: {m}")

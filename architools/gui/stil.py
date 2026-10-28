@@ -23,6 +23,7 @@ FREIGABE = set()                         # Ordner, deren Dateien die Oberfläche
 HOEHE = "calc(100vh - 156px)"            # Arbeitsbereich unter Kopf und Reitern
 
 AKTION_TEXT = {"ritzen": "ritzen (blau)", "gravieren": "gravieren (schwarze Fläche)",
+               "raster": "Raster-Gravur (experimentell)",
                "schneiden": "schneiden (rot)", "aus": "aus"}
 MASSSTAEBE = {50: "1:50", 100: "1:100", 200: "1:200", 250: "1:250", 500: "1:500", 750: "1:750", 1000: "1:1000",
               1250: "1:1250", 2000: "1:2000", 2500: "1:2500", 5000: "1:5000", 10000: "1:10000"}

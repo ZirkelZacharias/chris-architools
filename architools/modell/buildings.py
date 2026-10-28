@@ -80,6 +80,48 @@ def _too_thin(fp, min_w):
     return fp.buffer(-min_w / 2.0).is_empty
 
 
+def stift_positionen(fp, d, abstand):
+    """Stiftpositionen (x, y) in Modell-mm: im Grundriss mit Rand; kleine Gebäude 1 Stift, grössere ein Raster.
+    Gebäude, in denen kein Stift mit Wand >= 1 mm Platz hat, bekommen keinen."""
+    rand = d / 2.0 + 1.0
+    innen = fp.buffer(-rand)
+    if innen.is_empty or innen.area < 0.5:
+        return []
+    out = []
+    minx, miny, maxx, maxy = innen.bounds
+    if max(maxx - minx, maxy - miny) <= abstand * 1.5:
+        p = innen.representative_point()
+        return [(float(p.x), float(p.y))]
+    nx = max(2, int(round((maxx - minx) / abstand)) + 1)
+    ny = max(1, int(round((maxy - miny) / abstand)) + 1)
+    for x in np.linspace(minx + rand * 0.2, maxx - rand * 0.2, nx):
+        for y in (np.linspace(miny + rand * 0.2, maxy - rand * 0.2, ny) if ny > 1 else [(miny + maxy) / 2]):
+            if innen.contains(shapely.Point(x, y)):
+                out.append((float(x), float(y)))
+    if not out:
+        p = innen.representative_point()
+        out = [(float(p.x), float(p.y))]
+    return out[:12]
+
+
+def stift_loecher(mesh, stifte, d_loch, tiefe):
+    """Sacklöcher von der Unterseite (z = 0) nach oben. Ohne Boolesche Operation (manifold3d) bleibt das Netz unverändert."""
+    if mesh is None or not stifte or not HAS_MANIFOLD:
+        return mesh
+    try:
+        zyl = []
+        for x, y in stifte:
+            c = trimesh.creation.cylinder(radius=d_loch / 2.0, height=tiefe + 1.0, sections=16)
+            c.apply_translation([x, y, (tiefe - 1.0) / 2.0])
+            zyl.append(c)
+        r = trimesh.boolean.difference([mesh] + zyl, engine="manifold")
+        if r is not None and len(r.faces):
+            return r
+    except Exception:
+        pass
+    return mesh
+
+
 def build_buildings(bldgs, extent_m, f, P, cfg, log=print):
     """bldgs: Ausgabe von read_citygml. f = mm pro m. Rückgabe: Liste von dicts."""
     gc = cfg["gebaeude"]
@@ -114,7 +156,7 @@ def build_buildings(bldgs, extent_m, f, P, cfg, log=print):
                 continue
             xyz = np.c_[e2, (ext[:, 2] - zmin) * f]
             fps.append(p)
-            roof_xy.append(xyz)
+            roof_xy.append((xyz, [np.c_[tm(i), (i[:, 2] - zmin) * f] for i in ints if len(i) >= 4]))
             prisms.append((p.buffer(eps, join_style="mitre"), _fit_plane(xyz)))
         if not fps and b["grounds"]:
             for ext, ints in b["grounds"]:
@@ -151,9 +193,17 @@ def build_buildings(bldgs, extent_m, f, P, cfg, log=print):
             fp = shapely.union_all(polys(fat))
             status = "druck"
         k = layer_under(P, fp)
+        stifte = []
+        if gc.get("modus", "druck") == "druck" and gc.get("stifte") and mesh is not None:
+            stifte = stift_positionen(fp, float(gc.get("stift_d_mm") or 2.0), float(gc.get("stift_abstand_mm") or 40.0))
+            if stifte:
+                mesh = stift_loecher(mesh, stifte, float(gc.get("stift_d_mm") or 2.0) + float(gc.get("stift_spiel_mm") or 0.2),
+                                     max(2.0, float(gc.get("stift_laenge_mm") or 4.0) / 2.0))
         res.append({"gml_id": b["id"], "footprint": fp, "mesh": mesh, "status": status,
                     "height_mm": height, "layer": k, "gruppe": "einsatz" if b["id"] in sep else "umgebung",
-                    "art": "Gebäude", "lod": "LoD2" if (in_near and prisms) else "Block"})
+                    "art": "Gebäude", "lod": "LoD2" if (in_near and prisms) else "Block",
+                    "prismen": prisms if (in_near and prisms) else None, "dach3d": roof_xy if (in_near and roof_xy) else None,
+                    "stifte": stifte})
     log(f"  Gebäude: {sum(r['status']=='druck' for r in res)} druckbar, "
         f"{sum(r['status']=='gravur' for r in res)} nur graviert (zu klein), "
         f"{sum(r['status']=='platzhalter' for r in res)} Platzhalter")
@@ -181,10 +231,16 @@ def build_blocks_from_footprints(items, to_model, extent_m, f, P, cfg, art, heig
                 fp = shapely.union_all(polys(fp.buffer(min_w / 2.0)))
                 h = max(h, gc["min_hoehe_mm"])
         mesh = _union(_block(fp, h)) if status == "druck" else None
+        stifte = []
+        if gc.get("modus", "druck") == "druck" and gc.get("stifte") and mesh is not None and art == "Gebäude":
+            stifte = stift_positionen(fp, float(gc.get("stift_d_mm") or 2.0), float(gc.get("stift_abstand_mm") or 40.0))
+            if stifte:
+                mesh = stift_loecher(mesh, stifte, float(gc.get("stift_d_mm") or 2.0) + float(gc.get("stift_spiel_mm") or 0.2),
+                                     max(2.0, float(gc.get("stift_laenge_mm") or 4.0) / 2.0))
         out.append({"gml_id": str(attrs.get("gml_id") or attrs.get("id") or ""), "footprint": fp,
                     "mesh": mesh, "status": status, "height_mm": h,
                     "layer": layer_under(P, fp),
-                    "gruppe": "umgebung", "art": art, "lod": "Block"})
+                    "gruppe": "umgebung", "art": art, "lod": "Block", "prismen": None, "dach3d": None, "stifte": stifte})
     return out
 
 

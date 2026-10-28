@@ -95,7 +95,7 @@ def profil(szene, a, b, abstand=0.5):
     return pr
 
 
-def ansicht_dahinter(szene, a, b, an, tiefe, seite, baeume_zeigen, abstand=2.0, fassade=False):
+def ansicht_dahinter(szene, a, b, an, tiefe, seite, baeume_zeigen, abstand=2.0):
     """Ansicht (senkrechte Projektion auf die Schnittebene) der Gebäude und Bäume HINTER der Linie bis zur Tiefe.
     -> dict(gebaeude=[dict(poly (s,z), u)], baeume=[dict(s, z, ho, kr, schnitt)], zg_hinten=Array bei s)"""
     from scipy.interpolate import RegularGridInterpolator
@@ -145,11 +145,8 @@ def ansicht_dahinter(szene, a, b, an, tiefe, seite, baeume_zeigen, abstand=2.0, 
             continue
         sil = unary_union(polys).intersection(box(0, -1e4, L, 1e4))
         if not sil.is_empty:
-            geb.append({"poly": sil, "u": float(max(0.0, u.min())), "id": g.get("id"),
-                        "_walls": g.get("walls") if fassade else None, "_mitte": ref.mean(axis=0)})
+            geb.append({"poly": sil, "u": float(max(0.0, u.min())), "id": g.get("id")})
     geb.sort(key=lambda t: -t["u"])
-    if fassade:
-        _fassade_ansicht(geb, a_, d, n, L)
     bm = []
     if baeume_zeigen:
         for (x, y, kr, ho) in _baeume_der_szene(szene):
@@ -164,49 +161,6 @@ def ansicht_dahinter(szene, a, b, an, tiefe, seite, baeume_zeigen, abstand=2.0, 
             bm.append({"s": sx, "z": z, "ho": max(float(ho), 2.0), "kr": kr, "schnitt": abs(u) <= kr / 2, "u": u})
         bm.sort(key=lambda t: -t["u"])
     return {"gebaeude": geb, "baeume": bm, "zg_hinten": (st, zh)}
-
-
-def _fassade_ansicht(geb, a_, d, n, L):
-    """Fenster und Tueren (Muster, nicht gemessen) der der Linie zugewandten Waende als Flaechen in (s, z).
-    geb ist von fern nach nah sortiert; was hinter einem naeheren Gebaeude liegt, wird abgezogen."""
-    import sys
-    from shapely.geometry import Polygon, box
-    from shapely.ops import unary_union
-    try:
-        from .modell import ifcmap_adapter as A
-        A.kern()
-        import ifcmap_fassade as FA
-    except Exception:
-        return
-    for i, g in enumerate(geb):
-        walls = g.pop("_walls", None)
-        mitte = g.pop("_mitte")
-        g["fenster"] = g["tueren"] = None
-        if not walls:
-            continue
-        try:
-            fen, tue, _ = FA.fassade(walls, mitte)
-        except Exception:
-            continue
-        verdeckt = unary_union([h["poly"] for h in geb[i + 1:]]) if i + 1 < len(geb) else None
-        for name, arr in (("fenster", fen), ("tueren", tue)):
-            polys = []
-            for q in arr:
-                nxy = np.cross(q[1] - q[0], q[3] - q[0])[:2]
-                if np.dot(nxy, n) >= 0:            # zeigt von der Linie weg (Rueckseite) oder parallel
-                    continue
-                sp = (q[:, :2] - a_) @ d
-                if sp.max() < 0 or sp.min() > L:
-                    continue
-                polys.append(box(float(sp.min()), float(q[:, 2].min()), float(sp.max()), float(q[:, 2].max())))
-            if not polys:
-                continue
-            f = unary_union(polys)
-            if verdeckt is not None and not verdeckt.is_empty:
-                f = f.difference(verdeckt)
-            f = f.intersection(box(0, -1e4, L, 1e4))
-            if not f.is_empty and f.area > 1e-4:
-                g[name] = f
 
 
 def _baeume_der_szene(szene):
@@ -283,8 +237,6 @@ def zeichnen(pr, p, ordner, name="Schnitt", log=print):
         if not q.is_empty:
             dah.append(q)
             zmax = max(zmax, q.bounds[3])
-    fen_f = [g["fenster"] for g in hin.get("gebaeude", []) if g.get("fenster") is not None]
-    tue_f = [g["tueren"] for g in hin.get("gebaeude", []) if g.get("tueren") is not None]
     baeume = hin.get("baeume", [])
     for t in baeume:
         zmax = max(zmax, t["z"] + t["ho"])
@@ -316,17 +268,6 @@ def zeichnen(pr, p, ordner, name="Schnitt", log=print):
         for ring in ringe(q):
             svg.append('<polygon fill="#d6d6d6" stroke="#8c8c8c" stroke-width="0.12" points="'
                        + " ".join(f"{X(a):.3f},{Y(z):.3f}" for a, z in ring) + '"/>')
-    if fen_f or tue_f:
-        svg.append('<g id="HINTERGRUND_FASSADE">')
-        for q in fen_f:
-            for ring in ringe(q):
-                svg.append('<polygon fill="#b9c7cf" stroke="#5f6e76" stroke-width="0.08" points="'
-                           + " ".join(f"{X(a):.3f},{Y(z):.3f}" for a, z in ring) + '"/>')
-        for q in tue_f:
-            for ring in ringe(q):
-                svg.append('<polygon fill="#7d8a91" stroke="#4f5b61" stroke-width="0.08" points="'
-                           + " ".join(f"{X(a):.3f},{Y(z):.3f}" for a, z in ring) + '"/>')
-        svg.append('</g>')
     for t in baeume:
         if not t["schnitt"]:
             svg.append(f'<line x1="{X(t["s"]):.3f}" y1="{Y(t["z"]):.3f}" x2="{X(t["s"]):.3f}" y2="{Y(t["z"] + 0.3 * t["ho"]):.3f}" stroke="#8a7a60" stroke-width="0.15"/>')
@@ -374,7 +315,7 @@ def zeichnen(pr, p, ordner, name="Schnitt", log=print):
         doc.units = ezdxf.units.M
         msp = doc.modelspace()
         for lay, col in (("SCHNITT_GELAENDE", 7), ("SCHNITT_GEBAEUDE", 8), ("HOEHEN", 3), ("TEXT", 7), ("HINTERGRUND_GELAENDE", 9), ("HINTERGRUND_GEBAEUDE", 9),
-                         ("HINTERGRUND_BAEUME", 94), ("SCHNITT_BAEUME", 3), ("HINTERGRUND_FASSADE", 9)):
+                         ("HINTERGRUND_BAEUME", 94), ("SCHNITT_BAEUME", 3)):
             doc.layers.add(lay, color=col)
         if zh is not None:
             st_, zh_ = zh
@@ -384,9 +325,6 @@ def zeichnen(pr, p, ordner, name="Schnitt", log=print):
         for q in dah:
             for ring in ringe(q):
                 msp.add_lwpolyline([(a, (z - zbasis) * ue) for a, z in ring], close=True, dxfattribs={"layer": "HINTERGRUND_GEBAEUDE"})
-        for q in fen_f + tue_f:
-            for ring in ringe(q):
-                msp.add_lwpolyline([(a, (z - zbasis) * ue) for a, z in ring], close=True, dxfattribs={"layer": "HINTERGRUND_FASSADE"})
         for t in baeume:
             lay = "SCHNITT_BAEUME" if t["schnitt"] else "HINTERGRUND_BAEUME"
             msp.add_lwpolyline([(a, (z - zbasis) * ue) for a, z in _krone(t, ue, zbasis)], close=True, dxfattribs={"layer": lay})
@@ -421,14 +359,6 @@ def zeichnen(pr, p, ordner, name="Schnitt", log=print):
         for ring in ringe(q):
             a_, z_ = zip(*ring)
             ax.fill(a_, z_, color="#d6d6d6", ec="#8c8c8c", lw=0.4)
-    for q in fen_f:
-        for ring in ringe(q):
-            a_, z_ = zip(*ring)
-            ax.fill(a_, z_, color="#b9c7cf", ec="#8c8c8c", lw=0.2)
-    for q in tue_f:
-        for ring in ringe(q):
-            a_, z_ = zip(*ring)
-            ax.fill(a_, z_, color="#7d8a91", ec="#4f5b61", lw=0.2)
     for t in baeume:
         if not t["schnitt"]:
             a_, z_ = zip(*_krone(t, ue, zbasis))
@@ -470,7 +400,7 @@ def erzeugen(p, log=print, prog=lambda *a: None):
     pr = profil(szene, a, b, float(p["schnitt"].get("abstand_m") or 0.5))
     an, tiefe, seite, bz = ansicht_einst(p)
     try:
-        pr["hinten"] = ansicht_dahinter(szene, a, b, an, tiefe, seite, bz, fassade=bool(p["schnitt"].get("fassade", False)))
+        pr["hinten"] = ansicht_dahinter(szene, a, b, an, tiefe, seite, bz)
     except Exception as e:
         import traceback
         log(f"  Ansicht der dahinterliegenden Gebäude nicht möglich ({str(e)[:120]}) - nur der Schnitt wird gezeichnet")

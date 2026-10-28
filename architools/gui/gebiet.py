@@ -501,8 +501,6 @@ class Gebiet:
             hinweis("„Links“ und „rechts“ gelten in Richtung A → B. Die orange Fläche in der Karte zeigt, was gezeichnet wird.")
             ui.checkbox("Gebäude im Schnitt zeigen").bind_value(s, "gebaeude").bind_visibility_from(s, "art", backward=nur_schnitt)
             ui.checkbox("Bäume markieren (Schnitt: dunkelgrün im Schnitt, hellgrün dahinter)").bind_value(s, "baeume")
-            ui.checkbox("Fassaden andeuten (Fenster und Türen als Muster in der Ansicht dahinter)").bind_value(s, "fassade") \
-                .tooltip("Nur ein Muster nach Wandbreite und Geschosshöhe – nicht gemessen. Eigene Ebene, lässt sich ausblenden.")
         self._sch_info()
         return k
 

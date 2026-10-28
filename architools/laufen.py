@@ -145,7 +145,7 @@ def modell_export(p, ausgaben, log=print, prog=None, vorschau=False):
     for a in ("laser", "druck"):
         if a in ausgaben:
             dat = []
-            sub = os.path.join(out, a)
+            sub = os.path.join(out, "laser" if (a == "druck" and cfg["gebaeude"].get("modus", "druck") != "druck") else a)
             for r, _, fs in os.walk(sub):
                 dat += [os.path.join(r, f) for f in fs][:100]
             P.stand_setzen(p, a, dat, sub)

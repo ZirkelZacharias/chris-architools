@@ -15,6 +15,7 @@ import shapely
 from . import bibliothek as BIB
 from . import blatt as BL
 from . import buildings as B
+from . import gebaeude_laser as GL
 from . import geo_io as G
 from . import laser as L
 from . import report as R
@@ -120,6 +121,7 @@ def szene_aus_dateien(cfg, log=print):
         items = G.read_vector(m["datei"], m.get("layer", ""), sz["extent"].bounds, log)
         sz["ebenen"].append({"name": m.get("name") or os.path.basename(m["datei"]), "items": items,
                              "aktion": _akt(m.get("aktion", "ritzen")), "d": float(m.get("punkt_d_mm") or 1.5),
+                             "raster_grau": float(m.get("raster_grau", 50.0)), "raster_weite_mm": float(m.get("raster_weite_mm", 0.8)),
                              "breite_m": float(m.get("breite_m") or 0)})
         log(f"  {sz['ebenen'][-1]['name']}: {len(items)} Objekte")
     return sz
@@ -160,11 +162,66 @@ def einsatz_polygon(cfg, szene, log=print):
 
 
 def _akt(a):
-    return {"gravieren": "gravieren", "gravieren (Fläche)": "gravieren", "ritzen": "ritzen",
+    return {"gravieren": "gravieren", "gravieren (Fläche)": "gravieren", "ritzen": "ritzen", "raster": "raster",
             "schneiden": "schneiden", "aus": "aus"}.get(a, "ritzen")
 
 
 # ------------------------------------------------------------------ Modell bauen
+def _teststreifen(RG, bild, extent_m, tw_xy, weite, kont, hell, log):
+    """Probestück 100 x 100 mm: dasselbe Bildstück in drei Stufen (schwächer, normal, kräftiger) - vor der Gravur der ganzen Platte prüfen"""
+    from shapely.geometry import box
+    cx, cy = extent_m.centroid.x, extent_m.centroid.y
+    teile = []
+    reg = box(cx - 50, cy - 50, cx + 50, cy + 50)
+    polys_ = []
+    for i, faktor in enumerate((0.6, 1.0, 1.5)):
+        band = box(cx - 50, cy - 50 + i * 100 / 3.0, cx + 50, cy - 50 + (i + 1) * 100 / 3.0 - 0.5)
+        polys_ += RG.bild_raster(bild, band, tw_xy, weite, kont * faktor, hell)
+    quad = box(0, 0, 100, 100)
+    from shapely import affinity
+    g = [affinity.translate(p, -(cx - 50), -(cy - 50)) for p in polys_]
+    teile.append({"id": "TEST", "poly": quad, "ritzen": [], "gravieren": g, "layer": -1, "raster_mm2": 100 * 100.0, "art": "Teststreifen"})
+    log("  Rastergravur: Teststreifen 100 x 100 mm (drei Stufen: schwächer / normal / kräftiger) liegt mit auf den Platten")
+    return teile
+
+
+def _gebaeude_platten(cfg, parts_g, parts_ge, sorte_g, t_g, formate, d_laser, name, svgs, svgs_v, log):
+    """Gebäudeteile aus eigenem Material (oder ohne Gelände-Lasercut) auf Platten legen und schreiben"""
+    import copy as _copy
+    n_ex = max(1, int(cfg["einsatz"].get("exemplare", 1))) if cfg["einsatz"].get("aktiv") else 1
+    alle = list(parts_g) + [_copy.copy(p) for _ in range(n_ex) for p in parts_ge]
+    log(f"5a   Gebäudeteile aus {sorte_g} {mm(t_g)} mm anordnen")
+    platten_g, _ = BL.anordnen(alle, formate, cfg, log)
+    pdfs_g = BL.pdfs_schreiben(d_laser, f"{name}_Gebaeude_{_safe(sorte_g)}_{mm(t_g)}mm", platten_g,
+                               f"{cfg['projekt_name']} – Gebäude {sorte_g} {mm(t_g)} mm", log)
+    for i, pl in enumerate(platten_g, 1):
+        sp = os.path.join(d_laser, f"{name}_gebaeude_platte_{i:02d}.svg")
+        BL.svg_schreiben(sp, pl, titel=f"Gebäude Platte {i}")
+        svgs.append(sp)
+        svgs_v.append(_svg_vorschau(sp, pl, sorte_g, f"Gebäude Platte {i}"))
+    return platten_g, pdfs_g
+
+
+def _gebaeude_teile(cfg, blds, blds_in, sorte, t, formate, log, getrennt=False):
+    """Gebäude als Laserteile (Stapelmodell, Klebeflächen, Faltmodell).
+    -> (Teile Umgebung, Teile Einsatz, Material, Stärke, eigenes Material?)  getrennt=True: immer eigene Plattengruppe"""
+    gc = cfg["gebaeude"]
+    modus = gc.get("modus", "druck")
+    sorte_g = gc.get("material") or sorte
+    t_g = float(gc.get("staerke_mm") or t)
+    if sorte_g != sorte and not gc.get("staerke_mm"):
+        mat_g = BIB.alle("materialien").get(sorte_g) or {}
+        t_g = float((mat_g.get("staerken") or [t])[0])
+    eigen = getrennt or (sorte_g != sorte) or abs(t_g - t) > 1e-6
+    if modus == "falt" and t_g > 1.0:
+        log(f"  HINWEIS: Faltmodell mit {mm(t_g)} mm Material - zum Falten ist dünner Karton (bis ca. 0,5 mm) besser; "
+            "bei dickerer Pappe sind die Ritzlinien nur eine Knick-Hilfe")
+    lc = cfg["laser"]
+    pg = GL.teile_fuer(blds, cfg, t_g, formate, lc["rand_mm"], log)
+    pe = GL.teile_fuer(blds_in, cfg, t_g, formate, lc["rand_mm"], log) if blds_in else []
+    return pg, pe, sorte_g, t_g, eigen
+
+
 def run(cfg, log=print, szene=None, laser=True, druck=True):
     """Kompletter Lauf. Ohne szene wird aus den Dateien im Projekt geladen. laser/druck: nur das Gewuenschte rechnen und schreiben."""
     from .config import resolve_paths
@@ -241,7 +298,8 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
             if gm.is_empty:
                 continue
             feats.append({"name": e["name"], "geom": gm, "typ": typ, "aktion": e["aktion"],
-                          "d": float(e.get("d") or 1.5), "breite_mm": bw * f})
+                          "d": float(e.get("d") or 1.5), "breite_mm": bw * f,
+                          "raster": (float(e.get("raster_grau", 50.0)), float(e.get("raster_weite_mm", 0.8)))})
 
     # Projektgrundstück als Einsatz
     E_w = einsatz_polygon(cfg, szene, log)
@@ -273,11 +331,29 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
             stuetzen = list(st_e)
 
     parts, Q, stuetzen_e, rippen_3d, platten, platten_e, pdfs, pdfs_e, svgs, svgs_v = [], [], [], [], [], [], [], [], [], []
+    parts_g, parts_ge, platten_g, pdfs_g, rest_ungenutzt = [], [], [], [], []
+    modus = cfg["gebaeude"].get("modus", "druck")
+    sorte_g, t_g, eigen_mat = sorte, t, False
     if laser:
         log("4/6  Laserteile")
         lc = cfg["laser"]
         stuetzen_e = stuetzen if E_w is not None else []
+        rb = cfg.get("raster_bild") or {}
+        teststreifen = []
+        if rb.get("aktiv"):
+            log("  Rastergravur (EXPERIMENTELL, an der Werkstatt ungetestet): Bild laden")
+            try:
+                from . import rastergravur as RG
+                bild = RG.bild_beschaffen(cfg, extent_w.bounds, log)
+                if bild is not None:
+                    kont, hell, weite = float(rb.get("kontrast", 1.0)), float(rb.get("helligkeit", 0.0)), float(rb.get("weite_mm", 0.5))
+                    cfg["_rasterbild"] = lambda reg, bild=bild: RG.bild_raster(bild, reg, tw_xy, weite, kont, hell)
+                    if rb.get("teststreifen", True):
+                        teststreifen = _teststreifen(RG, bild, extent_m, tw_xy, weite, kont, hell, log)
+            except Exception as e:
+                log(f"  HINWEIS: Rastergravur nicht möglich ({str(e)[:100]})")
         parts, Q, stuetzen, rippen = L.make_parts(P_haupt, blds, feats, cfg, log)
+        cfg.pop("_rasterbild", None)
         rippen_3d = [r["lage"] for r in rippen if r.get("lage") is not None]
         for r in rippen:
             r.pop("lage", None)
@@ -290,8 +366,10 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
             for _ in range(2):
                 parts_e = L.tile_parts(parts_e, formate, lc["rand_mm"], log, False)
             L.finalize_ids(parts_e, cfg_e, "E-")
+        if modus != "druck":
+            parts_g, parts_ge, sorte_g, t_g, eigen_mat = _gebaeude_teile(cfg, blds, blds_in, sorte, t, formate, log)
         meldungen = []
-        for p in parts + parts_e:
+        for p in parts + parts_e + parts_g + parts_ge:
             BL.bereinigen(p, protokoll=meldungen)
         for m in meldungen[:20]:
             log("  " + m)
@@ -302,15 +380,22 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
 
         log("5/6  Laserplatten anordnen")
         filler = stuetzen[0]["poly"] if stuetzen else None
-        platten, rest = BL.anordnen(parts, formate, cfg, log, filler=filler, n_filler=len(stuetzen))
+        fest = BL.restplatten(cfg)
+        if fest:
+            log(f"  Restplatten: {len(fest)} angelegt, werden zuerst belegt")
+        haupt = parts + (parts_g if not eigen_mat else []) + teststreifen
+        platten, rest = BL.anordnen(haupt, formate, cfg, log, filler=filler, n_filler=len(stuetzen), fest=fest)
         titel = f"{cfg['projekt_name']} – {sorte} {mm(t)} mm"
         pdfs = BL.pdfs_schreiben(d_laser, f"{name}_{_safe(sorte)}_{mm(t)}mm", platten, titel, log)
         svgs, svgs_v = [], []
         for i, pl in enumerate(platten, 1):
-            sp = os.path.join(d_laser, f"{name}_platte_{i:02d}.svg")
-            BL.svg_schreiben(sp, pl, titel=f"Platte {i}")
+            sp = os.path.join(d_laser, f"{name}_platte_{i:02d}.svg" if not pl.get("rest") else f"{name}_restplatte_{i:02d}.svg")
+            bez = f"Restplatte {pl['rest']}" if pl.get("rest") else f"Platte {i}"
+            BL.svg_schreiben(sp, pl, titel=bez)
             svgs.append(sp)
-            svgs_v.append(_svg_vorschau(sp, pl, sorte, f"Platte {i}"))
+            svgs_v.append(_svg_vorschau(sp, pl, sorte, bez))
+        if eigen_mat and (parts_g or parts_ge):
+            platten_g, pdfs_g = _gebaeude_platten(cfg, parts_g, parts_ge, sorte_g, t_g, formate, d_laser, name, svgs, svgs_v, log)
         if lc.get("ausgabe_dxf"):
             BL.dxf_schreiben(os.path.join(d_laser, f"{name}_laser.dxf"), platten)
         log(f"  Werkstatt-PDFs: {len(pdfs)} (je Platte eine Datei, z. B. {os.path.basename(pdfs[0]) if pdfs else '-'})")
@@ -320,7 +405,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
             n_ex = max(1, int(cfg["einsatz"].get("exemplare", 1)))
             alle_e = []
             for x in range(n_ex):
-                for p in parts_e:
+                for p in parts_e + (parts_ge if not eigen_mat else []):
                     q = _copy.copy(p)
                     alle_e.append(q)
             log(f"5b   Einsatz anordnen ({n_ex} Exemplar{'e' if n_ex > 1 else ''})")
@@ -336,16 +421,27 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
             log(f"  Einsatz-PDFs: {len(pdfs_e)}")
 
     else:
-        log("4/6  Laserteile: nicht gewählt")
         parts_e, stuetzen = [], []
+        if druck and modus != "druck":
+            log("4/6  Gebäude als Laserteile (ohne Geländeplatten)")
+            lc = cfg["laser"]
+            parts_g, parts_ge, sorte_g, t_g, eigen_mat = _gebaeude_teile(cfg, blds, blds_in, sorte, t, formate, log, True)
+            meld = []
+            for p in parts_g + parts_ge:
+                BL.bereinigen(p, protokoll=meld)
+            svgs, svgs_v = [], []
+            if parts_g or parts_ge:
+                platten_g, pdfs_g = _gebaeude_platten(cfg, parts_g, parts_ge, sorte_g, t_g, formate, d_laser, name, svgs, svgs_v, log)
+        else:
+            log("4/6  Laserteile: nicht gewählt")
         _vorschau_3d(out, name, [], [], blds + blds_in, t, log, [])
 
     log("6/6  Druckplatten und Montageplan")
     from . import druck as D
     printable = [b for b in blds + blds_in if b["status"] == "druck" and b["mesh"] is not None]
-    if not druck:
+    if not druck or modus != "druck":
         printable_w = []
-        log("6/6  Gebäude-3D-Druck: nicht gewählt")
+        log("6/6  Gebäude-3D-Druck: nicht gewählt" if modus == "druck" else f"6/6  Gebäude werden gelasert ({modus}) - keine Druck-STL")
     else:
         printable_w = printable
     for b in printable_w:
@@ -359,8 +455,17 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
     vol = sum(abs(b["mesh"].volume) for b in printable)
     fil = BIB.FILAMENTE.get(cfg["druck"].get("filament", "PLA"), BIB.FILAMENTE["PLA"])
 
+    holz_dateien = []
+    try:
+        if (laser or druck) and any(((cfg.get("holz") or {}).get(k) or {}).get("aktiv") for k in ("rahmen", "podest")):
+            from . import podest as PO
+            holz_res = PO.berechnen(cfg, modell_b, modell_h, len(P) * t)
+            holz_dateien = PO.schreiben(os.path.join(out, "holz"), name, holz_res, log)
+    except Exception as e:
+        log(f"  Hinweis: Holz (Rahmen/Podest) nicht berechnet ({e})")
+        holz_res = None
     plat = {}
-    for pl in platten:
+    for pl in platten + platten_g:
         plat[pl["format"]] = plat.get(pl["format"], 0) + 1
     teile_fl = sum(p["poly"].area for p in parts)
     voll = sum(q.area for q in Q)
@@ -368,21 +473,28 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         "modell_b": modell_b, "modell_h": modell_h, "platten": plat,
         "teile_flaeche": teile_fl, "voll_flaeche": voll,
         "ersparnis": 100 * (1 - teile_fl / voll) if voll else 0,
-        "n_druck": len(printable), "n_gravur": sum(b["status"] == "gravur" for b in blds + blds_in),
+        "n_druck": len(printable) if modus == "druck" else 0, "n_gebaeude_laser": len(printable) if modus != "druck" else 0, "n_gravur": sum(b["status"] == "gravur" for b in blds + blds_in),
         "n_platz": sum(b["status"] == "platzhalter" for b in blds + blds_in),
         "n_druckplatten": len(drucke), "n_stuetzen": len(stuetzen),
         "n_rippen": sum(1 for p in parts if p.get("rippe")),
         "volumen_cm3": vol / 1000.0,
         "filament_g": vol / 1000.0 * fil["dichte_g_cm3"] * cfg["druck"].get("fuellgrad_effektiv", 0.35),
         "material": f"{sorte} {mm(t)} mm", "bauweise": L.bauweise(cfg),
+        "holz": holz_dateien, "gebaeude_modus": modus, "n_geb_teile": len(parts_g) + len(parts_ge),
+        "gebaeude_material": f"{sorte_g} {mm(t_g)} mm", "n_restplatten": sum(1 for pl in platten if pl.get("rest")),
     }
-    if laser:
+    if laser or platten_g:
         # Laserzeit und Kosten (nur für den Bericht)
         zeit, z_lo, z_hi, zt = BL.laserzeit(platten + platten_e, sorte, t)
+        if platten_g:
+            g1, g2, g3, gt = BL.laserzeit(platten_g, sorte_g, t_g)
+            zeit, z_lo, z_hi = zeit + g1, z_lo + g2, z_hi + g3
+            zt = {k: (v + gt.get(k, 0) if k != "v_schnitt" else v) for k, v in zt.items()}
         pm, mw = BIB.WERKSTATT["preis_min_netto"], BIB.WERKSTATT["mwst"]
         stats["laser"] = {"s": zeit, "s_lo": z_lo, "s_hi": z_hi, "teile": zt,
                           "netto": zeit / 60 * pm, "netto_lo": z_lo / 60 * pm, "netto_hi": z_hi / 60 * pm,
                           "preis_min": pm, "mwst": mw}
+    if laser:
         # Draufsicht und Schnitte
         from . import ansichten as AN
         try:
@@ -390,7 +502,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         except Exception as e:
             log(f"  Hinweis: Ansichten nicht erzeugt ({e})")
             stats["ansichten"] = []
-        R.write_pdf(os.path.join(out, f"{name}_montageplan.pdf"), cfg, info, Q, parts + parts_e, platten + platten_e,
+        R.write_pdf(os.path.join(out, f"{name}_montageplan.pdf"), cfg, info, Q, parts + parts_e, platten + platten_g + platten_e,
                     blds + blds_in,
                     drucke, feats, stats, stuetzen)
     else:
@@ -402,18 +514,21 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
             w.writerow(["Rippe" if p.get("rippe") else "Laserteil", p["id"],
                         "" if p.get("rippe") else p["layer"], p.get("platte", "-"),
                         f"{p['poly'].area / 100:.1f} cm²", "", ""])
+        for p in parts_g + parts_ge:
+            w.writerow([p.get("art", "Gebäudeteil"), p["id"], "", p.get("platte", "-"),
+                        f"{p['poly'].area / 100:.1f} cm²", modus, ""])
         for b in blds + blds_in:
             w.writerow([b["art"], b["nr"], b["layer"], b.get("druckplatte", "-"),
                         f"{b['height_mm']:.1f} mm", f"{b['status']} ({b['lod']})", b["gml_id"]])
     try:
         from . import kosten as KO
         stats["kostenliste"] = os.path.join(out, f"{name}_zuschnitt_und_kosten.txt")
-        stats["kosten_text"] = KO.schreiben(stats["kostenliste"], cfg, stats, platten, platten_e, drucke)
+        stats["kosten_text"] = KO.schreiben(stats["kostenliste"], cfg, stats, platten, platten_e, drucke, platten_g)
     except Exception as e:
         stats["kostenliste"] = None
         log(f"  Hinweis: Zuschnitt-/Kostenliste nicht erzeugt ({e})")
     stats.update({
-        "ausgabe": out, "laser_ordner": d_laser, "laser_pdfs": pdfs, "einsatz_pdfs": pdfs_e, "laser_svgs": svgs, "laser_svgs_vorschau": svgs_v, "material_farbe": BIB.farbe(sorte) if laser else None,
+        "ausgabe": out, "laser_ordner": d_laser, "laser_pdfs": pdfs + pdfs_g, "einsatz_pdfs": pdfs_e, "laser_svgs": svgs, "laser_svgs_vorschau": svgs_v, "material_farbe": BIB.farbe(sorte) if laser else None,
         "n_einsatzplatten": len(platten_e),
         "vorschau_laser": os.path.join(out, f"{name}_vorschau_laser.stl"),
         "vorschau_druck": os.path.join(out, f"{name}_vorschau_druck.stl"),

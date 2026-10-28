@@ -22,6 +22,10 @@ def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
             if stats.get("kostenliste") and os.path.exists(stats["kostenliste"]):
                 ui.button("Kostenliste", icon="receipt_long", on_click=lambda: oeffnen(stats["kostenliste"])) \
                     .props("outline dense").tooltip("Zuschnitt- und Kostenliste (Text, nur geschätzt)")
+            if stats.get("holz"):
+                ordner_holz = os.path.dirname(stats["holz"][0])
+                ui.button("Holz", icon="carpenter", on_click=lambda: oeffnen(ordner_holz)).props("outline dense") \
+                    .tooltip("Zuschnittliste und Zeichnung für Rahmenleisten / Podest")
             if stats.get("montageplan"):
                 ui.button("Montageplan", icon="picture_as_pdf",
                           on_click=lambda: oeffnen(stats["montageplan"])).props("outline dense")
@@ -29,7 +33,8 @@ def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
         for k, txt in (("material", "Material"), ("n_laserplatten", "Laserplatten"), ("n_einsatzplatten", "Einsatz-Platten"),
                        ("platten", "Laserplatten"), ("n_teile", "Laserteile"), ("teile", "Laserteile"),
                        ("n_rippen", "Steckrippen"), ("n_stuetzen", "Stützklötze"),
-                       ("n_druck", "Gebäude gedruckt"), ("n_druckplatten", "Druckplatten"), ("n", "Druckkörper")):
+                       ("n_druck", "Gebäude gedruckt"), ("n_gebaeude_laser", "Gebäude gelasert"), ("n_geb_teile", "Gebäude-Laserteile"),
+                       ("n_restplatten", "Restplatten genutzt"), ("n_druckplatten", "Druckplatten"), ("n", "Druckkörper")):
             v = stats.get(k)
             if v not in (None, 0, {}) and not isinstance(v, (dict, list)):
                 zeilen.append((txt, v))
