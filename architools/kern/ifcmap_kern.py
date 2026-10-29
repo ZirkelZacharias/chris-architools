@@ -514,40 +514,6 @@ def _tif_ist_dgm(p):
         return False
 
 
-def datei_art(p):
-    """'dgm', 'lod2', 'dom', 'nutzung', 'baeume' oder None (nach Endung/Name/Inhalt)."""
-    low = p.lower()
-    if os.path.basename(low) in AUSGABE_DATEIEN:
-        return None
-    if low.endswith((".asc", ".tif", ".tiff", ".xyz", ".txt", ".csv", ".zip")):
-        import ifcmap_markant as M
-        if M.ist_dom_datei(p):
-            return "dom"                                   # Oberflaechenmodell (Name enthaelt dom, nicht dgm)
-    if low.endswith(".asc"):
-        return "dgm"
-    if low.endswith((".tif", ".tiff")):
-        return "dgm" if _tif_ist_dgm(p) else None
-    if low.endswith((".xyz", ".txt", ".csv")):
-        return "dgm" if xyz_format(p) is not None else None
-    if low.endswith((".zip", ".xml", ".gml")):
-        return "lod2"
-    if low.endswith((".json", ".geojson")):
-        return geojson_art(p)
-    return None
-
-
-def ordner_scannen(ordner):
-    """Sortiert Dateien eines Ordners in dgm / lod2 / nutzung / baeume."""
-    r = dict(dgm=[], lod2=[], dom=[], nutzung=[], baeume=[], unbekannt=[])
-    for p in sorted(glob.glob(os.path.join(ordner, "**", "*"), recursive=True)):
-        if os.path.isdir(p):
-            continue
-        art = datei_art(p)
-        if art:
-            r[art].append(p)
-    return r
-
-
 # ----------------------------------------------------------------------------------------------
 # Gelaende
 # ----------------------------------------------------------------------------------------------
@@ -1114,15 +1080,6 @@ def _kompakt(t):
     return {"id": t["id"], "gebaeude": t["gebaeude"], "h": t["h"], "ground": t["ground"], "wall": [], "roof": [],
             "closure": [], "roofz": roofz, "kompakt": True, "c": t["c"], "dachk": _dach_stat(t["roof"]),
             "quelle": t.get("quelle", "LoD2")}
-
-
-def _teil_hoehe(t):
-    try:
-        if t["ground"] and t["roof"]:
-            return float(max(e[:, 2].max() for e, h in t["roof"]) - min(e[:, 2].min() for e, h in t["ground"]))
-    except ValueError:
-        pass
-    return t.get("h") or 0.0
 
 
 def _behalten(teile, behalte):
@@ -2110,34 +2067,6 @@ def laender_kacheln(cfg, d, land, log, dgm=True, lod2=True):
     if dn or ln:
         cfg = replace(cfg, dgm=list(cfg.dgm) + dn, lod2=list(cfg.lod2) + ln)
     return cfg
-
-
-def cfg_angleichen(cfg):
-    """Einstellungen wie in lade() fuer das Bundesland anpassen (Koordinatensystem) - still, fuer wiederverwendete Daten."""
-    import ifcmap_laender as L
-    return L.vorbereiten(cfg, sys.modules[__name__], _noop)
-
-
-def gelaende_nachladen(d, cfg, log=print, prog=_noop):
-    """Nur das Gelaende nachladen (Vorschau lief ohne Gelaende) - alles andere in d bleibt, spart Gebaeude, Abfragen, Zusatzdaten."""
-    cfg, d.land = cfg_angleichen(cfg)
-    d.cfg = cfg
-    kp = kacheln_pruefen(cfg)
-    if cfg.online_dgm and kp["aktiv"] and cfg.epsg == 25833 and ist_berlin(cfg) and kp["dgm_fehlt"]:
-        prog(0.02, "Gelaendekacheln herunterladen ...")
-        dn, _, geholt = kacheln_online_holen(replace(cfg, online_lod2=False), kp, log)
-        if dn:
-            cfg = replace(cfg, dgm=list(cfg.dgm) + dn)
-            d.cfg = cfg
-    land = getattr(d, "land", None)
-    if cfg.online_dgm and land and land != "berlin":
-        prog(0.02, "Gelaendekacheln herunterladen ...")
-        cfg = laender_kacheln(cfg, d, land, log, dgm=True, lod2=False)
-        d.cfg = cfg
-    _gelaende_laden(d, cfg, log, prog)
-    if cfg.mit_gelaende and d.px is None and cfg.dgm:
-        log("WARNUNG: Es wurden KEINE Gelaendedaten im Rechteck gefunden - die IFC enthaelt dann kein Gelaende.")
-    return d
 
 
 def fgn_laden(cfg, d, log):

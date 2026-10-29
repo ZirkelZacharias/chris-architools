@@ -8,18 +8,6 @@ from shapely.geometry import LineString, Point, box
 from .geomutil import lines, place_text, polys
 
 
-def _rib_grid(bounds, spacing, width):
-    xmin, ymin, xmax, ymax = bounds
-    ls = []
-    xs = np.arange(math.floor(xmin / spacing) * spacing, xmax + spacing, spacing)
-    ys = np.arange(math.floor(ymin / spacing) * spacing, ymax + spacing, spacing)
-    for x in xs:
-        ls.append(LineString([(x, ymin - 1), (x, ymax + 1)]))
-    for y in ys:
-        ls.append(LineString([(xmin - 1, y), (xmax + 1, y)]))
-    return shapely.union_all([l.buffer(width / 2.0, cap_style="flat") for l in ls]), xs, ys
-
-
 # Eingebaute Ebenen auf den Geländeplatten und ihre Vorgaben
 EBENEN_STANDARD = {
     "Anlegekante nächste Schicht": "ritzen",

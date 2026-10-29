@@ -118,52 +118,6 @@ def ebenen_panel(box, p, d):
                     reihe("      ↳ %s (%d)" % (txt, n), None, "Extra:%s:%s" % (key, sub))
 
 
-def nutzung_panel(box, p, d, geaendert=None):
-    """So wurden die Nutzungsarten zugeordnet; die Kategorie lässt sich je Zeile ändern."""
-    K = P.kern()
-    u = p["umgebung"]
-    box.clear()
-    with box:
-        if d is None:
-            hinweis("Erst „Vorschau laden“ – dann erscheint hier die Zuordnung der Nutzungsarten.")
-            return
-        if not getattr(d, "tabelle", None):
-            hinweis("In den geladenen Daten gibt es keine Nutzungsarten zuzuordnen (z. B. bei eigenen Dateien ohne Nutzungsflächen).")
-            return
-        hinweis("So wurden die Nutzungsarten aus den Daten zugeordnet. Die Kategorie lässt sich je Zeile ändern "
-                "(auch eigener Name möglich, z. B. „Hof“).")
-
-        def aendern(text, wert):
-            neu = str(wert or "").strip().replace(" ", "_")
-            if not neu:
-                return
-            u.setdefault("overrides", {})[text] = neu
-            d.cfg.overrides = dict(u["overrides"])
-            K.zuordnen(d)
-            if geaendert:
-                geaendert()
-
-        def zuruecksetzen():
-            u["overrides"] = {}
-            d.cfg.overrides = {}
-            K.zuordnen(d)
-            if geaendert:
-                geaendert()
-        ui.button("Zuordnung zurücksetzen", icon="restart_alt", on_click=zuruecksetzen).props("flat dense no-caps")
-        with ui.row().classes("w-full items-center no-wrap q-px-sm").style("background:#dcebec"):
-            ui.label("Nutzung").classes("text-weight-bold grow")
-            ui.label("Kategorie").classes("text-weight-bold").style("width:240px")
-            ui.label("Anzahl").classes("text-weight-bold").style("width:70px")
-            ui.label("ha").classes("text-weight-bold").style("width:70px")
-        for text, kat, n, ha in d.tabelle:
-            with ui.row().classes("w-full items-center no-wrap q-px-sm").style("border-bottom:1px solid #eee"):
-                ui.label(text).classes("text-body2 grow")
-                ui.select(list(K.KATEGORIE_NAMEN), value=kat, new_value_mode="add-unique", with_input=True,
-                          on_change=lambda e, t=text: aendern(t, e.value)).props("dense borderless").style("width:240px")
-                ui.label(str(n)).style("width:70px")
-                ui.label("%.2f" % ha).style("width:70px")
-
-
 # ---------------------------------------------------------------- Ebenen-Karte in den Einstellungen
 _BOX = {"box": None, "p": None, "d": None}
 

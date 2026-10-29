@@ -154,18 +154,6 @@ def sonne_fuer_plan(cfg, d, auch_aus=False):
     return dict(lokal=lokal, az=az, el=el, az_wahr=az_w, text=text, breite=lat, laenge=lon, drehung=dreh)
 
 
-def bahn_tag(breite, laenge, monat, tag, jahr=None, schritt_min=10):
-    """Sonnenbahn eines Tages: Liste (Ortszeit-Stunde als float, Azimut, Hoehe) fuer Hoehe >= 0"""
-    jahr = jahr or dt.date.today().year
-    out = []
-    for m in range(0, 24 * 60, schritt_min):
-        lokal = dt.datetime(jahr, monat, tag, m // 60, m % 60)
-        az, el = sonne_zum_zeitpunkt(breite, laenge, lokal)
-        if el >= 0:
-            out.append((m / 60.0, az, el))
-    return out
-
-
 # ----------------------------------------------------------------------------------------------
 # Gebaeudeflaechen sammeln
 # ----------------------------------------------------------------------------------------------

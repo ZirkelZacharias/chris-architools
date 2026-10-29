@@ -9,10 +9,6 @@ from . import projekt as P
 _cache = {"key": None, "d": None}
 
 
-def _log_prog(log, prog):
-    return log or print, prog or (lambda *a, **k: None)
-
-
 # ------------------------------------------------------------------ Umgebung
 def umgebung_laden(p, ausgaben, log=print, prog=None, test=False):
     """Daten laden (einmal je Einstellung; wiederholte Aufrufe nutzen das Ergebnis weiter)."""

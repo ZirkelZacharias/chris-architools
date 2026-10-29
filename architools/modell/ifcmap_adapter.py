@@ -50,11 +50,6 @@ ZUSATZ = {"oepnv": "OEPNV", "gewaesser": "Gewaessernetz", "denkmal": "Denkmal", 
 KERN = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "kern")
 
 
-def ordner_finden(cfg=None):
-    """Es gibt nur noch EINEN Rechenkern (architools/kern) - keine Kopie und keine Suche nach einem IFCmap-Ordner mehr."""
-    return KERN
-
-
 def kern(cfg=None):
     """Der gemeinsame IFCmap-Rechenkern (Daten laden, IFC, DXF-Pläne)."""
     if KERN not in sys.path:

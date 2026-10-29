@@ -99,6 +99,3 @@ def fassade(waende, mitte_xy):
     return (np.array(fenster) if fenster else np.zeros((0, 4, 3)), np.array(tueren) if tueren else np.zeros((0, 4, 3)),
             {"geschosse": geschosse})
 
-
-def zu_flaechen(arr):
-    return [q for q in arr]

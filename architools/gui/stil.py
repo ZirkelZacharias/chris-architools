@@ -131,27 +131,6 @@ def url(pfad):
     return "/datei?p=" + quote(os.path.abspath(pfad)) + f"&t={os.path.getmtime(pfad):.0f}"
 
 
-@app.get("/datei")
-def _datei(p: str, t: str = ""):
-    from fastapi.responses import FileResponse, Response
-    p = os.path.abspath(p)
-    if os.path.dirname(p) not in FREIGABE or not os.path.isfile(p):
-        return Response(status_code=404)
-    return FileResponse(p)
-
-
-@app.get("/bild/abschluss.jpg")
-def _bild():
-    from fastapi.responses import FileResponse, Response
-    return FileResponse(BILD) if os.path.exists(BILD) else Response(status_code=404)
-
-
-@app.get("/bild/maskottchen.gif")
-def _maskott():
-    from fastapi.responses import FileResponse, Response
-    return FileResponse(MASKOTT) if os.path.exists(MASKOTT) else Response(status_code=404)
-
-
 async def waehlen(art="datei", mehrere=False, typen=(), name="projekt.architools.json"):
     """Datei-/Ordnerdialog des Fensters. Im Browser-Modus: Hinweis, Pfad bitte eintippen."""
     if not NATIVE["an"]:
@@ -222,11 +201,6 @@ def feld_pfad(label, obj, key, art="datei", typen=(), mehrere=False):
                     inp.value = r
         ui.button(icon="folder_open", on_click=wahl).props("flat dense round").tooltip("Auswählen")
     return zeile
-
-
-def zahl_feld(label, obj, key, breite="w-28", **kw):
-    """Zahlenfeld, das auch leer sein darf (None) und Komma als Dezimaltrenner versteht."""
-    return ui.number(label, **kw).bind_value(obj, key).classes(breite)
 
 
 class Lauf:

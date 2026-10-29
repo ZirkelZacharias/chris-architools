@@ -13,6 +13,7 @@ from .stil import (AKZENT, GRAU, HOEHE, INK, LINIE, SALBEI, Lauf, feld_pfad, hin
 
 
 AKTION = {}                                  # vom Kopf aus erreichbar: Export starten
+LETZTES = {"pfad": None, "d3": None, "png": None, "ergebnis": None}     # überlebt ein Neuladen der Seite (z. B. nach kurzem Verbindungsabbruch)
 
 
 def seite(p, speichern):
@@ -120,11 +121,23 @@ def seite(p, speichern):
     from .stil import FARBE_DRUCK, FARBE_GRAVUR, FARBE_LASER
 
     d3 = {"modus": "umg", "umg": None, "modell": None, "ue": 1.0}
+    schluessel = os.path.abspath(p.get("ordner") or "") + "|" + str(p.get("name"))
+    if LETZTES["pfad"] != schluessel:                                          # anderes Projekt: nichts übernehmen
+        LETZTES.update(pfad=schluessel, d3=d3, png=None, ergebnis=None)
+    else:
+        d3 = LETZTES["d3"]
     UE_WAHL = {1.0: "1× (maßstäblich)", 1.5: "1,5×", 2.0: "2×", 3.0: "3×", 5.0: "5×"}
 
     def gruppen_gewaehlt():
         g = gewaehlte()
         return (any(P.AUSGABEN[k][4] == "umgebung" for k in g), any(k in g for k in ("laser", "druck")))
+
+    def uebersicht_zeigen():
+        uebersicht.clear()
+        if LETZTES["png"] and os.path.exists(LETZTES["png"]):
+            with uebersicht:
+                ui.label("Gebiet (gestrichelt: Nahbereich)").classes("text-subtitle2")
+                ui.image(url(LETZTES["png"])).classes("w-full bg-white")
 
     def zeichne_3d():
         """3D-Tab: bei Umgebung UND Modell gewählt mit Umschalter, sonst nur das, was gewählt ist."""
@@ -206,10 +219,8 @@ def seite(p, speichern):
         if r:
             d = r.pop("daten", None)
             _eb.aktualisieren(p, d)
-            uebersicht.clear()
-            with uebersicht:
-                ui.label("Gebiet (gestrichelt: Nahbereich)").classes("text-subtitle2")
-                ui.image(url(r["png"])).classes("w-full bg-white")
+            LETZTES["png"] = r["png"]
+            uebersicht_zeigen()
             d3["umg"] = r
             d3["modus"] = "umg"
             zeichne_3d()
@@ -242,12 +253,15 @@ def seite(p, speichern):
                 lauf.anhaengen = True
                 rv = await lauf.starten(lambda p, d, ue, lp, log, prog: L.vorschau_aus_daten(d, p, log, prog, ue, lp), p, u["d"], d3["ue"], lp)
                 if rv:
-                    uebersicht.clear()
-                    with uebersicht:
-                        ui.label("Gebiet (gestrichelt: Nahbereich)").classes("text-subtitle2")
-                        ui.image(url(rv["png"])).classes("w-full bg-white")
+                    LETZTES["png"] = rv["png"]
+                    uebersicht_zeigen()
                     d3["umg"] = rv
                     zeichne_3d()
+                    try:                                                     # Ebenen-Auswahl in den Einstellungen auch nach direktem Export füllen
+                        _eb.aktualisieren(p, u["d"])
+                    except Exception:
+                        pass
+            LETZTES["ergebnis"] = r
             ergebnis.clear()
             with ergebnis:
                 zeigen(r)
@@ -324,3 +338,10 @@ def seite(p, speichern):
         if u and (zu.get("schwarzplan") or zu.get("info_dwg")):
             datei_liste("Zusätzliche Pläne (DXF/DWG)", zu.get("schwarzplan", []) + zu.get("info_dwg", []))
 
+    # Seite wurde neu geladen (Verbindung kurz weg, Fenster neu geöffnet …): letzte Ergebnisse wieder anzeigen
+    if LETZTES["png"]:
+        uebersicht_zeigen()
+    if LETZTES["ergebnis"]:
+        ergebnis.clear()
+        with ergebnis:
+            zeigen(LETZTES["ergebnis"])

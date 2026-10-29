@@ -259,7 +259,8 @@ def start(native=None, port=None, show=True):
         return {"programm": "ArchItools", "pfad": stil.PAKET, "stand": VERSION}
     ui.page("/")(seite)
     kw = dict(title=f"Zacharias Tools – {WASSERZEICHEN}", reload=False, language="de", show_welcome_message=False,
-              favicon="📐")
+              favicon="📐",
+              reconnect_timeout=3600.0)      # lange Berechnungen dürfen die Verbindung zum Fenster kurz blockieren, ohne dass die Seite neu lädt und die Ergebnisse verschwinden
     if native:
         # Nur das Programmfenster öffnen (kein zusätzlicher Browser-Tab). Meldet sich innerhalb von 30 s kein Fenster beim Server, klappt das
         # Fenster nicht (z. B. fehlende WebView-Komponenten): dann öffnet sich die Weboberfläche im Browser.

@@ -282,52 +282,6 @@ def ifc_decks_vorbereiten(d, cfg, reg_gel, fahrbahn, log=print):
     return neu, fahrbahn, decks
 
 
-def _deck_ebene(d, e, interp):
-    """Hoehenebene z = a*x + b*y + c der Bruecke aus dem Gelaende an den Bruecken-ENDEN (dort, wo die Strasse/der Weg aufs Deck trifft).
-    -> (a, b, c, Anzahl Stuetzpunkte) oder None"""
-    deck = e["deck"]
-    ring = deck.buffer(7.0).difference(deck.buffer(1.0))
-    ziel = d.regionen.get("Strasse" if e["typ"] == "strasse" else "Weg_Platz")
-    if e["typ"] == "strasse" and d.regionen.get("Weg_Platz") is not None:
-        ziel = unary_union([g for g in (ziel, d.regionen.get("Weg_Platz")) if g is not None]) if ziel is not None else d.regionen.get("Weg_Platz")
-    pts_ring = ring.intersection(ziel) if ziel is not None and not ziel.is_empty else None
-    for gebiet in (pts_ring, ring):
-        if gebiet is None or gebiet.is_empty:
-            continue
-        x0, y0, x1, y1 = gebiet.bounds
-        gx, gy = np.meshgrid(np.arange(x0, x1, 1.5), np.arange(y0, y1, 1.5))
-        P = shapely.points(gx.ravel(), gy.ravel())
-        ok = shapely.contains(gebiet, P)
-        x, y = gx.ravel()[ok], gy.ravel()[ok]
-        if len(x) < 3:
-            continue
-        z = np.asarray(interp(x, y), dtype=float)
-        g = np.isfinite(z)
-        x, y, z = x[g], y[g], z[g]
-        if len(x) < 3:
-            continue
-        # Der Ring reicht auch seitlich ueber die Schlucht/das Wasser: dort liegt das Gelaende tief. Die Bruecke sitzt auf den
-        # HOEHEREN Werten (den Auffahrten an den Enden), darum zaehlt nur die obere Haelfte.
-        k = z >= np.percentile(z, 50)
-        x, y, z = x[k], y[k], z[k]
-        if len(x) < 3:
-            continue
-        A = np.column_stack([x - x.mean(), y - y.mean(), np.ones(len(x))])
-        try:
-            abc, *_ = np.linalg.lstsq(A, z, rcond=None)
-        except np.linalg.LinAlgError:
-            continue
-        a, b = float(abc[0]), float(abc[1])
-        if np.hypot(a, b) > 0.08:                            # steiler als ~8 % ist keine Brueckenfahrbahn: flach auf mittlerer Hoehe
-            a = b = 0.0
-            c = float(np.median(z))
-        else:
-            c = float(abc[2]) - a * x.mean() - b * y.mean()
-        zmin, zmax = float(z.min()) - 0.5, float(z.max()) + 0.5
-        return a, b, c, len(x), zmin, zmax
-    return None
-
-
 def _lod2_oberseite(d, deck):
     """Ist die Bruecke im LoD2 als Koerper (Platte) vorhanden, liegt ihre Oberseite in den Dachflaechen der Teile. -> (Hoehenfunktion z(x, y), Anteil
     des Decks, der von Dachflaechen bedeckt ist) oder None. Die Fahrbahn wird dann auf diese Oberseite gelegt statt eine zweite Platte zu bauen."""

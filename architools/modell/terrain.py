@@ -66,17 +66,6 @@ def build_levels(dgm, extent_world, to_model, scale, gcfg, dgm_cfg, log=print):
     return P, info
 
 
-def layer_at(P, pt):
-    """Index der obersten Schicht, die den Punkt enthält."""
-    k = 0
-    for i in range(1, len(P)):
-        if P[i].contains(pt):
-            k = i
-        else:
-            break
-    return k
-
-
 def layer_under(P, footprint):
     """Tiefste Schicht unter dem ganzen Grundriss (dort steht das Gebäude eben auf)."""
     k = 0

@@ -133,16 +133,6 @@ def profile(log=None):
     return p
 
 
-def standard_json():
-    """Inhalt der mitgelieferten system/laender.json: nur Aenderungen gegenueber den eingebauten Profilen (zunaechst keine)."""
-    return {
-        "_hinweis": "Hier stehen nur Aenderungen gegenueber den eingebauten Laenderprofilen (Erklaerung im Kopf von ifcmap_laender.py). "
-                    "Eintraege, deren Name mit _ beginnt, werden ignoriert. Neues Land: Eintrag mit eigenem Namen (epsg, box = West, Sued, Ost, Nord in Grad, dgm, lod2, nutzung).",
-        "_beispiel_adresse_aendern": {"bayern": {"dgm": {"url": "https://example.org/dgm/{ekm}_{nkm}.tif"}}},
-        "_eingebaute_laender": sorted(PROFILE),
-    }
-
-
 def land_bestimmen(cfg, K, prof=None):
     """-> Land-Kennung ("berlin", "nrw" ...) oder None (unbekannt / 'keins')."""
     wahl = getattr(cfg, "land", "auto") or "auto"
@@ -403,16 +393,3 @@ def kacheln_holen(cfg, land, bbox, log, K, dgm=True, lod2=True, dom=False):
         log("Hinweis: Fehlende Kacheln bitte von Hand laden (Portal: %s) und unter 'Eigene Dateien' hinzufuegen." % prof.get("portal", ""))
     return dgm_out, lod_out, fehlt
 
-
-def kacheln_vorschau(cfg, land, bbox):
-    """Fuer die Oberflaeche: Text, welche Kacheln das Rechteck braucht. -> (Zeilen, Profil-Name oder None)"""
-    prof = profile().get(land)
-    if not prof:
-        return [], None
-    z = []
-    for art, nm in (("dgm", "Gelaende"), ("lod2", "Gebaeude")):
-        t = prof.get(art)
-        if t:
-            z.append("%s: %d Kachel(n) a %d m, %s" % (nm, len(kachel_liste(bbox, t.get("kachel", 1000))), t.get("kachel", 1000),
-                                                    "automatisch" if t.get("art") != "manuell" else "von Hand laden"))
-    return z, prof.get("name")
