@@ -131,3 +131,10 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
 - **Höhenlinien auf die Platten** (Gelände-Lasercut, Standard aus): Hauptlinien graviert, Nebenlinien geritzt; jede Linie landet auf der Schicht, auf der sie verläuft.
 - **Luftbild als Gelände-Textur in der IFC** (Berlin-Dienst, Standard aus): IfcTriangulatedFaceSet + IfcIndexedTriangleTextureMap, Bilddatei neben der IFC. In Archicad **ungetestet** (Archicad liest IFC-Texturen nicht immer); die 3D-Vorschau zeigt das Luftbild.
 - **Rasterplugin (Zusatzmodul, nicht öffentlich):** Befund „Linien einheitlich“: Luftbilder nutzen oft nur einen schmalen Grauwert-Bereich → automatische Kontrastspreizung (Standard an), Bildstatistik im Protokoll. Punktraster (Halbton) ist begonnen; Leistungsverbesserungen für Zehntausende Raster-Objekte (Gravur ohne Vereinigung, Verschieben und PDF-Schreiben vektorisiert, Farbprüfung bei großen Platten übersprungen) sind im Kern. Offen: Montageplan-Zeichnung bei Hunderttausenden Punkten.
+
+## Nachtrag Build 5: Länder-Plugins und Montageplan (29.10.2026)
+- Länder-Plugins `zusatz/land_sachsen`, `land_niedersachsen`, `land_sachsen_anhalt` (gitignored, Hook `LAENDER`): nur Profile mit `art="manuell"`, weil die Kachel-Adressen von hier nicht prüfbar sind (Sachsen: 2 km, GeoTIFF/CityGML, EPSG:25833 laut GeoSN; die anderen ungetestet).
+- Länder-Erkennung: `ifcmap_laender.land_am_punkt` – Berlin/Hamburg zuerst, sonst nächstgelegene Rechteckmitte (Landesgrenzen bleiben Näherung, z. B. Leipzig/Halle).
+- Standort-Warnung: ein Plugin-Land ohne automatischen Download zeigt weiterhin einen Hinweis (nicht still „ok“).
+- Montageplan: Raster ab 3000 Flächen/Linien rasterisiert gezeichnet (Punktraster mit ~100k Punkten sonst Minuten).
+- Gesichtet, nicht eingebaut: leafmap (MIT; Notebook-Karten, nur als Ideenquelle), GeoServer (GPL-Server, kein Baustein), maplab ETH (Robotik-SLAM, nicht passend), LOD3_buildings (Forschungscode, Fotos -> LoD3).

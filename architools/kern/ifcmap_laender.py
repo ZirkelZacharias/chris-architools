@@ -156,16 +156,26 @@ def land_bestimmen(cfg, K, prof=None):
         lo, la = Transformer.from_crs("EPSG:%d" % cfg.epsg, "EPSG:4326", always_xy=True).transform(ce, cn)
     except Exception:
         return None
-    prof = prof or profile()
-    for land in REIHENFOLGE:
-        box = BERLIN_BOX if land == "berlin" else tuple(prof.get(land, {}).get("box") or ())
+    return land_am_punkt(lo, la, prof or profile())
+
+
+def land_am_punkt(lo, la, prof):
+    """Bundesland zu Laenge/Breite. Berlin und Hamburg (Stadtstaaten in groesseren Land-Rechtecken) haben Vorrang; sonst gewinnt bei
+    ueberlappenden Rechtecken das Land, dessen Mitte (auf die Rechteckgroesse bezogen) am naechsten liegt. An Landesgrenzen bleibt das
+    eine Naeherung - dort das Land in den Einstellungen von Hand waehlen."""
+    for land in ("berlin", "hamburg"):
+        box = BERLIN_BOX if land == "berlin" else tuple((prof.get(land) or {}).get("box") or ())
         if len(box) == 4 and box[0] <= lo <= box[2] and box[1] <= la <= box[3]:
             return land
-    for land, p in prof.items():                      # eigene Laender aus der JSON-Datei
+    beste, bw = None, None
+    for land, p in prof.items():
         box = tuple(p.get("box") or ())
-        if land not in REIHENFOLGE and len(box) == 4 and box[0] <= lo <= box[2] and box[1] <= la <= box[3]:
-            return land
-    return None
+        if land in ("berlin", "hamburg") or len(box) != 4 or not (box[0] <= lo <= box[2] and box[1] <= la <= box[3]):
+            continue
+        w = max(abs(lo - (box[0] + box[2]) / 2) / ((box[2] - box[0]) / 2), abs(la - (box[1] + box[3]) / 2) / ((box[3] - box[1]) / 2))
+        if bw is None or w < bw:
+            beste, bw = land, w
+    return beste
 
 
 def vorbereiten(cfg, K, log):
