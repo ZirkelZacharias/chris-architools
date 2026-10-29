@@ -374,7 +374,11 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         if (cfg.get("raster_bild") or {}).get("aktiv"):
             # Rastergravur eines Bildes: gehört zum Zusatzmodul (Plugin); ohne Modul wird sie übersprungen
             from .. import zusatz
-            rr = zusatz.erstes("modell_raster_bild", cfg, extent_w.bounds, extent_m, tw_xy, log, log=log)
+            cfg["_dgm"] = szene.get("dgm")                     # für Quellen, die aus dem Geländemodell berechnet werden (Schummerung u. a.)
+            try:
+                rr = zusatz.erstes("modell_raster_bild", cfg, extent_w.bounds, extent_m, tw_xy, log, log=log)
+            finally:
+                cfg.pop("_dgm", None)
             if rr:
                 cfg["_rasterbild"] = rr.get("region")
                 teststreifen = rr.get("teststreifen") or []
