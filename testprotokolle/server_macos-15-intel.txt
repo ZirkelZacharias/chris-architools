@@ -1,3 +1,0 @@
-binding propagation for 1005 active links took 0.038 s
-binding propagation for 1005 active links took 0.036 s
-binding propagation for 1005 active links took 0.015 s
