@@ -181,8 +181,22 @@ def text(p, ausgaben, erg, zeilen, dauer, zeiten):
         add("  Keine Auffälligkeiten gemeldet.")
     add("")
 
+    # ------------------------------------------------------------ Plausibilität
+    pl = [str(z).replace("[Plausibilität] ", "", 1).strip() for z in zeilen if str(z).startswith("[Plausibilität] ")]
+    ran = any("Plausibilitätsprüfung:" in str(z) for z in zeilen)
+    if ran or pl:
+        add("6  PLAUSIBILITÄTSPRÜFUNG (Ausreißer in den Daten)")
+        add("-" * 60)
+        add("Das Programm hat die geladenen Daten auf Auffälligkeiten durchsucht. Es ändert nichts – die Hinweise sind Anlässe zum Nachsehen, keine Fehler.")
+        if pl:
+            for z in pl:
+                add("  - " + _kuerzen(z, 200))
+        else:
+            add("  Keine Ausreißer bei Gebäudehöhen, Dachformen, Grundrissen, Gelände und Bäumen gefunden.")
+        add("")
+
     # ------------------------------------------------------------ Laufzeiten
-    add("6  WEITERES")
+    add("7  WEITERES")
     add("-" * 60)
     for g_, t in zeiten.items():
         add(f"  Laufzeit {gruppen.get(g_, g_)}: {_dauer(t)}")

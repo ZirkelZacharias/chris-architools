@@ -24,6 +24,14 @@ def _patch(poly, **kw):
     return PathPatch(Path(verts, codes), **kw)
 
 
+def _draw_viele(ax, geoms, **kw):
+    """Viele Flächen (Raster aus Linien oder Punkten) als EINE Sammlung – Zehntausende einzelne Patches brauchen Minuten."""
+    from matplotlib.collections import PolyCollection
+    ringe = [np.asarray(p.exterior.coords) for g in geoms for p in polys(g)]
+    if ringe:
+        ax.add_collection(PolyCollection(ringe, facecolors=kw.get("facecolor", "#000"), edgecolors="none", linewidths=0), autolim=False)
+
+
 def _draw(ax, g, **kw):
     for p in polys(g):
         ax.add_patch(_patch(p, **kw))
@@ -186,8 +194,7 @@ def write_pdf(path, cfg, info, Q, parts, sheets, buildings, plates, features, st
                 for pp in s["teile"]:
                     _draw(ax, pp["poly"], facecolor="#f5e3c4", edgecolor="#d00", lw=0.4)
                     _lines(ax, pp.get("ritzen", []), color="#00c", lw=0.25)
-                    for gg in pp.get("gravieren", []):
-                        _draw(ax, gg, facecolor="#000", edgecolor="none", lw=0)
+                    _draw_viele(ax, pp.get("gravieren", []), facecolor="#000", edgecolor="none", lw=0)
                     if pp.get("id"):
                         c = pp["poly"].representative_point()
                         ax.text(c.x, c.y, pp["id"], fontsize=5, ha="center", va="center", color="#555")

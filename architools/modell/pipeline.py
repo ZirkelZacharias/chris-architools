@@ -165,6 +165,46 @@ def einsatz_polygon(cfg, szene, log=print):
     return g
 
 
+def _hoehenlinien_feats(dgm, cfg, to_model, extent_w, extent_m, f, log):
+    """Höhenlinien aus dem Gelände als Ritz-/Gravurlinien. Jede Linie landet automatisch auf der Schicht, auf der sie liegt."""
+    import contourpy
+    from scipy.ndimage import gaussian_filter
+    hl = cfg["laser"]["hoehenlinien"]
+    x, y, z = np.asarray(dgm["x"], float), np.asarray(dgm["y"], float), np.asarray(dgm["z"], float)
+    res = abs(x[1] - x[0]) if len(x) > 1 else 1.0
+    sig = max(float(cfg["dgm"].get("glaettung_m") or 0), 2.0) / res           # etwas glätten: das Raster ist stufig
+    z = gaussian_filter(z, sig, mode="nearest")
+    aeq = max(0.1, float(hl.get("aequidistanz_m") or 1.0))
+    haupt = max(1, int(hl.get("haupt_alle") or 5))
+    cg = contourpy.contour_generator(x, y, z)
+    feats = []
+    n_h = n_n = 0
+    k0, k1 = int(np.floor(z.min() / aeq)), int(np.ceil(z.max() / aeq))
+    for k in range(k0, k1 + 1):
+        lvl = k * aeq
+        if lvl <= z.min() or lvl >= z.max():
+            continue
+        zeilen = [shapely.LineString(l) for l in cg.lines(lvl) if len(l) >= 2]
+        if not zeilen:
+            continue
+        g = shapely.union_all(zeilen).intersection(extent_w)
+        if g.is_empty:
+            continue
+        gm = to_model(g).intersection(extent_m)
+        if gm.is_empty or gm.length < 3.0:
+            continue
+        ist_haupt = (k % haupt == 0)
+        akt = (hl.get("haupt") if ist_haupt else hl.get("neben")) or "ritzen"
+        if akt == "aus":
+            continue
+        feats.append({"name": "Höhenlinien", "geom": gm, "typ": "linie", "aktion": akt, "d": 1.5,
+                      "breite_mm": 0.6 if ist_haupt else 0.0, "raster": (50.0, 0.8)})
+        n_h += ist_haupt
+        n_n += not ist_haupt
+    log(f"  Höhenlinien auf den Platten: Abstand {aeq:g} m, {n_h} Haupt- und {n_n} Nebenlinien")
+    return feats
+
+
 def _akt(a):
     return {"gravieren": "gravieren", "gravieren (Fläche)": "gravieren", "ritzen": "ritzen", "raster": "raster",
             "schneiden": "schneiden", "aus": "aus"}.get(a, "ritzen")
@@ -286,6 +326,12 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
             feats.append({"name": e["name"], "geom": gm, "typ": typ, "aktion": e["aktion"],
                           "d": float(e.get("d") or 1.5), "breite_mm": bw * f,
                           "raster": (float(e.get("raster_grau", 50.0)), float(e.get("raster_weite_mm", 0.8)))})
+
+    if laser and (cfg["laser"].get("hoehenlinien") or {}).get("aktiv"):
+        try:
+            feats += _hoehenlinien_feats(szene["dgm"], cfg, to_model, extent_w, extent_m, f, log)
+        except Exception as e:
+            log(f"  HINWEIS: Höhenlinien auf den Platten nicht erzeugt ({str(e)[:120]})")
 
     # Projektgrundstück als Einsatz
     E_w = einsatz_polygon(cfg, szene, log)

@@ -134,6 +134,18 @@ def place(geom, ang, dx, dy):
     return affinity.translate(affinity.rotate(geom, ang, origin=(0, 0)), dx, dy)
 
 
+def place_viele(geoms, ang, dx, dy):
+    """Wie place, aber für lange Listen (Raster aus Zehntausenden Linien/Punkten) auf einmal und damit viel schneller."""
+    if len(geoms) < 50:
+        return [place(g, ang, dx, dy) for g in geoms]
+    import shapely
+    a = np.radians(ang)
+    c, sn = np.cos(a), np.sin(a)
+    arr = np.empty(len(geoms), dtype=object)
+    arr[:] = list(geoms)
+    return list(shapely.transform(arr, lambda xy: np.c_[xy[:, 0] * c - xy[:, 1] * sn + dx, xy[:, 0] * sn + xy[:, 1] * c + dy]))
+
+
 def _run(items, formats, margin, gap, res, filler, n_filler):
     sheets = []
     rest = items

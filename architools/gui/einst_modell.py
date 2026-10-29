@@ -439,6 +439,21 @@ class ModellEinst:
                                 ui.number("Leistenbreite mm", min=5).bind_value(rz, "breite_mm").classes("w-40").tooltip("Breite von oben gesehen")
                             ausgrauen(b_r, sw_r)
                             hinweis("Standard aus. Die langen Leisten laufen durch, die kurzen sitzen dazwischen; die Leisten liegen mit auf den Platten.")
+                        with karte("Höhenlinien auf die Platten ritzen/gravieren", OCKER, offen=False):
+                            hz = cfg["laser"].setdefault("hoehenlinien", {"aktiv": False, "aequidistanz_m": 1.0, "haupt_alle": 5,
+                                                                          "haupt": "gravieren", "neben": "ritzen"})
+                            sw_h = ui.checkbox("Höhenlinien aus dem Gelände auf die Schichten übertragen").bind_value(hz, "aktiv")
+                            b_h = ui.column().classes("w-full gap-1")
+                            with b_h:
+                                with ui.row().classes("gap-2 items-end"):
+                                    ui.number("Abstand der Linien (m)", min=0.1, step=0.5).bind_value(hz, "aequidistanz_m").classes("w-44")
+                                    ui.number("Hauptlinie alle … Linien", min=1, step=1, format="%.0f").bind_value(hz, "haupt_alle").classes("w-48")
+                                with ui.row().classes("gap-2"):
+                                    ui.select({k: AKTION_TEXT[k] for k in ("ritzen", "gravieren", "aus")}, label="Hauptlinien").bind_value(hz, "haupt").classes("w-48")
+                                    ui.select({k: AKTION_TEXT[k] for k in ("ritzen", "gravieren", "aus")}, label="Nebenlinien").bind_value(hz, "neben").classes("w-48")
+                            ausgrauen(b_h, sw_h)
+                            hinweis("Standard aus. Jede Linie liegt auf der Schicht, auf der sie wirklich verläuft – so wird das Gelände zwischen den Stufen lesbar. "
+                                    "Ritzen = feine Linie, Gravieren = breitere, dunkle Linie. In der 3D-Vorschau des Modells sind sie zu sehen.")
                         self._zusatz_laser(cfg)
                         self._karte_bauweise()
                         with karte("Was wird geritzt, graviert, geschnitten?", SCHIEFER):

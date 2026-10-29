@@ -69,7 +69,19 @@ def _gelaende_textur(K, d, X, Y, Z, farbe_basis):
     img = np.empty((bh, bw, 3), np.uint8)
     img[:] = np.asarray(farbe_basis, np.uint8)
     tr = from_bounds(d.xmin, d.ymin, d.xmax, d.ymax, bw, bh)
-    for kat, reg in (d.regionen or {}).items():
+    luft = None
+    if getattr(d.cfg, "gelaende_luftbild", False):                 # Luftbild statt Nutzungsfarben (Berlin-Dienst; sonst Rückfall auf Farben)
+        luft = getattr(d, "luftbild", None)
+        if luft is None:
+            try:
+                import ifcmap_wms
+                luft = ifcmap_wms.luftbild_fuer_gelaende(d, d.cfg, print) or False
+            except Exception:
+                luft = False
+            d.luftbild = luft
+        if luft:
+            img = np.asarray(luft[0].convert("RGB").resize((bw, bh)), np.uint8).copy()
+    for kat, reg in ([] if luft else (d.regionen or {}).items()):
         try:
             m = rasterio.features.rasterize([(reg, 1)], out_shape=(bh, bw), transform=tr, fill=0, dtype="uint8").astype(bool)
             if m.any():
@@ -84,6 +96,8 @@ def _gelaende_textur(K, d, X, Y, Z, farbe_basis):
     licht = np.array([-0.45, -0.55, 0.7]); licht /= np.linalg.norm(licht)
     sh = np.clip(n @ licht, 0, 1)
     sh = 0.62 + 0.38 * sh / max(float((np.array([0, 0, 1.0]) @ licht)), 1e-6)
+    if luft:
+        sh = 0.85 + 0.15 * sh                                      # Luftbild hat schon seine eigenen Schatten: nur leicht modellieren
     sh_img = Image.fromarray(np.clip(sh[::-1] * 255, 0, 255).astype(np.uint8)).resize((bw, bh), Image.BICUBIC)
     f = (np.asarray(sh_img, float) / 255.0)[..., None]
     img = np.clip(img.astype(float) * np.minimum(f, 1.08), 0, 255).astype(np.uint8)

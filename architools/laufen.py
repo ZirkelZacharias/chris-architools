@@ -214,6 +214,14 @@ def alles(p, ausgaben, log=print, prog=None, speichern=True, test=False):
         try:
             if g == "umgebung":
                 erg["umgebung"] = umgebung_export(p, ausgaben, log, pg, test=test)
+                try:                                         # Plausibilitäts-Prüfer: meldet Ausreißer (Höhen, Dachformen, Gelände), ändert nichts
+                    from . import plausibilitaet
+                    meldungen = plausibilitaet.pruefen(erg["umgebung"].get("d"))
+                    log(f"Plausibilitätsprüfung: {len(meldungen)} Hinweis(e)")
+                    for m in meldungen:
+                        log("[Plausibilität] " + m)
+                except Exception as e:
+                    log(f"Plausibilitätsprüfung nicht möglich: {e}")
             elif g == "modell":
                 erg["modell"] = modell_export(p, ausgaben, log, pg)
             elif g == "schnitt":

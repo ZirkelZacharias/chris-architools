@@ -86,6 +86,8 @@ DEFAULTS = {
         "restplatten": [],
         # Rahmen ums Modell, aus demselben Material mitgelasert (je Schicht vier Leisten, Stapel = Höhe des Modells)
         "rahmen": {"aktiv": False, "breite_mm": 15.0},
+        # Höhenlinien auf die Platten: Hauptlinien graviert, Nebenlinien geritzt (Standard aus)
+        "hoehenlinien": {"aktiv": False, "aequidistanz_m": 1.0, "haupt_alle": 5, "haupt": "gravieren", "neben": "ritzen"},
     },
     # Rastergravur (EXPERIMENTELL): Bild als Linienraster (schwarze Streifen) auf die Geländeschichten.
     "raster_bild": {

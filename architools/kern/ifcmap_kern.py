@@ -209,6 +209,8 @@ class Config:
     zusatzplaene: list = field(default_factory=list)      # Liste der Zusatzplaene (siehe ifcmap_zusatz.py)
     wms_karten: list = field(default_factory=list)        # optionale Kartenbilder (Luftbild, historische Karten, Umweltatlas), siehe ifcmap_wms.py
     wms_eigene: str = ""                                  # weitere WMS-Dienste, je Zeile: Name | Adresse | Ebene1,Ebene2
+    gelaende_luftbild: bool = False                       # Gelaende mit Luftbild als Textur (IFC, 3D-Vorschau); Berlin-Dienst, braucht Internet
+    luftbild_aufloesung: float = 0.5                      # Meter je Pixel des Luftbilds fuer die Textur
     wms_aufloesung: float = 0.25                          # Meter je Pixel (hoechstens 4096 Pixel Kantenlaenge)
     # --- Lageplan / Schwarzplan
     buergersteige: str = "fgn"            # Lageplan: "fgn" = Fussgaengernetz (Berlin), "naeherung" = aus der Strassenbreite (ueberall), "keine"
@@ -3211,7 +3213,7 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         return layers[name]
 
     def element(klasse, name, faces, lay, container, predefined=None, objtype=None, props=None, als_site=False, farbe=None,
-                gebaeude=False, stil=None, mesh=None):
+                gebaeude=False, stil=None, mesh=None, textur=None):
         stat = {}
         if mesh is not None:                              # fertig berechnet (zusammengefasste Fernbereich-Felder)
             verts, polys, stat = mesh
@@ -3227,7 +3229,10 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         el = ifcopenshell.api.root.create_entity(f, **kw)
         if objtype:
             el.ObjectType = objtype
-        rep = ifcopenshell.api.geometry.add_mesh_representation(f, context=body, vertices=[verts], faces=[polys])
+        if textur is not None:
+            rep = textur_darstellung(verts, polys, textur)
+        else:
+            rep = ifcopenshell.api.geometry.add_mesh_representation(f, context=body, vertices=[verts], faces=[polys])
         el.ObjectPlacement = platzierung
         el.Representation = f.createIfcProductDefinitionShape(None, None, [rep])
         if als_site:
@@ -3236,11 +3241,30 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
             sammel_cont.setdefault(id(container), (container, []))[1].append(el)
         layer(lay)
         sammel_layer.setdefault(lay, []).append(rep)
-        if farben_an and farbe:
+        if farben_an and farbe and textur is None:
             farbe_zuweisen(rep, el, stil or lay, farbe)
         if props:
             pset_direkt(el, "Pset_Umgebung", props)
         return el
+
+    def textur_darstellung(verts, polys, tx):
+        """Gelaende als Dreiecksnetz mit Luftbild-Textur (IfcTriangulatedFaceSet + IfcIndexedTriangleTextureMap). UNGETESTET in Archicad."""
+        rect, bildname = tx
+        tri = []
+        for pl in polys:
+            for i in range(1, len(pl) - 1):
+                tri.append((int(pl[0]) + 1, int(pl[i]) + 1, int(pl[i + 1]) + 1))
+        pts = f.createIfcCartesianPointList3D([tuple(float(c) for c in v) for v in verts])
+        fs = f.createIfcTriangulatedFaceSet(pts, None, None, tri, None)
+        bw, bh = max(rect[2] - rect[0], 1e-6), max(rect[3] - rect[1], 1e-6)
+        uv = [(min(1.0, max(0.0, (v[0] + shift[0] - rect[0]) / bw)), min(1.0, max(0.0, (v[1] + shift[1] - rect[1]) / bh))) for v in verts]
+        img = f.createIfcImageTexture(False, False, "DIFFUSE", None, None, bildname)
+        weiss = f.createIfcColourRgb(None, 1.0, 1.0, 1.0)
+        rs = f.createIfcSurfaceStyleRendering(weiss, 0.0, weiss, None, None, None, None, None, "NOTDEFINED")
+        st = f.createIfcSurfaceStyle("Luftbild", "BOTH", [rs, f.createIfcSurfaceStyleWithTextures([img])])
+        f.createIfcStyledItem(fs, [st], None)
+        f.createIfcIndexedTriangleTextureMap([img], fs, f.createIfcTextureVertexList([list(u) for u in uv]), tri)
+        return f.createIfcShapeRepresentation(body, "Body", "Tessellation", [fs])
 
     n_geb = n_gel = n_baum = 0
     n_gl = n_glb = 0
@@ -3375,6 +3399,19 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         log("  WARNUNG: %d Gebaeude ergaben keine Flaechen und fehlen in der IFC: %s%s" % (len(leer), ", ".join(leer[:8]), " ..." if len(leer) > 8 else ""))
 
     # Gelaende: je Nutzungsart ein Element
+    tex = None
+    if getattr(d.cfg, "gelaende_luftbild", False):
+        try:
+            import ifcmap_wms as _W
+            lb = getattr(d, "luftbild", None) or _W.luftbild_fuer_gelaende(d, d.cfg, log)
+            d.luftbild = lb
+            if lb:
+                bildname = os.path.splitext(os.path.basename(pfad))[0] + "_luftbild.jpg"
+                lb[0].save(os.path.join(os.path.dirname(pfad), bildname), quality=88)
+                tex = (lb[1], bildname)
+                log("  Gelaende mit Luftbild-Textur (%s) - die Bilddatei muss neben der IFC liegen; Archicad liest Texturen aus IFC nicht immer" % bildname)
+        except Exception as e:
+            log("  HINWEIS: Luftbild-Textur nicht moeglich (%s)" % str(e)[:100])
     texte = {}
     for text, kat, n, ha in d.tabelle:
         texte.setdefault(kat, []).append(text)
@@ -3384,10 +3421,11 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         if kat in texte:
             props["Nutzungsarten_ALKIS"] = "; ".join(texte[kat])[:250]
         if gelaende_typ == "site":
-            ok = element("IfcSite", lay, fl, lay, None, props=props, als_site=True, farbe=IFC_FARBEN.get(kat, kat_info(kat)[1]))
+            ok = element("IfcSite", lay, fl, lay, None, props=props, als_site=True, farbe=IFC_FARBEN.get(kat, kat_info(kat)[1]),
+                         textur=tex if kat != "Bordstein" else None)
         else:
             ok = element("IfcGeographicElement", lay, fl, lay, site, predefined="TERRAIN", props=props,
-                         farbe=IFC_FARBEN.get(kat, kat_info(kat)[1]))
+                         farbe=IFC_FARBEN.get(kat, kat_info(kat)[1]), textur=tex if kat != "Bordstein" else None)
         n_gel += 1 if ok else 0
 
     # Baeume

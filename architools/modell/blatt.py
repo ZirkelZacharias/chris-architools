@@ -59,14 +59,35 @@ def bereinigen(teil, min_steg=WERKSTATT["min_steg_mm"], protokoll=None):
     teil["poly"] = p
     innen = p.buffer(-0.15)
     grav = [g for g in teil.get("gravieren", []) if g is not None and not g.is_empty]
-    gv = shapely.union_all(grav).intersection(p.buffer(-0.2)) if grav else Polygon()
-    gv = shapely.union_all([q for q in polys(gv) if q.area > 0.05]) if not gv.is_empty else gv
-    teil["gravieren"] = polys(gv)
+    flach = [q for g in grav for q in polys(g)]
+    if len(flach) > 500:
+        # Raster (Linien oder Punkte): sehr viele einzelne Flächen, die sich nicht überlappen – ohne teure Vereinigung auf das Teil begrenzen
+        import numpy as _np
+        arr = _np.array(flach, dtype=object)
+        ziel = p.buffer(-0.2)
+        shapely.prepare(ziel)
+        drin = shapely.contains(ziel, arr)
+        teil_ = [q for q in arr[drin]]
+        for q in arr[~drin & shapely.intersects(ziel, arr)]:
+            teil_ += [x for x in polys(q.intersection(ziel))]
+        gl = [q for q in teil_ if q.area > 0.05]
+        gv = shapely.MultiPolygon(gl) if gl else Polygon()
+        teil["gravieren"] = gl
+    else:
+        gv = shapely.union_all(grav).intersection(p.buffer(-0.2)) if grav else Polygon()
+        gv = shapely.union_all([q for q in polys(gv) if q.area > 0.05]) if not gv.is_empty else gv
+        teil["gravieren"] = polys(gv)
     rz = _linien_vereinigen(teil.get("ritzen", []))
     if rz:
         g = shapely.union_all(rz).intersection(innen)
-        if not gv.is_empty:
-            g = g.difference(gv.buffer(0.05))
+        if not gv.is_empty and not g.is_empty:
+            tp = polys(gv)
+            if len(tp) > 200:                       # viele Gravurflächen (Raster): nur die in der Nähe der Ritzlinien betrachten
+                nah = shapely.STRtree(tp).query(g.buffer(0.1))
+                tp = [tp[i] for i in nah]
+            if tp:
+                u = shapely.union_all(tp)
+                g = g.difference(u if len(tp) > 200 else u.buffer(0.05))
         rz = [l for l in lines(g) if l.length >= 0.3]
     teil["ritzen"] = rz
     return teil
@@ -75,8 +96,8 @@ def bereinigen(teil, min_steg=WERKSTATT["min_steg_mm"], protokoll=None):
 def _verschieben(teil, ang, dx, dy):
     mv = lambda g: N.place(g, ang, dx, dy)
     return {"id": teil.get("id", ""), "poly": mv(teil["poly"]), "raster_mm2": teil.get("raster_mm2", 0.0),
-            "ritzen": [mv(l) for l in teil.get("ritzen", [])],
-            "gravieren": [mv(g) for g in teil.get("gravieren", [])]}
+            "ritzen": N.place_viele(teil.get("ritzen", []), ang, dx, dy),
+            "gravieren": N.place_viele(teil.get("gravieren", []), ang, dx, dy)}
 
 
 def restplatten(cfg):
@@ -282,6 +303,8 @@ def pruefen(pfad_pdf, platten):
         W, H = pl["format"]
         if abs(page.rect.width / k - W) > 0.05 or abs(page.rect.height / k - H) > 0.05:
             msg.append(f"Seite {i}: Größe {page.rect.width / k:.1f} × {page.rect.height / k:.1f} mm statt {W} × {H}")
+        if sum(len(t.get("gravieren", [])) + len(t.get("ritzen", [])) for t in pl["teile"]) > 20000:
+            continue                       # Raster mit Zehntausenden Objekten: die Farbprüfung liefe minutenlang (Farben schreibt das Programm selbst)
         for d in page.get_drawings():
             for c in (d.get("color"), d.get("fill")):
                 if c is not None and tuple(round(v, 3) for v in c) not in erlaubt:

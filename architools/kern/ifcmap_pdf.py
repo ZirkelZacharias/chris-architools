@@ -245,14 +245,13 @@ class SeiteSchreiben:
         return ("%.3f" % v).rstrip("0").rstrip(".") if abs(v) >= 0.0005 else "0"
 
     def _pfad(self, ringe):
+        ops = self.ops
         for pts in ringe:
             pts = list(pts)
             if len(pts) < 2:
                 continue
-            f = self._f
-            self.ops.append("%s %s m" % (f(pts[0][0]), f(pts[0][1])))
-            for x, y in pts[1:]:
-                self.ops.append("%s %s l" % (f(x), f(y)))
+            # schnell: je Ring ein Textstück (bei Zehntausenden Raster-Punkten zählt jede Mikrosekunde)
+            ops.append("%.3f %.3f m %s" % (pts[0][0], pts[0][1], " ".join("%.3f %.3f l" % (x, y) for x, y in pts[1:])))
 
     def flaeche(self, ringe, rgb):
         """Fläche mit gerade/ungerade-Füllregel (Löcher bleiben frei), ohne Kontur"""
@@ -285,7 +284,7 @@ def schreiben(pfad, seiten, titel=""):
     baum = neu(b"")                                     # 2: Seitenbaum
     kinder = []
     for s in seiten:
-        inhalt = zlib.compress("\n".join(s.ops).encode("ascii"), 9)
+        inhalt = zlib.compress("\n".join(s.ops).encode("ascii"), 6)
         n_i = neu(b"<< /Length %d /Filter /FlateDecode >>\nstream\n" % len(inhalt) + inhalt + b"\nendstream")
         n_s = neu(("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.3f %.3f] /Resources << >> /Contents %d 0 R >>"
                    % (s.breite, s.hoehe, n_i)).encode("ascii"))

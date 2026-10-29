@@ -148,6 +148,13 @@ def seiten(p):
                 hinweis("Das Gelände bleibt auf DGM-Höhe (dort stehen auch die Gebäude); nur die Fahrbahn sinkt.")
                 _haken("Brücken im IFC: Straße/Gehweg nur auf Brücken, die im LoD2 vorhanden sind (sonst weglassen)", u, "bruecken_ifc")
                 _wahl("Gelände in der IFC als", GELAENDE_TYPEN, u, "gelaende_typ")
+                lb = _haken("Gelände mit Luftbild als Textur (nur Berlin, braucht Internet – ungetestet in Archicad)", u, "gelaende_luftbild")
+                with ui.row().classes("gap-2 items-center") as lb_in:
+                    ui.label("Auflösung des Luftbilds").classes("text-body2")
+                    _zahl("", u, "luftbild_aufloesung", min=0.1, max=5, step=0.1, breite="w-20")
+                    ui.label("m je Pixel (höchstens 4096 Pixel). Die Bilddatei liegt neben der IFC; wenn Archicad die Textur nicht zeigt, "
+                             "bleibt das Gelände farbig, und die 3D-Vorschau zeigt das Luftbild.").classes("text-caption").style(f"color:{GRAU}")
+                ausgrauen(lb_in, lb)
                 gl = _haken("Geschosslinien: waagerechte Linien an den Wänden der Gebäude im Nahbereich (optional)", u, "geschosslinien")
                 with ui.column().classes("w-full gap-1") as gl_in:
                     _wahl("Geschosszahl", {"auto": "aus den Daten, sonst aus der Traufhöhe geschätzt", "daten": "nur Gebäude mit echter Geschosszahl"},

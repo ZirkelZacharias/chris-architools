@@ -73,6 +73,7 @@ u["geschosslinien"] = True; u["fenstermuster"] = True; u["lp_text"] = True      
 mg = p["modell"]["gebaeude"]
 mg.update(modus="falt", material="Bristolkarton", staerke_mm=0.5, lasche_mm=3.0, fenstermuster=True)       # Gebäude als Faltmodell (Laser)
 p["modell"]["laser"]["rahmen"] = {"aktiv": True, "breite_mm": 15.0}
+p["modell"]["laser"]["hoehenlinien"] = {"aktiv": True, "aequidistanz_m": 1.0, "haupt_alle": 5, "haupt": "gravieren", "neben": "ritzen"}
 p["modell"]["laser"]["restplatten"] = [{"name": "Rest A", "b_mm": 400, "h_mm": 300, "anzahl": 1}]
 from PIL import Image
 _rj = os.path.join(TMP, "rasterbild.jpg")
@@ -89,6 +90,7 @@ def _wms_fake(url, ctx, timeout=90):
     w = int(url.split("WIDTH=")[1].split("&")[0]); h = int(url.split("HEIGHT=")[1].split("&")[0])
     b = io.BytesIO(); Image.new("RGB", (w, h), (120, 160, 200)).save(b, "PNG"); return b.getvalue(), "image/png"
 WM._holen = _wms_fake
+u["gelaende_luftbild"] = True; u["luftbild_aufloesung"] = 2.0
 p["schnitt"]["seite"]="rechts"; p["ziel"]={"ordner":os.path.join(TMP,"ziel"),"name":"MeinExport"}
 p["schnitt"]["linie_en"] = [[393450, 5826550], [393750, 5826550]]
 t0 = time.time()
@@ -122,6 +124,16 @@ lt = [f for r_, _, fs_ in os.walk(TMP) for f in fs_ if f.endswith("lageplan.dxf"
 print("GEBAEUDE-LASER, HOLZ, RESTPLATTEN OK")
 assert any("Rahmen mitgelasert" in x for x in LOG), "Laser-Rahmen wurde nicht erzeugt"
 print("LASER-RAHMEN OK")
+_ifcs = [os.path.join(r_, f_) for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f_ in fs_ if f_.endswith(".ifc")]
+assert _ifcs, "keine IFC"
+_txt = open(_ifcs[0], encoding="utf-8", errors="ignore").read()
+assert "IFCINDEXEDTRIANGLETEXTUREMAP" in _txt and "IFCIMAGETEXTURE" in _txt, "IFC ohne Luftbild-Textur"
+assert [f_ for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f_ in fs_ if f_.endswith("_luftbild.jpg")], "Luftbild-Datei fehlt"
+import ifcopenshell as _io
+_m = _io.open(_ifcs[0]); assert _m.by_type("IfcIndexedTriangleTextureMap"), "Texturzuordnung fehlt"
+print("LUFTBILD-TEXTUR IM IFC OK", len(_m.by_type("IfcIndexedTriangleTextureMap")))
+assert any("Höhenlinien auf den Platten" in x for x in LOG), "Höhenlinien auf den Platten fehlen"
+print("HOEHENLINIEN-GRAVUR OK")
 from architools import zusatz as _Z
 if _Z.hat("modell_raster_bild"):
     assert any("Teststreifen" in x for x in LOG), "Rastergravur (Zusatzmodul) hat keinen Teststreifen erzeugt"

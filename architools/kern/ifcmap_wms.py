@@ -115,6 +115,32 @@ def bild_holen(basis, ebenen, rect, aufloesung, foto, ctx, log=print):
     return gross, W, Hp, aufl
 
 
+def luftbild_fuer_gelaende(d, cfg, log=print):
+    """Luftbild (aktuellstes Orthofoto, Berlin) fuer das ganze Gebiet als PIL-Bild; -> (Bild, rect) oder None.
+    Wird als Textur auf das Gelaende gelegt (IFC, 3D-Vorschau). Bei Fehlern: None und eine Zeile im Protokoll."""
+    import ifcmap_kern as K
+    from PIL import Image
+    ctx = K.ssl_kontext(cfg.cafile, cfg.unsicher)
+    rect = (d.xmin, d.ymin, d.xmax, d.ymax)
+    name, dienste, wahl, foto = WMS_KATALOG["luftbild"]
+    fehler = []
+    for s in dienste:
+        basis = WMS_BASIS + s
+        try:
+            eb = _gewaehlt(ebenen_lesen(basis, ctx), wahl)
+            if not eb:
+                raise RuntimeError("keine Ebenen im Dienst")
+            im, W, H, px = bild_holen(basis, eb, rect, float(getattr(cfg, "luftbild_aufloesung", 0.5) or 0.5), True, ctx, log)
+            if max(W, H) > 4096:
+                im = im.resize((min(W, 4096), min(H, 4096)))
+            log("  Luftbild (%s): %d x %d Pixel, %.2f m je Pixel" % (s, im.size[0], im.size[1], px))
+            return im, rect
+        except Exception as e:
+            fehler.append("%s: %s" % (s, str(e)[:70]))
+    log("  HINWEIS: Luftbild nicht erreichbar oder ausserhalb des Dienstgebiets (%s) - Gelaende bleibt ohne Textur" % "; ".join(fehler[:3]))
+    return None
+
+
 def _eigene(text):
     """Zeilen 'Name | Adresse | Ebene1,Ebene2' (Ebenen optional) -> Liste von Dicts"""
     out = []
