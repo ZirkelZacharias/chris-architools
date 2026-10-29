@@ -1,52 +1,52 @@
 + uv python install 3.12
 Downloading cpython-3.12.16-macos-x86_64-none (download) (23.6MiB)
  Downloaded cpython-3.12.16-macos-x86_64-none (download)
-Installed Python 3.12.16 in 4.06s
+Installed Python 3.12.16 in 3.45s
  + cpython-3.12.16-macos-x86_64-none (python3.12)
 Python: /Users/runner/.local/share/uv/python/cpython-3.12.16-macos-x86_64-none/bin/python3.12 -> /Users/runner/.local/share/uv/python/cpython-3.12.16-macos-x86_64-none
 + uv pip install --python /Users/runner/work/zacharias-tools/zacharias-tools/dist/ZachariasTools/programm/python/bin/python3 --break-system-packages --no-progress -r /Users/runner/work/zacharias-tools/zacharias-tools/requirements.txt
 Using Python 3.12.16 environment at: dist/ZachariasTools/programm/python
-Resolved 89 packages in 514ms
-Downloading pygments (1.2MiB)
-Downloading pyobjc-core (6.1MiB)
-Downloading networkx (2.0MiB)
+Resolved 89 packages in 746ms
 Downloading ezdxf (3.0MiB)
-Downloading pydantic-core (2.1MiB)
-Downloading pandas (11.1MiB)
+Downloading pygments (1.2MiB)
+Downloading networkx (2.0MiB)
 Downloading rasterio (23.9MiB)
-Downloading pyogrio (24.9MiB)
-Downloading ifcopenshell (43.3MiB)
-Downloading pillow (5.3MiB)
-Downloading pyproj (5.8MiB)
-Downloading scipy (22.0MiB)
+Downloading pyobjc-core (6.1MiB)
 Downloading fonttools (2.5MiB)
-Downloading numpy (6.5MiB)
-Downloading pypdfium2 (3.6MiB)
-Downloading ezdwg (2.9MiB)
 Downloading nicegui (8.1MiB)
 Downloading shapely (1.7MiB)
+Downloading scipy (22.0MiB)
+Downloading pydantic-core (2.1MiB)
+Downloading pyproj (5.8MiB)
+Downloading pandas (11.1MiB)
+Downloading ifcopenshell (43.3MiB)
+Downloading numpy (6.5MiB)
+Downloading pyogrio (24.9MiB)
 Downloading matplotlib (9.0MiB)
+Downloading pillow (5.3MiB)
+Downloading pypdfium2 (3.6MiB)
+Downloading ezdwg (2.9MiB)
  Downloaded pygments
- Downloaded pydantic-core
  Downloaded shapely
  Downloaded networkx
- Downloaded ezdxf
+ Downloaded pydantic-core
  Downloaded fonttools
+ Downloaded ezdxf
  Downloaded ezdwg
  Downloaded pypdfium2
  Downloaded pillow
- Downloaded pyobjc-core
  Downloaded pyproj
- Downloaded numpy
+ Downloaded pyobjc-core
  Downloaded nicegui
+ Downloaded numpy
  Downloaded matplotlib
  Downloaded pandas
- Downloaded scipy
  Downloaded rasterio
  Downloaded pyogrio
+ Downloaded scipy
  Downloaded ifcopenshell
-Prepared 89 packages in 6.12s
-Installed 89 packages in 928ms
+Prepared 89 packages in 10.45s
+Installed 89 packages in 1.15s
  + affine==3.0.1
  + aiofiles==25.1.0
  + aiohappyeyeballs==2.7.1
@@ -96,8 +96,8 @@ Installed 89 packages in 928ms
  + pillow==13.0.0
  + propcache==0.5.4
  + proxy-tools==0.1.0
- + pydantic==2.14.1
- + pydantic-core==2.50.1
+ + pydantic==2.14.2
+ + pydantic-core==2.50.2
  + pygments==2.21.0
  + pyobjc-core==12.2.2
  + pyobjc-framework-cocoa==12.2.2
@@ -137,7 +137,7 @@ Installed 89 packages in 928ms
  + wsproto==1.3.2
  + yarl==1.25.1
 Schlank gemacht: 768 MB -> 713 MB
-Paket gebaut in 17 s
+Paket gebaut in 19 s
 + /Users/runner/work/zacharias-tools/zacharias-tools/dist/ZachariasTools/programm/python/bin/python3 -c import numpy, scipy, shapely, rasterio, pyogrio, contourpy, matplotlib, trimesh, networkx, ezdxf, ezdwg, pypdfium2, pandas, pyproj, PIL, ifcopenshell, nicegui, webview; print('Bibliotheken ok')
 Bibliotheken ok
 + /Users/runner/work/zacharias-tools/zacharias-tools/dist/ZachariasTools/programm/python/bin/python3 /Users/runner/work/zacharias-tools/zacharias-tools/bau/smoke_e2e.py /Users/runner/work/zacharias-tools/zacharias-tools/dist/ZachariasTools/programm
@@ -175,9 +175,9 @@ Baeume (Berliner WFS):
   Vegetationsraster: 0 Baeume bekamen die Rasterhoehe, 2 fehlende Baeume ergaenzt (nur Spitzen >= 4 m, ausserhalb von Gebaeuden)
   OpenStreetMap: 1 Baeume ergaenzt, die es in den amtlichen Quellen nicht gibt (kein amtlicher Baum im Umkreis von 3 m)
   Baeume im Nahbereich samt Uebergangszone: 4 (davon 2 mit Kronendurchmesser aus den Daten, Rest Standard 6 m)
-  OpenStreetMap (Gleisachsen, Bruecken): overpass-api.de antwortete nach 32.6 s (28 Objekte)
+  OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 1.4 s (28 Objekte)
   Gleisachsen (OpenStreetMap): 6 Linien, 2049 m; Bruecken in OSM: 13
-    (32.7 s, im Hintergrund)
+    (17.1 s, im Hintergrund)
 Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - ungetestet:
   Quelle: amtlich (Berlin)
   radverkehrsnetz:radverkehrsnetz: 1 geladen, 1 im Rechteck (erstes Objekt bei Ost 393500 / Nord 5826520, Gebiet bei Ost 393600 / Nord 5826550)
@@ -186,7 +186,7 @@ Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - un
   Radfernwege: Attribute (Beispiel): {}
   radverkehrsnetz:stadtgruen: keine Objekte geliefert
   -> 2 Objekte uebernommen
-Zeiten: Gelaende lesen und ausduennen 1 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 32 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 33 s
+Zeiten: Gelaende lesen und ausduennen 1 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 16 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 17 s
 Gelaende nach Nutzung aufteilen:
   12 Bruecke(n) ohne LoD2-Koerper: dort keine Fahrbahn/kein Gehweg (bleibt weg)
   Gelaende wird aufgeteilt nach: Weg_Platz
@@ -206,13 +206,9 @@ IFC schreiben:
   Gleis-/OEPNV-Achsen unter Bruecken: 19 Stuecke (254 m) liegen unter dem Brueckendeck und werden nicht gezeichnet (Layer 2D_Gleisachsen_unter_Bruecken, ausgeschaltet)
   Gebaeudekontur: 62 Linien (duenn, schwarz)
   HINWEIS: keine ALKIS-Flurstuecke geladen (Haken fuer die ALKIS-Zusatzdaten setzen, nur Berlin) - keine Flurstuecksnummern
-  OpenStreetMap: overpass-api.de nicht erreichbar nach 1 s (HTTP Error 502: Bad Gateway) - wird in diesem Lauf nicht mehr versucht
-  OpenStreetMap: overpass.kumi.systems nicht erreichbar nach 40 s (The read operation timed out) - wird in diesem Lauf nicht mehr versucht
-  OpenStreetMap: overpass.private.coffee nicht erreichbar nach 40 s (The read operation timed out) - wird in diesem Lauf nicht mehr versucht
-  OpenStreetMap: overpass.openstreetmap.fr nicht erreichbar nach 40 s (The read operation timed out) - wird in diesem Lauf nicht mehr versucht
-  FEHLER beim Laden von OpenStreetMap: The read operation timed out
-  -> OpenStreetMap wird fuer den Rest dieses Laufs uebersprungen (kein weiteres Warten). Spaeter nochmal versuchen, oder Daten selbst als GeoJSON hinzufuegen.
-  Lageplan-Beschriftung: 0 Flurstuecksnummern, 0 Hausnummern, 0 Strassennamen, 27 Gebaeudehoehen (Hoehen: ueber Gelaende; Tr = Traufe, Fi = First)
+  OpenStreetMap: overpass-api.de nicht erreichbar nach 0 s (HTTP Error 502: Bad Gateway) - wird in diesem Lauf nicht mehr versucht
+  OpenStreetMap: overpass.openstreetmap.fr antwortete nach 1.3 s (35 Objekte)
+  Lageplan-Beschriftung: 0 Flurstuecksnummern, 9 Hausnummern, 4 Strassennamen, 27 Gebaeudehoehen (Hoehen: ueber Gelaende; Tr = Traufe, Fi = First)
   DXF-Pruefung (R2010): 29 Schraffuren, 134 Polylinien, 4 Kreise - keine Beanstandungen
   Lageplan: ifcmap_lageplan.dxf (0.1 MB)
   DXF-Pruefung (R2010): 13 Schraffuren, 6 Polylinien, 0 Kreise - keine Beanstandungen
@@ -222,10 +218,10 @@ Kartenbild Luftbild – aktuellstes verfügbares Orthofoto (Berlin):
   1200 x 1200 Pixel, 0.25 m je Pixel
   Zusatzplan Karte_Luftbild_aktuellstes_verfuegbares: Bild 1200x1200 Pixel, 0.25 m je Pixel, 300 x 300 m, gedreht um 0.0 Grad (PNG und World-File liegen neben der DXF)
   Zusatzplan: ifcmap_zusatz_Karte_Luftbild_aktuellstes_verfuegbares_.dxf (0.0 MB, Speichern 0 s)
-Zeiten der Ausgabe: IFC schreiben 2 s; Arbeits-DXF (ifcmap_2d.dxf) 0 s; Lageplan 52 s; Schwarzplan 0 s; Kartenbilder 0 s
+Zeiten der Ausgabe: IFC schreiben 3 s; Arbeits-DXF (ifcmap_2d.dxf) 0 s; Lageplan 13 s; Schwarzplan 0 s; Kartenbilder 0 s
 
 Lokaler Nullpunkt: E0 = 394000, N0 = 5827000, Z0 = 47 m  (lokal = Ost-E0 / Nord-N0 / Hoehe-Z0; EPSG:25833, NHN)
-Fertig in 54 s.
+Fertig in 16 s.
 Plausibilitätsprüfung: 2 Hinweis(e)
 [Plausibilität] Grundriss: 1 Gebäude mit weniger als 4 m² (z. B. DEBE_SCHUPPEN) – Splitter, kaum sichtbar im Modell.
 [Plausibilität] Gelände/Gebäude: DEBE_DAMM steht -4.0 m über bzw. unter dem Gelände (Sockel 51.9 m ü. NHN) – Hang, Einschnitt oder Höhenfehler?
@@ -273,6 +269,10 @@ Material: Graupappe 2 mm · Platte 800 × 500 mm
   _rasterize(
 /Users/runner/work/zacharias-tools/zacharias-tools/dist/ZachariasTools/programm/python/lib/python3.12/site-packages/rasterio/features.py:381: NotGeoreferencedWarning: The given matrix is equal to Affine.identity or its flipped counterpart. GDAL may ignore this matrix and save no geotransform without raising an error. This behavior is somewhat driver-specific.
   _rasterize(
+/Users/runner/work/zacharias-tools/zacharias-tools/dist/ZachariasTools/programm/python/lib/python3.12/site-packages/rasterio/features.py:381: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  _rasterize(
+/Users/runner/work/zacharias-tools/zacharias-tools/dist/ZachariasTools/programm/python/lib/python3.12/site-packages/rasterio/features.py:381: NotGeoreferencedWarning: The given matrix is equal to Affine.identity or its flipped counterpart. GDAL may ignore this matrix and save no geotransform without raising an error. This behavior is somewhat driver-specific.
+  _rasterize(
   Laserplatte 1: 800 x 500 mm, 62 Teile, Ausnutzung 27 %
   Werkstatt-PDFs: 7 (je Platte eine Datei, z. B. E2E_Graupappe_2mm_Platte01.pdf)
 5b   Einsatz anordnen (1 Exemplar)
@@ -280,8 +280,8 @@ Material: Graupappe 2 mm · Platte 800 × 500 mm
   Einsatz-PDFs: 1
 6/6  Druckplatten und Montageplan
 6/6  Gebäude werden gelasert (falt) - keine Druck-STL
-  Holz: 10 Zuschnitte, Zuschnittliste und Zeichnung in /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/tmpncm7aa5h/ziel/MeinExport/modell/holz
-Fertig in 33 s: 7 Laserplatten, 0 Druckplatten. Ausgabe: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/tmpncm7aa5h/ziel/MeinExport/modell
+  Holz: 10 Zuschnitte, Zuschnittliste und Zeichnung in /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/tmposhenbq8/ziel/MeinExport/modell/holz
+Fertig in 36 s: 7 Laserplatten, 0 Druckplatten. Ausgabe: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/tmposhenbq8/ziel/MeinExport/modell
 === Geländeschnitt ===
 Geländeschnitt von (393450, 5826550) nach (393750, 5826550)
   DGM: 390 x 190 Zellen, Auflösung 1.00 m, Höhe 48.2 – 56.7 m
@@ -302,9 +302,9 @@ Höhenlinien für 300 × 300 m um (393600, 5826550)
   Bäume: 37 Objekte
   45 Höhenlinien, 8 Höhenstufen (1 m), Gelände 48.3–56.6 m ü. NHN
   Zeichnung: 45 Linien, 3 Höhenkoten, Nullpunkt E0=394000 N0=5827000
-Fertig in 151 s
-FERTIG 151 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gebaeude_laser'], 'schnitt': ['ordner', 'dateien', 'png', 'svg'], 'hoehenlinien': ['ordner', 'dateien', 'png']}
-{"ifc": "2026-10-29 16:17", "lageplan": "2026-10-29 16:17", "schwarzplan": "2026-10-29 16:17", "info_dwg": "2026-10-29 16:17", "laser": "2026-10-29 16:18", "druck": "2026-10-29 16:18", "schnitt": "2026-10-29 16:18", "hoehenlinien": "2026-10-29 16:18"}
+Fertig in 105 s
+FERTIG 105 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gebaeude_laser'], 'schnitt': ['ordner', 'dateien', 'png', 'svg'], 'hoehenlinien': ['ordner', 'dateien', 'png']}
+{"ifc": "2026-10-29 16:55", "lageplan": "2026-10-29 16:55", "schwarzplan": "2026-10-29 16:55", "info_dwg": "2026-10-29 16:55", "laser": "2026-10-29 16:56", "druck": "2026-10-29 16:56", "schnitt": "2026-10-29 16:56", "hoehenlinien": "2026-10-29 16:56"}
 /E2E.architools.json 18924
 Straßen-/Fassadenabwicklung: 3 Punkte, 268 m, Seite(n): links, rechts, Tiefe 60 m
   DGM: 460 x 290 Zellen, Auflösung 1.00 m, Höhe 48.2 – 56.7 m
