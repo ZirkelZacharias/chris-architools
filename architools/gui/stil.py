@@ -217,7 +217,7 @@ class Lauf:
         self.balken, self.status = balken, status
         self.fortschritt = (0.0, "")
         self.pop_67 = None                    # wird von eier.py gesetzt
-        self.bericht_pfad = None              # Funktion -> Pfad der bericht.txt (None: kein Bericht)
+        self.bericht_pfad = None              # Funktion -> Pfad der protokoll.txt (None: kein Protokoll)
         self.zeilen = []
         self.anhaengen = False
         ui.timer(0.2, self._leeren)
@@ -275,7 +275,7 @@ class Lauf:
             self.bericht_schreiben()
 
     def bericht_schreiben(self):
-        """Das Protokoll des letzten Laufs als bericht.txt in den Ausgabeordner – zum Weitergeben bei Fehlern."""
+        """Das Programmprotokoll des letzten Laufs als protokoll.txt in den Ausgabeordner – zum Weitergeben bei Fehlern."""
         if not self.bericht_pfad or not self.zeilen:
             return
         try:

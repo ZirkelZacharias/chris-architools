@@ -10,7 +10,7 @@ und erzeugt in lokalen Koordinaten (Meter; lokal = Ost-E0 / Nord-N0 / Hoehe-Z0):
                           Gebaeude Fern (Bloecke bis Traufe), Baeume; mit IfcMapConversion (EPSG:25833)
   ifcmap_2d.dxf            2D-Arbeitsblaetter: Nutzungsflaechen, Gebaeudegrundrisse, Baeume
   gelaende_punkte.xyz     (optional) ausgeduennte Hoehenpunkte
-  bericht.txt             Protokoll
+  protokoll.txt           Protokoll
 
 Die Oberflaeche (ifcmap.py) ruft nur die Funktionen dieses Moduls auf.
 """
@@ -4959,7 +4959,7 @@ def exportiere(d, log=print, prog=_noop, protokoll=None):
     log("Fertig in %.0f s." % (time.time() - t_start))
     prog(1.0, "Fertig")
     if protokoll:
-        pfad = os.path.join(cfg.ausgabe, "bericht.txt")
+        pfad = os.path.join(cfg.ausgabe, "protokoll.txt")
         with open(pfad, "w", encoding="utf-8") as fh:
             fh.write("\n".join(protokoll) + "\n")
         erzeugt.append(pfad)

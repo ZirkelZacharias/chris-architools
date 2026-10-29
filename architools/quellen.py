@@ -3,7 +3,7 @@ import os
 
 TEXT = """QUELLEN UND LIZENZEN DER DATEN (zum Export gehörig)
 ====================================================
-Je nach Einstellung nutzt Zacharias Tools folgende Datenquellen. Die Liste enthält alles, was geladen werden kann; im Protokoll
+Je nach Einstellung nutzt Zacharias Tools folgende Datenquellen. Die Liste enthält alles, was geladen werden kann; im Bericht
 (bericht.txt) steht, was in diesem Lauf tatsächlich verwendet wurde. Für Pläne, Berichte, Arbeiten bitte die zutreffenden Vermerke übernehmen.
 
 BERLIN (Geoportal Berlin / Senatsverwaltung für Stadtentwicklung, Bauen und Wohnen)

@@ -107,7 +107,7 @@ def seite(p, speichern):
     AKTION["start"] = lambda: exportieren()
     lauf = Lauf(logel, [b_vor, b_exp], sp, fertig, balken, status)
     lauf.pop_67 = eier.log_67(logel)
-    lauf.bericht_pfad = lambda: os.path.join(P.ausgabe_basis(p), "bericht.txt")         # immer da, auch nach Fehlern
+    lauf.bericht_pfad = lambda: os.path.join(P.ausgabe_basis(p), "protokoll.txt")       # immer da, auch nach Fehlern
 
     def aktualisieren():
         for k, (z, st) in zeilen.items():
@@ -250,7 +250,9 @@ def seite(p, speichern):
         with ui.row().classes("items-center gap-2 w-full"):
             ui.button("Ausgabeordner", icon="folder", on_click=lambda: oeffnen(P.ausgabe_basis(p))).props("outline dense")
             ui.button("bericht.txt", icon="description", on_click=lambda: oeffnen(os.path.join(P.ausgabe_basis(p), "bericht.txt"))) \
-                .props("outline dense").tooltip("Protokoll des letzten Laufs – bei Problemen einfach weitergeben")
+                .props("outline dense").tooltip("Bericht: Kosten- und Materialschätzung, Quellen, Hinweise")
+            ui.button("protokoll.txt", icon="bug_report", on_click=lambda: oeffnen(os.path.join(P.ausgabe_basis(p), "protokoll.txt"))) \
+                .props("outline dense").tooltip("Programmprotokoll des letzten Laufs – bei Problemen einfach weitergeben")
             ui.space()
             eier.icon(48)                                                   # Zirkel Zacharias schaut zu – wortlos
         u = r.get("umgebung")

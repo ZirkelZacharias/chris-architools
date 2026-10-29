@@ -22,6 +22,6 @@ Eine Datei **ZachariasTools_Update_…zip** in den Ordner **programm/updates** l
 Bei bestehender Internetverbindung zeigt das Programm in der Kopfleiste **Update: Stand N**, sobald auf GitHub ein neueres Paket liegt (abschaltbar unter Werkzeuge → Einstellungen → Programm-Update). Es wird nichts automatisch installiert: Download-Seite öffnen, das Paket laden, entpacken, starten.
 
 ## Wenn etwas nicht klappt
-Nach jedem Lauf liegt die Datei **bericht.txt** im Ausgabeordner. Einfach weitergeben.
+Nach jedem Lauf liegen im Ausgabeordner **bericht.txt** (Kosten- und Materialschätzung, Quellen, Hinweise) und **protokoll.txt** (Programmprotokoll). Bei Problemen die protokoll.txt weitergeben.
 
 Alles Weitere (Bedienung, Ausgaben, Formate): siehe programm/ENTSCHEIDUNGEN.md und die Hinweise im Programm.

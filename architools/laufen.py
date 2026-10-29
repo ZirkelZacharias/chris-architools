@@ -175,6 +175,12 @@ def hoehenlinien_export(p, log=print, prog=None):
 def alles(p, ausgaben, log=print, prog=None, speichern=True, test=False):
     """Alle gewählten Ausgaben nacheinander. -> {Ausgabe: Ergebnis}"""
     prog = prog or (lambda *a, **k: None)
+    log0 = log or print
+    zeilen = []
+
+    def log(s=""):                                   # jede Zeile auch für bericht.txt / protokoll.txt merken
+        zeilen.append(str(s))
+        log0(s)
     gruppen = []
     if any(P.AUSGABEN[a][4] == "umgebung" for a in ausgaben):
         gruppen.append("umgebung")
@@ -185,8 +191,10 @@ def alles(p, ausgaben, log=print, prog=None, speichern=True, test=False):
     if "hoehenlinien" in ausgaben:
         gruppen.append("hoehenlinien")
     erg = {}
+    zeiten = {}
     t0 = time.time()
     for i, g in enumerate(gruppen):
+        tg = time.time()
         a0, a1 = i / len(gruppen), (i + 1) / len(gruppen)
         pg = lambda x, t="", a0=a0, a1=a1: prog(a0 + (a1 - a0) * float(x), t)
         log(f"=== {dict(umgebung='Umgebung', modell='Modellbau', schnitt='Geländeschnitt', hoehenlinien='Höhenlinien')[g]} ===")
@@ -204,6 +212,7 @@ def alles(p, ausgaben, log=print, prog=None, speichern=True, test=False):
             log(f"FEHLER in {g}: {e}")
             log(traceback.format_exc()[-1800:])
             erg[g] = {"fehler": str(e)}
+        zeiten[g] = time.time() - tg
         if speichern:
             try:
                 P.speichern(p)
@@ -215,4 +224,6 @@ def alles(p, ausgaben, log=print, prog=None, speichern=True, test=False):
     except Exception:
         pass
     log(f"Fertig in {time.time() - t0:.0f} s")
+    from . import bericht
+    bericht.schreiben(p, ausgaben, erg, zeilen, time.time() - t0, zeiten)
     return erg
