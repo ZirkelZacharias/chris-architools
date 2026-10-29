@@ -369,7 +369,7 @@ class ModellEinst:
                            ("ua_vegetationsraster", "Bäume: Vegetationsraster 1 m (einmaliger Download, ca. 785 MB)"),
                            ("rad_wege", "Wege: Radverkehrsnetz als zusätzliche Quelle"),
                            ("osm_ergaenzen", "OpenStreetMap-Bäume ergänzen, die es amtlich nicht gibt")):
-                im.setdefault(k, k == "osm_ergaenzen")
+                im.setdefault(k, k in ("osm_ergaenzen", "ua_gebaeudehoehen"))
                 ui.checkbox(txt).bind_value(im, k).props("dense")
         with ui.column().classes("w-full").bind_visibility_from(cfg, "quelle", value="dateien"):
             ui.label("Eigene Markierungs-Dateien").classes("text-subtitle2 mt-2")

@@ -185,7 +185,7 @@ def szene_aus_koordinaten(cfg, rahmen, log=print):
                   alkis_zusatz=True, dxf_plaene=["schwarzplan"],
                   ifc=False, dxf2d=False, mit_gelaende=False, baeume_nur_nah=False,
                   cafile=nz.get("cafile", "") or "", unsicher=bool(nz.get("unsicher", False)),
-                  ua_gebaeudehoehen=bool(cfg["ifcmap"].get("ua_gebaeudehoehen", False)),
+                  ua_gebaeudehoehen=bool(cfg["ifcmap"].get("ua_gebaeudehoehen", True)),
                   ua_vegetationsraster=bool(cfg["ifcmap"].get("ua_vegetationsraster", False)),
                   rad_wege=bool(cfg["ifcmap"].get("rad_wege", False)),
                   osm_ergaenzen=bool(cfg["ifcmap"].get("osm_ergaenzen", True)))

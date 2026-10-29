@@ -216,7 +216,7 @@ class Config:
     gehweg_auto: bool = True              # Gehwegbreite nach Strassenbreite (3 Klassen, Berliner Richtwerte); False = feste gehweg_breite
     gehweg_ueberall: bool = False         # Buergersteige auch im Fernbereich (Vorgabe: nur Nahbereich)
     hoehe_ohne_angabe: float = 2.2        # Hoehe (m) fuer Grundrisse (ALKIS/OSM) ohne jede Hoehenangabe
-    ua_gebaeudehoehen: bool = False       # Berlin: Umweltatlas-Gebaeudehoehen (Firsthoehe) fuer Gebaeude ohne LoD2 (ALKIS/OSM) - ungetestet
+    ua_gebaeudehoehen: bool = True        # Berlin: Umweltatlas-Gebaeudehoehen (Firsthoehe) fuer Gebaeude ohne LoD2 (ALKIS/OSM); Standard an (amtlich vor Schaetzung), bei Ausfall faellt der Kern auf Schaetzung zurueck - ungetestet
     ua_vegetationshoehen: bool = False    # Berlin: Umweltatlas-Vegetationshoehen (Blockmittelwert) fuer Baeume ohne Hoehenangabe - ungetestet
     ua_vegetationsraster: bool = False    # Berlin: Vegetationsraster 1 m (Umweltatlas, einmalig ca. 785 MB): Baumhoehen + fehlende Baeume - ungetestet
     veg_raster_dateien: list = field(default_factory=list)    # eigene Vegetationshoehen-GeoTIFFs (Dezimeter oder wie im Umweltatlas)

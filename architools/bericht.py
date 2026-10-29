@@ -160,6 +160,17 @@ def text(p, ausgaben, erg, zeilen, dauer, zeiten):
         if n >= 40:
             add("  … weitere Hinweise stehen in protokoll.txt")
             break
+    # Gelände über Gebäude-Oberkante: die betroffenen Gebäude nennen und sagen, was zu prüfen ist
+    for i, z in enumerate(zeilen):
+        if "Gelaende hoeher als die Gebaeude-Oberkante" in str(z):
+            add("  - Zu den Gelände-Hinweisen: Betroffen sind die oben genannten Gebäude (Kennung, überdeckte Fläche, Höhenunterschied):")
+            for w in zeilen[i + 1:i + 6]:
+                if str(w).startswith("    ") and "m2" in str(w):
+                    add("      " + _kuerzen(str(w).strip(), 150))
+            add("    Bitte prüfen: Hang oder Einschnitt, Gleisbett, Brücke bzw. ein falsch gelesenes Geländeraster? Das Gelände wird nur dort "
+                "ausgeschnitten, wo es über der Oberkante liegt; bei zu niedrig angesetzten Gebäudehöhen hilft „Höhe ohne LoD2“ in den Einstellungen.")
+            n += 1
+            break
     gesch = sum(int(m.group(1)) for m in (re.search(r"(\d+) mit geschaetzter Hoehe", str(z)) for z in zeilen) if m)
     ergaenzt = sum(int(m.group(1)) for m in (re.search(r"LoD2-Luecken gefuellt: (\d+) Gebaeude", str(z)) for z in zeilen) if m)
     if ergaenzt and gesch / ergaenzt > 0.5 and not (p.get("umgebung") or {}).get("ua_gebaeudehoehen"):
