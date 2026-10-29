@@ -72,12 +72,12 @@ def seite():
             info = await run.io_bound(UH.neueste)
             if not UH.ist_neuer(info, STAND, es.get("update_ignoriert", 0)):
                 return
-            upd_btn.text = f"Update: Stand {info['stand']}"
+            upd_btn.text = f"Update: Build {info['stand']}"
             upd_btn.set_visibility(True)
 
             with ui.dialog() as dlg, ui.card().style("width:460px"):
-                ui.label(f"Neuer Stand {info['stand']} verfügbar").classes("text-h6")
-                ui.label(f"Installiert ist Stand {STAND}. Auf GitHub liegt „{info['titel']}“.").classes("text-body2")
+                ui.label(f"Neuer Build {info['stand']} verfügbar").classes("text-h6")
+                ui.label(f"Installiert ist Build {STAND}. Auf GitHub liegt „{info['titel']}“.").classes("text-body2")
                 ui.label("So aktualisierst du: Download-Seite öffnen, das Paket für dein System laden (Windows oder Mac), entpacken und "
                          "wie gewohnt starten. Deine Projekte und Einstellungen bleiben unberührt (sie liegen in deinem Projektordner "
                          "und in .architools im Benutzerordner).").classes("text-body2").style("color:#6b737b")
@@ -200,7 +200,7 @@ def _laeuft_schon(port):
         return False
 
 
-def _wache_starten(port, sekunden=30):
+def _wache_starten(port, sekunden=60):
     """Meldet sich innerhalb von `sekunden` kein Fenster beim Server, öffnet sich die Weboberfläche im Browser."""
     from nicegui import background_tasks
 
@@ -220,6 +220,11 @@ def _wache_starten(port, sekunden=30):
 
 
 def start(native=None, port=None, show=True):
+    import multiprocessing
+    if multiprocessing.current_process().name != "MainProcess":
+        # Das Programmfenster läuft als eigener Prozess und lädt dieses Modul noch einmal. Hier darf nichts passieren – sonst fände es
+        # den Port belegt und würde zusätzlich die Weboberfläche im Browser öffnen.
+        return
     if native is None:
         try:
             import webview  # noqa: F401

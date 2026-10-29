@@ -224,7 +224,7 @@ class Werkzeuge:
         import architools_update as AU
         from .. import STAND
         z = {"pfad": ""}
-        hinweis(f"Installiert: Stand {STAND}. Eine Update-Datei (ZachariasTools_Update_….zip) enthält nur geänderte und neue Dateien; "
+        hinweis(f"Installiert: Build {STAND}. Eine Update-Datei (ZachariasTools_Update_….zip) enthält nur geänderte und neue Dateien; "
                 "Projekte und Einstellungen bleiben unberührt, ersetzte Dateien werden vorher gesichert (Ordner updates/_sicherung).")
         feld_pfad("Update-Datei", z, "pfad", typen=("Update (*.zip)",))
         ausgabe = ui.label("").classes("text-body2").style("white-space:pre-wrap")
@@ -243,7 +243,7 @@ class Werkzeuge:
                 .props("flat dense")
         hinweis("Oder: die Datei in den Ordner „updates“ neben dem Programm legen – beim nächsten Start wird sie automatisch eingespielt.")
         es = ES.laden()
-        ui.checkbox("Beim Start nach einem neueren Stand suchen (nur Hinweis, nichts wird installiert)") \
+        ui.checkbox("Beim Start nach einem neueren Build suchen (nur Hinweis, nichts wird installiert)") \
             .bind_value(es, "update_pruefen").on_value_change(lambda e: ES.speichern(es))
         hinweis("Dafür fragt das Programm bei GitHub nach der neuesten Veröffentlichung. Es werden keine Daten von dir gesendet.")
 

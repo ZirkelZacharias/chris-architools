@@ -43,6 +43,22 @@ GELAENDE_TYPEN = {"geographic": "IfcGeographicElement (Variante A)", "site": "If
 GENAUIGKEIT = {"Schnell": (0.3, 2.5, 40, 10), "Standard": (0.15, 1.5, 60, 6), "Fein": (0.05, 0.5, 80, 2)}
 
 
+def _laender_liste():
+    """Eingebaute Länder plus – ohne Aufhebens – die Länder aus installierten Zusatzmodulen."""
+    out = dict(LAENDER)
+    try:
+        from .. import zusatz as Z
+        keins = out.pop("keins")
+        for m in Z.module().values():
+            for k, w in (getattr(m, "LAENDER", None) or {}).items():
+                if k not in out and isinstance(w, dict):
+                    out[k] = w.get("name", k)
+        out["keins"] = keins
+    except Exception:
+        pass
+    return out
+
+
 def _zahl(label, u, key, breite="w-28", **kw):
     return ui.number(label, **kw).bind_value(u, key).classes(breite)
 
@@ -90,7 +106,7 @@ def seiten(p):
                 _wahl("Koordinatensystem", KBS, u, "epsg")
         with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "daten"):
             with karte("Daten", SCHIEFER, offen=False):
-                _wahl("Bundesland", LAENDER, u, "land")
+                _wahl("Bundesland", _laender_liste(), u, "land")
                 _wahl("Quelle für Nutzung und Bäume", QUELLEN, u, "quelle")
                 hinweis("Immer die beste Quelle: amtliche Daten, wo es sie gibt (Berlin, Brandenburg …), sonst OpenStreetMap.")
                 _haken("Gelände-Kacheln (DGM1) automatisch laden", u, "online_dgm")

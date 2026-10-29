@@ -24,9 +24,11 @@ if HIER not in sys.path:
     sys.path.insert(0, HIER)
 
 if __name__ in {"__main__", "__mp_main__"}:
+    import multiprocessing as _mp
     try:                                                      # Update-Dateien aus dem Ordner updates/ einspielen
-        import architools_update
-        architools_update.alle_anwenden()
+        if _mp.current_process().name == "MainProcess":          # nicht noch einmal im Fenster-Prozess
+            import architools_update
+            architools_update.alle_anwenden()
     except Exception as e:                                    # ein kaputtes Update darf den Start nie verhindern
         print("Update konnte nicht eingespielt werden:", e)
     from architools.gui import app

@@ -520,6 +520,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         "n_einsatzplatten": len(platten_e),
         "vorschau_laser": os.path.join(out, f"{name}_vorschau_laser.stl"),
         "vorschau_druck": os.path.join(out, f"{name}_vorschau_druck.stl"),
+        "vorschau_gravur": os.path.join(out, f"{name}_vorschau_gravur.stl"),
         "montageplan": os.path.join(out, f"{name}_montageplan.pdf"),
         "druck_stls": [d["datei"] for d in drucke], "druck_plaene": drucke,
         "n_laserplatten": len(platten), "n_teile": len(parts), "dauer_s": time.time() - t0,
@@ -566,6 +567,26 @@ def _vorschau_3d(out, name, parts, stuetzen, blds, t, log, rippen_3d=()):
                 m = b["mesh"].copy()
                 m.apply_translation([0, 0, (b["layer"] + 1) * t])
                 druck.append(m)
+        gravur, grenze = [], 4000                                      # Ritz- und Gravurlinien als dünne dunkle Auflage auf der Plattenoberseite
+        for p in parts:
+            if p.get("rippe") or len(gravur) >= grenze:
+                continue
+            geoms = [g.buffer(0.25) for g in (p.get("ritzen") or []) if g is not None and not g.is_empty]
+            geoms += [g for g in (p.get("gravieren") or []) if g is not None and not g.is_empty]
+            for g in geoms:
+                for comp in polys(g):
+                    if comp.area < 0.05 or len(gravur) >= grenze:
+                        continue
+                    try:
+                        m = trimesh.creation.extrude_polygon(comp, 0.15)
+                    except Exception:
+                        continue
+                    m.apply_translation([0, 0, (p["layer"] + 1) * t + 0.02])
+                    gravur.append(m)
+        if len(gravur) >= grenze:
+            log(f"  3D-Vorschau: Gravuren nur teilweise gezeigt (erste {grenze} Teile)")
+        if gravur:
+            trimesh.util.concatenate(gravur).export(os.path.join(out, f"{name}_vorschau_gravur.stl"))
         if laser:
             trimesh.util.concatenate(laser).export(os.path.join(out, f"{name}_vorschau_laser.stl"))
         if druck:

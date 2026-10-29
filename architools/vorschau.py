@@ -35,23 +35,59 @@ def _licht(tris, rgb):
 
 
 def _glb_material(pfad):
-    """Ohne Material zeigt der Betrachter die Flächen als dunkles Metall. Hier: mattes Material, beidseitig sichtbar."""
+    """Ohne Material zeigt der Betrachter die Flächen als dunkles Metall. Hier: mattes Material, beidseitig sichtbar –
+    nur für Flächen mit Eckfarben; das Gelände mit Textur behält sein eigenes Material."""
     import json
     import struct
     b = open(pfad, "rb").read()
     laenge_json, typ = struct.unpack_from("<II", b, 12)
     j = json.loads(b[20:20 + laenge_json].decode("utf-8"))
-    j["materials"] = [{"pbrMetallicRoughness": {"baseColorFactor": [1, 1, 1, 1], "metallicFactor": 0.0, "roughnessFactor": 0.95},
-                       "doubleSided": True}]
+    mats = j.setdefault("materials", [])
+    mats.append({"pbrMetallicRoughness": {"baseColorFactor": [1, 1, 1, 1], "metallicFactor": 0.0, "roughnessFactor": 0.95},
+                 "doubleSided": True})
+    idx = len(mats) - 1
     for m in j.get("meshes", []):
         for pr in m.get("primitives", []):
-            pr["material"] = 0
+            if "COLOR_0" in (pr.get("attributes") or {}) or "material" not in pr:
+                pr["material"] = idx
     neu = json.dumps(j, separators=(",", ":")).encode("utf-8")
     neu += b" " * ((4 - len(neu) % 4) % 4)
     rest = b[20 + laenge_json:]
     kopf = b[:8] + struct.pack("<I", 12 + 8 + len(neu) + len(rest))
     with open(pfad, "wb") as f:
         f.write(kopf + struct.pack("<II", len(neu), typ) + neu + rest)
+
+
+def _gelaende_textur(K, d, X, Y, Z, farbe_basis):
+    """Texturbild des Geländes: Nutzungsflächen scharf gezeichnet (statt grober Farbkacheln), dazu Schummerung aus der Neigung."""
+    from PIL import Image
+    import rasterio.features
+    from rasterio.transform import from_bounds
+    W, H = d.xmax - d.xmin, d.ymax - d.ymin
+    px = int(min(4096, max(768, round(max(W, H) / 0.4))))
+    bw, bh = (px, max(2, int(round(px * H / W)))) if W >= H else (max(2, int(round(px * W / H))), px)
+    img = np.empty((bh, bw, 3), np.uint8)
+    img[:] = np.asarray(farbe_basis, np.uint8)
+    tr = from_bounds(d.xmin, d.ymin, d.xmax, d.ymax, bw, bh)
+    for kat, reg in (d.regionen or {}).items():
+        try:
+            m = rasterio.features.rasterize([(reg, 1)], out_shape=(bh, bw), transform=tr, fill=0, dtype="uint8").astype(bool)
+            if m.any():
+                img[m] = _farbe(K, kat)
+        except Exception:
+            pass
+    # Schummerung aus dem Gitter (weich hochgerechnet)
+    zz = np.where(np.isnan(Z), np.nanmean(Z) if np.isfinite(Z).any() else 0.0, Z)
+    dy, dx = np.gradient(zz, Y[:, 0], X[0, :])
+    n = np.dstack([-dx, -dy, np.ones_like(dx)])
+    n /= np.linalg.norm(n, axis=2, keepdims=True)
+    licht = np.array([-0.45, -0.55, 0.7]); licht /= np.linalg.norm(licht)
+    sh = np.clip(n @ licht, 0, 1)
+    sh = 0.62 + 0.38 * sh / max(float((np.array([0, 0, 1.0]) @ licht)), 1e-6)
+    sh_img = Image.fromarray(np.clip(sh[::-1] * 255, 0, 255).astype(np.uint8)).resize((bw, bh), Image.BICUBIC)
+    f = (np.asarray(sh_img, float) / 255.0)[..., None]
+    img = np.clip(img.astype(float) * np.minimum(f, 1.08), 0, 255).astype(np.uint8)
+    return Image.fromarray(img)
 
 
 def glb_bauen(d, ziel, ueberhoehung=1.0, log=print, max_baeume=1200):
@@ -66,9 +102,9 @@ def glb_bauen(d, ziel, ueberhoehung=1.0, log=print, max_baeume=1200):
 
     # Gelände
     zg = [float(min(e[:, 2].min() for e, h in t["ground"])) for t in d.near + d.far if t.get("ground")]
-    step = max(5.0, max(d.xmax - d.xmin, d.ymax - d.ymin) / 110)
-    xs = np.arange(d.xmin, d.xmax + step, step)
-    ys = np.arange(d.ymin, d.ymax + step, step)
+    step = max(2.0, max(d.xmax - d.xmin, d.ymax - d.ymin) / 220)
+    xs = np.linspace(d.xmin, d.xmax, int(np.ceil((d.xmax - d.xmin) / step)) + 1)
+    ys = np.linspace(d.ymin, d.ymax, int(np.ceil((d.ymax - d.ymin) / step)) + 1)
     X, Y = np.meshgrid(xs, ys)
     if getattr(d, "px", None) is not None and len(d.px):
         f = LinearNDInterpolator(np.column_stack([d.px, d.py]), d.pz)
@@ -79,15 +115,6 @@ def glb_bauen(d, ziel, ueberhoehung=1.0, log=print, max_baeume=1200):
     ok = ~np.isnan(Z)
     zmin = float(np.nanmin(Z)) if ok.any() else 0.0
     zbasis = zmin
-    cx, cy = (X[:-1, :-1] + X[1:, 1:]) / 2, (Y[:-1, :-1] + Y[1:, 1:]) / 2
-    farbe = np.tile(np.array(K.IFC_FARBEN.get("Gelaende", (196, 205, 176)), float), (*cx.shape, 1))
-    for kat, reg in (d.regionen or {}).items():
-        try:
-            m = shapely.contains_xy(reg, cx, cy)
-            if m.any():
-                farbe[m] = _farbe(K, kat)
-        except Exception:
-            pass
     gut = ok[:-1, :-1] & ok[1:, :-1] & ok[:-1, 1:] & ok[1:, 1:]
     zoff = np.array([0.0, 0.0, zbasis])
     k = float(ueberhoehung or 1.0)
@@ -96,14 +123,40 @@ def glb_bauen(d, ziel, ueberhoehung=1.0, log=print, max_baeume=1200):
         q = np.asarray(p, float) - off - zoff
         q[..., 2] *= k
         return q
-    for i, j in zip(*np.nonzero(gut)):
-        a = lift([X[i, j], Y[i, j], Z[i, j]])
-        b = lift([X[i, j + 1], Y[i, j + 1], Z[i, j + 1]])
-        c = lift([X[i + 1, j + 1], Y[i + 1, j + 1], Z[i + 1, j + 1]])
-        e = lift([X[i + 1, j], Y[i + 1, j], Z[i + 1, j]])
-        for t in ((a, b, c), (a, c, e)):
-            tris.append(t)
-            cols.append(_licht([t], farbe[i, j])[0])
+    # Gelände: ein glattes Netz mit Texturbild (Nutzung scharf + Schummerung); Löcher dort, wo es keine Höhen gibt
+    ny, nx = X.shape
+    gv = np.dstack([X, np.where(ok, Y, Y), np.where(ok, Z, zmin)]).reshape(-1, 3)
+    gv = lift(gv)
+    uv = np.column_stack([((X - d.xmin) / max(d.xmax - d.xmin, 1e-6)).ravel(), ((Y - d.ymin) / max(d.ymax - d.ymin, 1e-6)).ravel()])
+    ii, jj = np.nonzero(gut)
+    a = ii * nx + jj
+    gf = np.concatenate([np.column_stack([a, a + 1, a + nx + 1]), np.column_stack([a, a + nx + 1, a + nx])])
+    textur = None
+    try:
+        textur = _gelaende_textur(K, d, X, Y, Z, K.IFC_FARBEN.get("Gelaende", (196, 205, 176)))
+    except Exception as e:
+        log(f"  3D-Vorschau: Gelände-Textur nicht möglich ({e}) – grobe Farbflächen")
+    if textur is not None and len(gf):
+        gelaende = trimesh.Trimesh(vertices=gv, faces=gf, process=False)
+        gelaende.visual = trimesh.visual.TextureVisuals(
+            uv=np.clip(uv, 0, 1), material=trimesh.visual.material.PBRMaterial(
+                baseColorTexture=textur, metallicFactor=0.0, roughnessFactor=0.95, doubleSided=True))
+    else:
+        gelaende = None
+        farbe = np.tile(np.array(K.IFC_FARBEN.get("Gelaende", (196, 205, 176)), float), (*gut.shape, 1))
+        cx, cy = (X[:-1, :-1] + X[1:, 1:]) / 2, (Y[:-1, :-1] + Y[1:, 1:]) / 2
+        for kat, reg in (d.regionen or {}).items():
+            try:
+                m = shapely.contains_xy(reg, cx, cy)
+                if m.any():
+                    farbe[m] = _farbe(K, kat)
+            except Exception:
+                pass
+        for i, j in zip(*np.nonzero(gut)):
+            for t in ((gv[i * nx + j], gv[i * nx + j + 1], gv[(i + 1) * nx + j + 1]),
+                      (gv[i * nx + j], gv[(i + 1) * nx + j + 1], gv[(i + 1) * nx + j])):
+                tris.append(t)
+                cols.append(_licht([t], farbe[i, j])[0])
 
     # Gebäude
     modus = getattr(d.cfg, "fern_gebaeude", "bloecke")
@@ -142,18 +195,25 @@ def glb_bauen(d, ziel, ueberhoehung=1.0, log=print, max_baeume=1200):
             t = tuple(lift(q) for q in (base[i], base[(i + 1) % 4], top))
             tris.append(t)
             cols.append(_licht([t], (40, 110, 50))[0])
-    if not tris:
+    if not tris and gelaende is None:
         raise RuntimeError("Keine Flächen für die 3D-Vorschau")
-    V = np.array(tris, float).reshape(-1, 3)
-    F = np.arange(len(V)).reshape(-1, 3)
-    C = np.repeat(np.array(cols, float), 3, axis=0)
-    C = 255.0 * (np.clip(C, 0, 255) / 255.0) ** 2.2                # glTF-Farben sind linear: sonst wirkt alles ausgewaschen
-    C = np.column_stack([C, np.full(len(C), 255.0)]).astype(np.uint8)
-    mesh = trimesh.Trimesh(vertices=V, faces=F, vertex_colors=C, process=False)
-    mesh.export(ziel)
+    szene = trimesh.Scene()
+    n_dr = 0
+    if gelaende is not None:
+        szene.add_geometry(gelaende, node_name="gelaende")
+        n_dr += len(gelaende.faces)
+    if tris:
+        V = np.array(tris, float).reshape(-1, 3)
+        F = np.arange(len(V)).reshape(-1, 3)
+        C = np.repeat(np.array(cols, float), 3, axis=0)
+        C = 255.0 * (np.clip(C, 0, 255) / 255.0) ** 2.2                # glTF-Farben sind linear: sonst wirkt alles ausgewaschen
+        C = np.column_stack([C, np.full(len(C), 255.0)]).astype(np.uint8)
+        szene.add_geometry(trimesh.Trimesh(vertices=V, faces=F, vertex_colors=C, process=False), node_name="bauten")
+        n_dr += len(F)
+    szene.export(ziel)
     _glb_material(ziel)
-    log(f"  3D-Vorschau: {len(F)} Dreiecke, {n_geb} Gebäudeteile ({os.path.getsize(ziel) / 1e6:.1f} MB)")
-    return {"glb": ziel, "b": d.xmax - d.xmin, "h": d.ymax - d.ymin, "n_dreiecke": int(len(F))}
+    log(f"  3D-Vorschau: {n_dr} Dreiecke, {n_geb} Gebäudeteile ({os.path.getsize(ziel) / 1e6:.1f} MB)")
+    return {"glb": ziel, "b": d.xmax - d.xmin, "h": d.ymax - d.ymin, "n_dreiecke": int(n_dr)}
 
 
 def plan_bauen(d, ziel, log=print):

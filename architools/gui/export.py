@@ -117,7 +117,7 @@ def seite(p, speichern):
         return [k for k in P.gewaehlt(p) if wahl.get(k)]
 
     # ---------------------------------------------------------------- Aktionen
-    from .stil import FARBE_DRUCK, FARBE_LASER
+    from .stil import FARBE_DRUCK, FARBE_GRAVUR, FARBE_LASER
 
     d3 = {"modus": "umg", "umg": None, "modell": None, "ue": 1.0}
     UE_WAHL = {1.0: "1× (maßstäblich)", 1.5: "1,5×", 2.0: "2×", 3.0: "3×", 5.0: "5×"}
@@ -154,7 +154,7 @@ def seite(p, speichern):
             else:
                 s = d3["modell"]
                 fl = (s or {}).get("material_farbe") or FARBE_LASER
-                teile = [(s.get("vorschau_laser"), fl), (s.get("vorschau_druck"), FARBE_DRUCK)] if s else []
+                teile = [(s.get("vorschau_laser"), fl), (s.get("vorschau_gravur"), FARBE_GRAVUR), (s.get("vorschau_druck"), FARBE_DRUCK)] if s else []
                 if not any(pf and os.path.exists(pf) for pf, _ in teile):
                     hinweis("Das Modell (Lasercut-Schichten und 3D-Druck-Gebäude) erscheint nach „Vorschau laden“.")
                     ui.button("Modell-Vorschau berechnen", icon="view_in_ar", on_click=lambda: modell_vorschau()).props("outline")
@@ -162,6 +162,7 @@ def seite(p, speichern):
                     with ui.row().classes("items-center gap-3"):
                         ui.label("Modell").classes("text-subtitle2")
                         ui.html(f'<span style="display:inline-block;width:12px;height:12px;background:{fl};border:1px solid #999"></span> Lasercut'
+                                f' &nbsp; <span style="display:inline-block;width:12px;height:12px;background:{FARBE_GRAVUR}"></span> Ritzen/Gravur'
                                 f' &nbsp; <span style="display:inline-block;width:12px;height:12px;background:{FARBE_DRUCK}"></span> 3D-Druck')
                         hinweis("Maus: drehen · Rad: zoomen · rechte Taste: verschieben")
                     szene3d(teile, s.get("modell_b", 400), s.get("modell_h", 300), hoehe=640, z_faktor=d3["ue"])

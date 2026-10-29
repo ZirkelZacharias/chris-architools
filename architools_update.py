@@ -27,7 +27,7 @@ GESCHUETZT = (".venv", "projekte", "updates", ".git")
 
 
 def stand_lesen():
-    """Aktueller Stand (Build-Nummer) des Programms; ohne stand.json gilt Stand 1 (erste Auslieferung)."""
+    """Aktueller Build (Nummer) des Programms; ohne stand.json gilt Build 1 (erste Auslieferung)."""
     try:
         with open(STAND, encoding="utf-8") as fh:
             return int(json.load(fh).get("build", 1))
@@ -70,10 +70,10 @@ def anwenden(pfad, log=print):
     jetzt, von, nach = stand_lesen(), int(info.get("von", 0)), int(info.get("nach", 0))
     name = os.path.basename(pfad)
     if nach <= jetzt:
-        return True, f"{name}: schon eingespielt (Stand {jetzt})."
+        return True, f"{name}: schon eingespielt (Build {jetzt})."
     if von != jetzt:
-        return False, (f"{name} baut auf Stand {von} auf, installiert ist Stand {jetzt}. "
-                       + (f"Bitte erst das Update für Stand {jetzt} → {jetzt + 1} einspielen." if von > jetzt else
+        return False, (f"{name} baut auf Build {von} auf, installiert ist Build {jetzt}. "
+                       + (f"Bitte erst das Update für Build {jetzt} → {jetzt + 1} einspielen." if von > jetzt else
                           "Diese Datei passt nicht zur installierten Version."))
     with zipfile.ZipFile(pfad) as z:
         dateien = info.get("dateien", {})
@@ -113,7 +113,7 @@ def anwenden(pfad, log=print):
                 os.remove(ziel)
         with open(STAND, "w", encoding="utf-8") as fh:
             json.dump({"build": nach, "version": info.get("version", ""), "zeit": time.strftime("%Y-%m-%d %H:%M")}, fh)
-    meldung = f"{name}: Stand {jetzt} → {nach} eingespielt ({geaendert} Dateien geändert oder neu, {len(loeschen)} entfernt)."
+    meldung = f"{name}: Build {jetzt} → {nach} eingespielt ({geaendert} Dateien geändert oder neu, {len(loeschen)} entfernt)."
     if os.path.exists(rp) and open(rp, "rb").read() != req_alt:
         open(os.path.join(HIER, "pakete_neu.txt"), "w").write("requirements.txt hat sich geändert\n")
         meldung += " Die Python-Pakete werden beim nächsten Start nachinstalliert."

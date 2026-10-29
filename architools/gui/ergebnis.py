@@ -3,7 +3,7 @@ import os
 
 from nicegui import ui
 
-from .stil import FARBE_DRUCK, FARBE_LASER, GRAU, hinweis, oeffnen, szene3d, url, vorschau_svgs
+from .stil import FARBE_DRUCK, FARBE_GRAVUR, FARBE_LASER, GRAU, hinweis, oeffnen, szene3d, url, vorschau_svgs
 
 
 def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
@@ -50,11 +50,12 @@ def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
                 ui.html("<pre style='white-space:pre-wrap; font-size:12px; margin:0'>"
                         + stats["kosten_text"].replace("&", "&amp;").replace("<", "&lt;") + "</pre>")
         fl = stats.get("material_farbe") or FARBE_LASER                      # Vorschau in der Farbe des Lasercut-Materials
-        teile = [(stats.get("vorschau_laser"), fl), (stats.get("vorschau_druck"), FARBE_DRUCK)]
+        teile = [(stats.get("vorschau_laser"), fl), (stats.get("vorschau_gravur"), FARBE_GRAVUR), (stats.get("vorschau_druck"), FARBE_DRUCK)]
         if any(p and os.path.exists(p) for p, _ in teile):
             with ui.row().classes("items-center gap-3 mt-2"):
                 ui.label("3D-Vorschau").classes("text-subtitle2")
                 ui.html(f'<span style="display:inline-block;width:12px;height:12px;background:{fl};border:1px solid #999"></span> Lasercut ({stats.get("material", "")})'
+                        f' &nbsp; <span style="display:inline-block;width:12px;height:12px;background:{FARBE_GRAVUR}"></span> Ritzen/Gravur'
                         f' &nbsp; <span style="display:inline-block;width:12px;height:12px;background:{FARBE_DRUCK}"></span> 3D-Druck')
                 hinweis("Maus: drehen · rechte Taste: verschieben · Zoom im Reiter „3D-Ansicht“ (hier blättert das Rad durch die Ergebnisse)")
             szene3d(teile, stats.get("modell_b", 400), stats.get("modell_h", 300), zoom=False)

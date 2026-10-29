@@ -12,7 +12,7 @@ from nicegui import app, run, ui
 BG, KARTE, AKZENT, AKZENT_HELL = "#f6f6f4", "#ffffff", "#1f6f78", "#e5f0f1"
 TEXT, GRAU, LINIE = "#1d2329", "#6b737b", "#e4e4df"
 INK, TERRA, OCKER, SALBEI, SCHIEFER = "#1d2329", "#c8643b", "#d19a2b", "#5f8f6b", "#3d6a9e"
-FARBE_LASER, FARBE_DRUCK = "#d6bf96", "#7fb3c4"
+FARBE_LASER, FARBE_DRUCK, FARBE_GRAVUR = "#d6bf96", "#7fb3c4", "#2b2f33"
 
 WASSERZEICHEN = "Archicad-Bildungsversion"
 PAKET = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

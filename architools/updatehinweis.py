@@ -1,6 +1,6 @@
 """Update-Hinweis: fragt beim Start (im Hintergrund, ohne Anmeldung) bei GitHub nach der neuesten Veröffentlichung.
 
-Es wird nichts heruntergeladen oder installiert – das Programm zeigt nur an, dass es einen neueren Stand gibt.
+Es wird nichts heruntergeladen oder installiert – das Programm zeigt nur an, dass es einen neueren Build gibt.
 Ohne Internet oder bei Fehlern passiert still nichts.
 """
 import json
@@ -21,7 +21,7 @@ def neueste(timeout=6.0):
                                          headers={"Accept": "application/vnd.github+json", "User-Agent": "ZachariasTools"})
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 d = json.load(r)
-            m = re.search(r"stand-(\d+)", d.get("tag_name", ""), re.I) or re.search(r"Stand\s+(\d+)", d.get("name", "") or "", re.I)
+            m = re.search(r"(?:stand|build)-(\d+)", d.get("tag_name", ""), re.I) or re.search(r"(?:Stand|Build)\s+(\d+)", d.get("name", "") or "", re.I)
             if not m:
                 continue
             return {"stand": int(m.group(1)), "tag": d.get("tag_name", ""), "url": d.get("html_url") or f"https://github.com/{repo}/releases/latest",

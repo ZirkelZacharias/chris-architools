@@ -91,4 +91,4 @@ jobs:
           [ "$(ls pakete/*.zip | wc -l)" -ge 1 ] || exit 1
           NOTE="Portable Pakete (kein Python nötig) für Windows und Mac."
           [ "$(ls pakete/*.zip | wc -l)" -ge 3 ] || NOTE="$NOTE Achtung: Ein Paket fehlt (Mac-Runner bei GitHub ausgelastet) - es wird nachgeliefert."
-          gh release create "$TAG" pakete/*.zip --title "Zacharias Tools Stand $(cat stand.txt)" --notes "$NOTE"
+          gh release create "$TAG" pakete/*.zip --title "Zacharias Tools Build $(cat stand.txt)" --notes "$NOTE"

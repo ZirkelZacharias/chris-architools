@@ -139,6 +139,23 @@ class Gebiet:
         e, n = self.cfg["gebiet"]["mitte_en"]
         lat, lon = en_zu_ll(e, n)
         self.inp_mitte.value = f"{lat:.6f}, {lon:.6f}"
+        self._standort_warnung(lat, lon)
+
+    def _standort_warnung(self, lat, lon):
+        """Kleine Warnung von Zirkel Zacharias, wenn der Ort nicht in Berlin und nicht in einem Land mit Zusatzmodul liegt."""
+        zeile = getattr(self, "standort_zeile", None)
+        if zeile is None:
+            return
+        from . import standort, eier
+        stufe, text = standort.pruefen(lat, lon)
+        if getattr(self, "_standort_stufe", None) == (stufe, text):
+            return
+        self._standort_stufe = (stufe, text)
+        zeile.clear()
+        with zeile:
+            if stufe != "ok":
+                eier.icon(34)
+                ui.label(text).classes("text-caption").style("color:#8a5a00")
 
     def _mitte_eingabe(self):
         from ..modell.ifcmap_adapter import _mitte
@@ -154,8 +171,7 @@ class Gebiet:
         if hasattr(self, "marker"):
             self.marker.move(lat, lon)
             self.karte.set_center((lat, lon))
-
-
+        self._standort_warnung(lat, lon)
 
     def _karte_klick(self, e):
         ll = e.args.get("latlng") or {}
@@ -530,6 +546,7 @@ class Gebiet:
                 self.inp_mitte.on("blur", lambda: self._mitte_eingabe())
                 ui.button(icon="my_location", on_click=lambda: self._mitte_eingabe()).props("flat dense round") \
                     .tooltip("Mittelpunkt übernehmen")
+            self.standort_zeile = ui.row().classes("w-full items-center no-wrap gap-2")
             self._mitte_text()
             hinweis("Gilt für alle Ausgaben – oder einfach in die Karte klicken.")
 

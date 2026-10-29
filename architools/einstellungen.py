@@ -7,8 +7,8 @@ STANDARD = {
     "dwg_erzeugen": False,          # DXF zusätzlich als DWG schreiben (braucht den ODA File Converter)
     "oda_pfad": "",                 # leer = automatisch suchen
     "projektordner": os.path.join(os.path.expanduser("~"), "ArchItools"),
-    "update_pruefen": True,         # beim Start nach einem neueren Stand suchen (nur Hinweis, nichts wird installiert)
-    "update_ignoriert": 0,          # dieser Stand wurde mit „nicht mehr erinnern“ zurückgestellt
+    "update_pruefen": True,         # beim Start nach einem neueren Build suchen (nur Hinweis, nichts wird installiert)
+    "update_ignoriert": 0,          # dieser Build wurde mit „nicht mehr erinnern“ zurückgestellt
     "spielereien": True,          # kleine Überraschungen in der Oberfläche
 }
 
