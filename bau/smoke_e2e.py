@@ -165,3 +165,13 @@ fehlend = [k for k in MUSS if k not in p["stand"]]
 if fehler or fehlend:
     raise SystemExit(f"Smoke-Test fehlgeschlagen: Fehler in {fehler}, nicht erzeugt: {fehlend}")
 print("SMOKE-TEST OK")
+
+# Regression (Build 7): die Datei-Routen der Oberfläche (/datei, /bild/...) werden nur über Dekoratoren angemeldet und sahen für
+# Aufräum-Werkzeuge "ungenutzt" aus. Ohne sie bleiben Vorschau und Ergebnis leer.
+from nicegui import app as _ng_app
+from architools.gui import stil as _stil
+_routen = {getattr(r, "path", "") for r in _ng_app.routes}
+assert {"/datei", "/bild/abschluss.jpg", "/bild/maskottchen.gif"} <= _routen, _routen
+_t = os.path.join(TMP, "route_test.txt"); open(_t, "w").write("x")
+assert _stil.url(_t).startswith("/datei?p="), "url()"
+print("OBERFLAECHEN-ROUTEN OK")
