@@ -1,4 +1,63 @@
 
+=== WMS-Sonde Luftbilder (Betriebswerk Pankow, 300 x 300 m, 1 m/Pixel) ===
+  dop_2026: GetCapabilities Fehler HTTP Error 404: Not Found
+  dop_2025: GetCapabilities Fehler HTTP Error 404: Not Found
+  dop_2024: GetCapabilities Fehler HTTP Error 404: Not Found
+  dop_2023: GetCapabilities Fehler HTTP Error 404: Not Found
+  dop_2022: GetCapabilities Fehler HTTP Error 404: Not Found
+  dop_2021: Ebene name=None titel='Digitale farbige Orthophotos 2021 (DOP20RGBI)' blatt=False srs25833=True abstract='Bei den Daten handelt es sich um farbige digitale Orthophotomosaike (DOP). Die Daten beinhalten vier Kanäle (Rot, Grün, '
+  dop_2021:   Ebene name=None titel='Wärmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  dop_2021:   Ebene name='blattschnitt' titel='Blattschnitte' blatt=True srs25833=True abstract='Blattschnitte'
+  dop_2021:   Ebene name='dop_2021_cir' titel='Digitale Color-Infrarot-Orthophotos 2021 (DOP20CIR)' blatt=True srs25833=True abstract='Bei den Daten handelt es sich um digitale Color-Infrarot-Orthophotos (DOP20CIR). Die Daten liegen für das gesamte Berlin'
+  dop_2021:   Ebene name='dop_2021_rgb' titel='Digitale farbige Orthophotos 2021 (DOP20RGB)' blatt=True srs25833=True abstract='Bei den Daten handelt es sich um farbige digitale Orthophotomosaike (DOP). Die Daten beinhalten vier Kanäle (Rot, Grün, '
+    GetMap dop_2021/blattschnitt image/jpeg: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+    GetMap dop_2021/blattschnitt image/png: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+    GetMap dop_2021/dop_2021_cir image/jpeg: (300, 300), Grau Mittel 105 Streuung 36.0 P2/P98 30/179, 232 Grauwerte, 39489 Farben, häufigste Farbe (np.int64(22), np.int64(19), np.int64(38)) = 0 %, weiß 0 %
+    GetMap dop_2021/dop_2021_cir image/png: (300, 300), Grau Mittel 105 Streuung 35.8 P2/P98 31/179, 220 Grauwerte, 62071 Farben, häufigste Farbe (np.int64(30), np.int64(22), np.int64(42)) = 0 %, weiß 0 %
+    GetMap dop_2021/dop_2021_rgb image/jpeg: (300, 300), Grau Mittel 96 Streuung 32.4 P2/P98 35/170, 225 Grauwerte, 20594 Farben, häufigste Farbe (np.int64(18), np.int64(37), np.int64(44)) = 0 %, weiß 0 %
+    GetMap dop_2021/dop_2021_rgb image/png: (300, 300), Grau Mittel 96 Streuung 32.3 P2/P98 35/169, 219 Grauwerte, 44426 Farben, häufigste Farbe (np.int64(20), np.int64(39), np.int64(47)) = 0 %, weiß 0 %
+  dop_2020: GetCapabilities Fehler HTTP Error 404: Not Found
+  dop_2019: Ebene name=None titel='Digitale farbige Orthophotos 2019 (DOP20RGBI)' blatt=False srs25833=True abstract='Digitale Orthophotos für das gesamte Berliner Stadtgebiet im Blattschnitt 2 km x 2 km. Bei den Daten handelt es sich um '
+  dop_2019:   Ebene name=None titel='Wärmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  dop_2019:   Ebene name='dop_2019' titel='Digitale farbige Orthophotos 2019 (DOP20RGBI)' blatt=True srs25833=True abstract='Digitale Orthophotos für das gesamte Berliner Stadtgebiet im Blattschnitt 2 km x 2 km. Bei den Daten handelt es sich um '
+    GetMap dop_2019/dop_2019 image/jpeg: (300, 300), Grau Mittel 130 Streuung 34.5 P2/P98 54/205, 229 Grauwerte, 16470 Farben, häufigste Farbe (np.int64(141), np.int64(141), np.int64(143)) = 0 %, weiß 0 %
+    GetMap dop_2019/dop_2019 image/png: (300, 300), Grau Mittel 130 Streuung 34.3 P2/P98 54/205, 213 Grauwerte, 28712 Farben, häufigste Farbe (np.int64(146), np.int64(145), np.int64(146)) = 0 %, weiß 0 %
+  dop_2018: Ebene name=None titel='Digitale farbige Orthophotos 2018 (DOP20RGBI)' blatt=False srs25833=True abstract='Digitale Orthophotos für das gesamte Berliner Stadtgebiet im Blattschnitt 2 km x 2 km. Bei den Daten handelt es sich um '
+  dop_2018:   Ebene name=None titel='Wärmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  dop_2018:   Ebene name='dop_2018' titel='Digitale farbige Orthophotos 2018 (DOP20RGBI)' blatt=True srs25833=True abstract='Digitale Orthophotos für das gesamte Berliner Stadtgebiet im Blattschnitt 2 km x 2 km. Bei den Daten handelt es sich um '
+    GetMap dop_2018/dop_2018 image/jpeg: (300, 300), Grau Mittel 106 Streuung 28.9 P2/P98 49/169, 223 Grauwerte, 13873 Farben, häufigste Farbe (np.int64(121), np.int64(122), np.int64(114)) = 0 %, weiß 0 %
+    GetMap dop_2018/dop_2018 image/png: (300, 300), Grau Mittel 106 Streuung 28.5 P2/P98 51/168, 197 Grauwerte, 19924 Farben, häufigste Farbe (np.int64(119), np.int64(121), np.int64(110)) = 0 %, weiß 0 %
+  luftbild_1998_05: Ebene name=None titel='Luftbilder 1998, Maßstab 1:5 000' blatt=False srs25833=True abstract='Luftbilder für Teilgebiete Berlins im Maßstab 1:5 000'
+  luftbild_1998_05:   Ebene name=None titel='Wärmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  luftbild_1998_05:   Ebene name='lb_1998_05_pan_bildmitten' titel='Bildmittelpunkt' blatt=True srs25833=True abstract='Mittelpunkte der Luftbilder 1998 (Senkrechtaufnahmen) für Teilgebiete Berlins im Maßstab  1:5 000'
+  luftbild_1998_05:   Ebene name='lb_1998_05_pan_gebietsabdeckung' titel='Abdeckung der Befliegung' blatt=True srs25833=True abstract='Gebietsabdeckung der Befliegung von 1998 im Maßstab 1:5 000'
+    GetMap luftbild_1998_05/lb_1998_05_pan_bildmitten image/jpeg: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+    GetMap luftbild_1998_05/lb_1998_05_pan_bildmitten image/png: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+    GetMap luftbild_1998_05/lb_1998_05_pan_gebietsabdeckung image/jpeg: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+    GetMap luftbild_1998_05/lb_1998_05_pan_gebietsabdeckung image/png: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+  luftbild_1953_22: Ebene name=None titel='Luftbilder 1953, Maßstab 1:22 000' blatt=False srs25833=True abstract='Senkrechtaufnahmen von Berlin, mit Überlappungen im Maßstab 1:22 000'
+  luftbild_1953_22:   Ebene name=None titel='Wärmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  luftbild_1953_22:   Ebene name='a_lb_1953_22_pan_bildmitten' titel='Bildmittelpunkt' blatt=True srs25833=True abstract='Senkrechtaufnahmen für das gesamte Berliner Stadtgebiet im Maßstab 1:22 000'
+  luftbild_1953_22:   Ebene name='b_lb_1953_22_pan_gebietsabdeckung' titel='Abdeckung der Befliegung' blatt=True srs25833=True abstract='Gebietsabdeckung der Befliegung von 1953 im Maßstab 1:22 000'
+  luftbild_1953_22:   Ebene name='c_luftbilder_1953_22_raster' titel='Bildmosaik' blatt=True srs25833=True abstract='Senkrechtaufnahmen von Berlin im Maßstab 1: 22 000'
+    GetMap luftbild_1953_22/a_lb_1953_22_pan_bildmitten image/jpeg: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+    GetMap luftbild_1953_22/a_lb_1953_22_pan_bildmitten image/png: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+    GetMap luftbild_1953_22/b_lb_1953_22_pan_gebietsabdeckung image/jpeg: (300, 300), Grau Mittel 220 Streuung 0.0 P2/P98 220/220, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(254), np.int64(204), np.int64(203)) = 100 %, weiß 0 %
+    GetMap luftbild_1953_22/b_lb_1953_22_pan_gebietsabdeckung image/png: (300, 300), Grau Mittel 221 Streuung 0.0 P2/P98 221/221, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(204), np.int64(204)) = 100 %, weiß 0 %
+    GetMap luftbild_1953_22/c_luftbilder_1953_22_raster image/jpeg: (300, 300), Grau Mittel 104 Streuung 31.2 P2/P98 52/183, 229 Grauwerte, 229 Farben, häufigste Farbe (np.int64(106), np.int64(106), np.int64(106)) = 2 %, weiß 0 %
+    GetMap luftbild_1953_22/c_luftbilder_1953_22_raster image/png: (300, 300), Grau Mittel 104 Streuung 31.3 P2/P98 53/183, 229 Grauwerte, 229 Farben, häufigste Farbe (np.int64(106), np.int64(106), np.int64(106)) = 2 %, weiß 0 %
+  luftbild_1928_04: Ebene name=None titel='Luftbilder 1928, Maßstab 1:4 000' blatt=False srs25833=True abstract='Senkrechtaufnahmen von Berlin, Fotoblätter ohne Überlappungen im Maßstab 1:4 000.'
+  luftbild_1928_04:   Ebene name=None titel='Wärmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  luftbild_1928_04:   Ebene name='a_lb_1928_04_pan_bildmitten' titel='Bildmittelpunkt' blatt=True srs25833=True abstract='Senkrechtaufnahmen von Berlin, Fotoblätter ohne Überlappungen im Maßstab 1:4 000.'
+  luftbild_1928_04:   Ebene name='b_lb_1928_04_pan_gebietsabdeckung' titel='Abdeckung der Befliegung' blatt=True srs25833=True abstract='Gebietsabdeckung der Befliegung von 1928 im Maßstab 1:4 000'
+  luftbild_1928_04:   Ebene name='c_luftbilder_1928_04_raster' titel='Bildmosaik' blatt=True srs25833=True abstract='Senkrechtaufnahmen von Berlin, Fotoblätter ohne Überlappung im Maßstab 1:4 000'
+    GetMap luftbild_1928_04/a_lb_1928_04_pan_bildmitten image/jpeg: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+    GetMap luftbild_1928_04/a_lb_1928_04_pan_bildmitten image/png: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
+    GetMap luftbild_1928_04/b_lb_1928_04_pan_gebietsabdeckung image/jpeg: (300, 300), Grau Mittel 220 Streuung 0.0 P2/P98 220/220, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(254), np.int64(204), np.int64(203)) = 100 %, weiß 0 %
+    GetMap luftbild_1928_04/b_lb_1928_04_pan_gebietsabdeckung image/png: (300, 300), Grau Mittel 221 Streuung 0.0 P2/P98 221/221, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(204), np.int64(204)) = 100 %, weiß 0 %
+    GetMap luftbild_1928_04/c_luftbilder_1928_04_raster image/jpeg: (300, 300), Grau Mittel 98 Streuung 34.5 P2/P98 54/176, 176 Grauwerte, 176 Farben, häufigste Farbe (np.int64(67), np.int64(67), np.int64(67)) = 2 %, weiß 0 %
+    GetMap luftbild_1928_04/c_luftbilder_1928_04_raster image/png: (300, 300), Grau Mittel 98 Streuung 34.5 P2/P98 56/176, 155 Grauwerte, 155 Farben, häufigste Farbe (np.int64(68), np.int64(68), np.int64(68)) = 2 %, weiß 0 %
+
 === vorrangnetz ===
   Feature-Typen: ['vorrangnetz:a_oepnv_vorrangnetz', 'vorrangnetz:b_oepnv_nachtangebot']
   vorrangnetz:a_oepnv_vorrangnetz / ganz Berlin (bis 20000): 8859 Objekte
