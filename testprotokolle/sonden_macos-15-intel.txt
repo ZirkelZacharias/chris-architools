@@ -1,4 +1,24 @@
 
+=== Luftbildsuche des Programms (live, Betriebswerk Pankow) ===
+  luftbild: Luftbild – aktuellstes verfügbares Orthofoto (Berlin)
+    dop_2026: nicht erreichbar (HTTP Error 404: Not Found)
+    dop_2025: nicht erreichbar (HTTP Error 404: Not Found)
+    dop_2024: nicht erreichbar (HTTP Error 404: Not Found)
+    dop_2023: nicht erreichbar (HTTP Error 404: Not Found)
+    dop_2022: nicht erreichbar (HTTP Error 404: Not Found)
+    dop_2021, Ebene dop_2021_rgb: Luftbild erkannt (Streuung 33, Tonwerte 34-170, 58 Graustufen, häufigste 6 %)
+  -> luftbild: dop_2021 / dop_2021_rgb
+  luftbild_1998: Luftbild 1998 (Schwarzweiß)
+    luftbild_1998_05, Ebene lb_1998_05_pan_bildmitten: kein Luftbild (Streuung 0, Tonwerte 255-255, 1 Graustufen, häufigste 100 %) - nächste
+    luftbild_1998_05, Ebene lb_1998_05_pan_gebietsabdeckung: kein Luftbild (Streuung 0, Tonwerte 255-255, 1 Graustufen, häufigste 100 %) - nächste
+  -> luftbild_1998: KEIN LUFTBILD / None
+  luftbild_1953: Luftbild 1953
+    luftbild_1953_22, Ebene c_luftbilder_1953_22_raster: Luftbild erkannt (Streuung 31, Tonwerte 51-183, 57 Graustufen, häufigste 7 %)
+  -> luftbild_1953: luftbild_1953_22 / c_luftbilder_1953_22_raster
+  luftbild_1928: Luftbild 1928
+    luftbild_1928_04, Ebene c_luftbilder_1928_04_raster: Luftbild erkannt (Streuung 33, Tonwerte 56-175, 41 Graustufen, häufigste 9 %)
+  -> luftbild_1928: luftbild_1928_04 / c_luftbilder_1928_04_raster
+
 === WMS-Sonde Luftbilder (Betriebswerk Pankow, 300 x 300 m, 1 m/Pixel) ===
   dop_2026: GetCapabilities Fehler HTTP Error 404: Not Found
   dop_2025: GetCapabilities Fehler HTTP Error 404: Not Found
