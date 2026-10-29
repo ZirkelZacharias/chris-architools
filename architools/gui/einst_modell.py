@@ -6,7 +6,7 @@ from nicegui import ui
 
 from ..modell import bibliothek as BIB
 from ..modell.laser import EBENEN_STANDARD
-from .stil import (AKTION_TEXT, AKZENT, GRAU, INK, MASSSTAEBE, OCKER, SALBEI, SCHIEFER, TERRA, ausgrauen, feld_pfad,
+from .stil import (AKTION_TEXT, aktion_ok, AKZENT, GRAU, INK, MASSSTAEBE, OCKER, SALBEI, SCHIEFER, TERRA, ausgrauen, feld_pfad,
                    hinweis, mm_text)
 from .stil import karte as _karte
 
@@ -269,40 +269,13 @@ class ModellEinst:
                 ui.number("Stützabstand mm", min=100).bind_value(pc, "stuetz_abstand_mm").classes("w-36").tooltip("Stützrahmen im Unterbau höchstens in diesem Abstand")
             ausgrauen(b2, sw2)
 
-    def _karte_raster(self):
-        rb = self.cfg.setdefault("raster_bild", {})
-        for k, v in (("aktiv", False), ("quelle", "luftbild"), ("datei", ""), ("weite_mm", 0.5), ("kontrast", 1.0),
-                     ("helligkeit", 0.0), ("teststreifen", True)):
-            rb.setdefault(k, v)
-        try:
-            from .. import projekt as _P
-            _P.kern()
-            import ifcmap_wms as _WM
-            quellen = {k: v for k, v in _WM.WMS_NAMEN.items() if not k.startswith("ua_")}
-        except Exception:
-            quellen = {"luftbild": "Luftbild (Berlin)"}
-        with karte("Rastergravur eines Bildes (experimentell)", TERRA, offen=False):
-            sw = ui.checkbox("Luftbild / Bild als Rastergravur auf die Geländeschichten").bind_value(rb, "aktiv")
-            box = ui.column().classes("w-full gap-1")
-            with box:
-                hinweis("Experimentell und an der Werkstatt noch nicht getestet. Das Bild wird als Linienraster aus schwarzen Streifen "
-                        "geschrieben (die Werkstatt nimmt Gravur nur als schwarze Fläche). Jede Schicht bekommt nur ihren sichtbaren Ring; "
-                        "zusammengesetzt ergibt das wieder ein durchgehendes Bild. Die Gravur kostet nach Fläche, nicht nach Bildinhalt – "
-                        "eine ganze 80 × 50-Platte kann rund eine Stunde dauern. Erst den Teststreifen lasern lassen. "
-                        "Hell wirkt es auf Finnpappe, Bristolkarton und Sperrholz; auf Graupappe ist der Kontrast schwach.")
-                with ui.row().classes("gap-2 items-end"):
-                    ui.select({**quellen, "datei": "eigene Bilddatei"}, label="Bildquelle").bind_value(rb, "quelle").classes("min-w-[260px]")
-                    ui.number("Zeilenabstand mm", min=0.25, max=3, step=0.05).bind_value(rb, "weite_mm").classes("w-40") \
-                        .tooltip("Kleiner = feiner, aber mehr Objekte und längere Laserzeit")
-                    ui.number("Kontrast", min=0.3, max=3, step=0.1).bind_value(rb, "kontrast").classes("w-28")
-                    ui.number("Helligkeit −1…+1", min=-1, max=1, step=0.1).bind_value(rb, "helligkeit").classes("w-40")
-                datei = ui.column().classes("w-full")
-                with datei:
-                    feld_pfad("Bilddatei (GeoTIFF mit Georeferenz, sonst JPG/PNG auf den Ausschnitt gestreckt)", rb, "datei",
-                              typen=("Bilder (*.tif;*.tiff;*.jpg;*.jpeg;*.png)",))
-                datei.bind_visibility_from(rb, "quelle", value="datei")
-                ui.checkbox("Teststreifen 100 × 100 mm in drei Stufen mitlasern").bind_value(rb, "teststreifen")
-            ausgrauen(box, sw)
+    def _zusatz_laser(self, cfg):
+        """Karten der Zusatzmodule bei den Lasercut-Einstellungen (z. B. Rastergravur)"""
+        from types import SimpleNamespace
+        from .. import zusatz as _z
+        h = SimpleNamespace(karte=karte, hinweis=hinweis, feld_pfad=feld_pfad, ausgrauen=ausgrauen, TERRA=TERRA, OCKER=OCKER,
+                            SCHIEFER=SCHIEFER, SALBEI=SALBEI, GRAU=GRAU, AKZENT=AKZENT)
+        _z.rufe("gui_laser", ui, cfg, h)
 
     def _ebenen_tabelle(self):
         cfg = self.cfg
@@ -312,6 +285,7 @@ class ModellEinst:
             for name in EBENEN_STANDARD:
                 eb.setdefault(name, EBENEN_STANDARD[name])
                 ui.label(name)
+                aktion_ok(eb, name)
                 ui.select(AKTION_TEXT if name != "Anlegekante nächste Schicht" else
                           {k: v for k, v in AKTION_TEXT.items() if k != "schneiden"}).bind_value(eb, name).props("dense")
         with ui.column().classes("w-full").bind_visibility_from(cfg, "quelle", backward=lambda q: q in ("auto", "ifcmap")):
@@ -326,6 +300,7 @@ class ModellEinst:
                     e = ie[name] = {"aktion": e}
                 e.setdefault("aktion", "aus")
                 ui.label(EBENEN_NAMEN.get(name, name))
+                aktion_ok(e, "aktion")
                 ui.select(AKTION_TEXT).bind_value(e, "aktion").props("dense")
                 if name == "Baeume":
                     e.setdefault("punkt_d_mm", 1.5)
@@ -382,6 +357,7 @@ class ModellEinst:
                         with ui.row().classes("w-full items-end no-wrap gap-1"):
                             ui.input("Name").bind_value(m, "name").classes("w-24").props("dense")
                             feld_pfad("Datei", m, "datei", typen=("Vektordaten (*.gpkg;*.shp;*.geojson)",))
+                            aktion_ok(m, "aktion")
                             ui.select(AKTION_TEXT).bind_value(m, "aktion").props("dense").classes("w-36")
                             ui.number("Breite m").bind_value(m, "breite_m").props("dense").classes("w-20") \
                                 .bind_enabled_from(m, "aktion", backward=lambda a: a != "aus")
@@ -458,7 +434,7 @@ class ModellEinst:
                             self.material_format(cfg["laser"])
                             self.lbl_schicht2 = ui.label("").classes("text-body2").style(f"color:{AKZENT}")
                         self._karte_restplatten()
-                        self._karte_raster()
+                        self._zusatz_laser(cfg)
                         self._karte_bauweise()
                         with karte("Was wird geritzt, graviert, geschnitten?", SCHIEFER):
                             self._ebenen_tabelle()

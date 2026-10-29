@@ -3,12 +3,19 @@
 Suchorte (in dieser Reihenfolge): Umgebungsvariable ZACHARIAS_ZUSATZ, Ordner `zusatz/` neben dem Paket `architools`,
 `~/.zacharias-tools/zusatz`. Jedes Modul ist ein Python-Paket (Ordner mit __init__.py) und darf folgende Funktionen anbieten:
 
-    NAME                                  Anzeigename
+    NAME, VERSION, BESCHREIBUNG           Anzeigename, Version, ein Satz (erscheint unter Einstellungen -> Zusatzmodule)
     gui_umgebung(ui, u)                   zusätzliche Einstellungen im Reiter Umgebung (u = Einstellungen, Schlüssel "zusatz")
     gui_modell(ui, g)                     zusätzliche Einstellungen im Reiter Modellbau (g = Einstellungen der Gebäude)
     ifc_ende(ctx)                         nach dem Schreiben der IFC-Elemente (ctx: dict, siehe ifcmap_kern.schreibe_ifc)
     modell_wand(b, ri, i, prof, L, cfg)   Gravurflächen (shapely, Wandkoordinaten s/z in mm) für eine Wand des Modellbaus
     modell_ende(ctx)                      nach dem Modellbau-Lauf (ctx: cfg, buildings, ausgabe, log)
+    gui_laser(ui, cfg, h)                 zusätzliche Karte bei den Gelände-Lasercut-Einstellungen (cfg = Modell-Einstellungen,
+                                          h = Hilfen der Oberfläche: karte, hinweis, feld_pfad, ausgrauen, TERRA ...)
+    raster_flaechen(geom, grau, weite)    Fläche als Linienraster füllen (Aktion "Raster-Gravur"); fehlt das Modul, wird voll graviert
+    modell_raster_bild(cfg, welt_grenzen, ausdehnung_mm, zu_welt, log)
+                                          Bild als Rastergravur auf die Geländeschichten -> dict(region=Funktion Region->Polygone,
+                                          teststreifen=[Teile]) oder None
+    LAENDER                               (Dict) Länderprofile wie in ifcmap_laender.PROFILE, z. B. {"sachsen": dict(name=..., epsg=..., ...)}
 
 Ein fehlerhaftes Modul bricht nie einen Lauf ab: der Fehler steht im Protokoll.
 """
@@ -53,6 +60,28 @@ def module():
 
 def vorhanden(name=None):
     return bool(module().get(name)) if name else bool(module())
+
+
+def erstes(hook, *a, log=print, **k):
+    """Ergebnis des ersten Moduls, das `hook` anbietet und nicht None zurückgibt; sonst None (Fehler werden protokolliert)."""
+    for r in rufe(hook, *a, log=log, **k):
+        if r is not None:
+            return r
+    return None
+
+
+def hat(hook):
+    """True, wenn mindestens ein geladenes Modul den Haken anbietet."""
+    return any(callable(getattr(m, hook, None)) for m in module().values())
+
+
+def liste():
+    """[(Ordnername, Name, Version, Beschreibung, Pfad)] aller geladenen Module (für die Anzeige in den Einstellungen)"""
+    out = []
+    for n, m in module().items():
+        out.append((n, getattr(m, "NAME", n), str(getattr(m, "VERSION", "")), getattr(m, "BESCHREIBUNG", ""),
+                    os.path.dirname(getattr(m, "__file__", "") or "")))
+    return out
 
 
 def rufe(hook, *a, log=print, **k):

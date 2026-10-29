@@ -73,6 +73,11 @@ u["geschosslinien"] = True; u["fenstermuster"] = True; u["lp_text"] = True      
 mg = p["modell"]["gebaeude"]
 mg.update(modus="falt", material="Bristolkarton", staerke_mm=0.5, lasche_mm=3.0, fenstermuster=True)       # Gebäude als Faltmodell (Laser)
 p["modell"]["laser"]["restplatten"] = [{"name": "Rest A", "b_mm": 400, "h_mm": 300, "anzahl": 1}]
+from PIL import Image
+_rj = os.path.join(TMP, "rasterbild.jpg")
+Image.fromarray((np.add.outer(np.arange(120), np.arange(160)) % 255).astype("uint8")).save(_rj)    # Verlaufsbild für die Rastergravur
+p["modell"]["raster_bild"] = {"aktiv": True, "quelle": "datei", "datei": _rj, "weite_mm": 0.8, "teststreifen": True}
+p["modell"].setdefault("ebenen", {})["Gebäudenummern"] = "raster"
 p["modell"]["holz"]["rahmen"]["aktiv"] = True; p["modell"]["holz"]["podest"]["aktiv"] = True
 import ifcmap_wms as WM, io
 from PIL import Image
@@ -86,7 +91,8 @@ WM._holen = _wms_fake
 p["schnitt"]["seite"]="rechts"; p["ziel"]={"ordner":os.path.join(TMP,"ziel"),"name":"MeinExport"}
 p["schnitt"]["linie_en"] = [[393450, 5826550], [393750, 5826550]]
 t0 = time.time()
-log = lambda s: print(s, flush=True)
+LOG = []
+log = lambda s: (LOG.append(str(s)), print(s, flush=True))
 erg = L.alles(p, P.gewaehlt(p), log, lambda x, t="": None)
 print("FERTIG", round(time.time() - t0), {k: (list(v)[:8] if isinstance(v, dict) else v) for k, v in erg.items()})
 print(json.dumps({k: v["zeit"] for k, v in p["stand"].items()}))
@@ -113,6 +119,13 @@ rp = [f for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f in fs_ if "Re
 assert rp, "Restplatten-PDF fehlt"
 lt = [f for r_, _, fs_ in os.walk(TMP) for f in fs_ if f.endswith("lageplan.dxf") or f.endswith("Lageplan.dxf")]
 print("GEBAEUDE-LASER, HOLZ, RESTPLATTEN OK")
+from architools import zusatz as _Z
+if _Z.hat("modell_raster_bild"):
+    assert any("Teststreifen" in x for x in LOG), "Rastergravur (Zusatzmodul) hat keinen Teststreifen erzeugt"
+    print("RASTERGRAVUR (ZUSATZMODUL) OK")
+else:
+    assert any("Zusatzmodul dafür ist nicht installiert" in x for x in LOG), "Hinweis zur fehlenden Rastergravur fehlt"
+    print("RASTERGRAVUR OHNE ZUSATZMODUL: Hinweis und Rückfall OK")
 
 fehler = [k for k, v in erg.items() if isinstance(v, dict) and v.get("fehler")]
 fehlend = [k for k in MUSS if k not in p["stand"]]

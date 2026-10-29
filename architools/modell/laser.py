@@ -38,6 +38,14 @@ def aktion(cfg, name):
     return e or EBENEN_STANDARD.get(name, "ritzen")
 
 
+def _raster(geom, raster):
+    """Linienraster über das Zusatzmodul (Rastergravur-Plugin); ohne Modul wird die Fläche voll graviert."""
+    from .. import zusatz
+    grau, weite = raster or (50.0, 0.8)
+    r = zusatz.erstes("raster_flaechen", geom, grau, weite)
+    return r if r is not None else polys(geom)
+
+
 def _anwenden(geom, typ, akt, region, d_mm=1.5, breite_mm=0.0, raster=None):
     """Geometrie einer Ebene auf eine Platte anwenden. -> (ritz-Linien, Gravurflächen, Schnittlöcher)"""
     rz, gv, cut = [], [], []
@@ -57,8 +65,7 @@ def _anwenden(geom, typ, akt, region, d_mm=1.5, breite_mm=0.0, raster=None):
                 rz += lines(c.exterior)
     elif typ == "flaeche":
         if akt == "raster":
-            from .rastergravur import flaechen_raster
-            gv += flaechen_raster(geom.intersection(region.buffer(-0.3)), *(raster or (50.0, 0.8)))
+            gv += _raster(geom.intersection(region.buffer(-0.3)), raster)
         elif akt == "gravieren":
             gv += polys(geom.intersection(region))
         elif akt == "schneiden":
@@ -67,9 +74,7 @@ def _anwenden(geom, typ, akt, region, d_mm=1.5, breite_mm=0.0, raster=None):
             rz += lines(geom.boundary.intersection(region))
     else:                                          # Linie
         if akt == "raster":
-            from .rastergravur import flaechen_raster
-            gv += flaechen_raster(geom.buffer(max(breite_mm, 1.5) / 2.0, cap_style="flat").intersection(region.buffer(-0.3)),
-                                  *(raster or (50.0, 0.8)))
+            gv += _raster(geom.buffer(max(breite_mm, 1.5) / 2.0, cap_style="flat").intersection(region.buffer(-0.3)), raster)
         elif akt == "gravieren":
             gv += polys(geom.buffer(max(breite_mm, 0.8) / 2.0, cap_style="flat").intersection(region))
         else:                                      # schneiden von offenen Linien ergibt keinen Sinn -> ritzen

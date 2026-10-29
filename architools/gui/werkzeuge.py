@@ -7,7 +7,7 @@ from nicegui import ui
 from .. import einstellungen as ES
 from ..modell import bibliothek as BIB
 from .ergebnis import ergebnis_zeigen
-from .stil import (AKZENT, FARBE_DRUCK, GRAU, HOEHE, INK, LINIE, MASSSTAEBE, OCKER, SALBEI, Lauf, feld_pfad, hinweis,
+from .stil import (AKZENT, FARBE_DRUCK, GRAU, HOEHE, INK, LINIE, MASSSTAEBE, OCKER, SALBEI, SCHIEFER, Lauf, feld_pfad, hinweis,
                    karte, mm_text, oeffnen, waehlen)
 
 WERKZEUG_STANDARD = {
@@ -288,6 +288,23 @@ class Werkzeuge:
                                 on_change=ass_an)
                     ui.button("Tipps wieder von vorn zeigen", on_click=lambda: (ass["gesehen"].clear(), sp(), ui.notify("Fertig"))) \
                         .props("flat dense no-caps")
+                with karte("Zusatzmodule (Plugins)", SCHIEFER, offen=False):
+                    from .. import zusatz
+                    liste = zusatz.liste()
+                    if liste:
+                        for n, name, ver, beschr, pfad in liste:
+                            with ui.row().classes("items-start no-wrap gap-2"):
+                                ui.icon("extension").style("color:#3d6a9e")
+                                with ui.column().classes("gap-0"):
+                                    ui.label(f"{name}" + (f"  ·  Version {ver}" if ver else "")).classes("text-weight-medium")
+                                    if beschr:
+                                        hinweis(beschr)
+                                    hinweis(f"Ordner: {pfad}")
+                    else:
+                        hinweis("Keine Zusatzmodule installiert. Sie sind nicht Teil des öffentlichen Programms.")
+                    hinweis("Zusatzmodule sind Ordner mit einer __init__.py. Sie liegen im Ordner „zusatz“ neben dem Ordner „architools“ "
+                            "(portables Paket: ZachariasTools/programm/zusatz) oder in ~/.zacharias-tools/zusatz. "
+                            "Nach dem Hineinkopieren das Programm neu starten. Ein fehlerhaftes Modul bricht nie einen Export ab.")
                 with karte("Daten und Netzwerk", INK, offen=False):
                     hinweis("Heruntergeladene Geodaten werden im Ordner ~/.ifcmap/cache gesammelt und für alle Projekte weiterverwendet. "
                             "Bei SSL-Fehlern im Uni-Netz: Einstellungen → Weitere Optionen → Netzwerk im jeweiligen Projekt.")

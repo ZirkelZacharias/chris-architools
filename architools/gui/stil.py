@@ -25,6 +25,27 @@ HOEHE = "calc(100vh - 156px)"            # Arbeitsbereich unter Kopf und Reitern
 AKTION_TEXT = {"ritzen": "ritzen (blau)", "gravieren": "gravieren (schwarze Fläche)",
                "raster": "Raster-Gravur (experimentell)",
                "schneiden": "schneiden (rot)", "aus": "aus"}
+
+
+def _ohne_raster():
+    """Die Aktion „Raster-Gravur“ gibt es nur, wenn das Zusatzmodul (Rastergravur) installiert ist."""
+    try:
+        from .. import zusatz
+        if not zusatz.hat("raster_flaechen"):
+            AKTION_TEXT.pop("raster", None)
+    except Exception:
+        AKTION_TEXT.pop("raster", None)
+
+
+_ohne_raster()
+
+
+def aktion_ok(d, key):
+    """Gespeicherte Aktion „raster“ ohne Zusatzmodul -> „gravieren“ (sonst kennt die Auswahl den Wert nicht)."""
+    if d.get(key) == "raster" and "raster" not in AKTION_TEXT:
+        d[key] = "gravieren"
+
+
 MASSSTAEBE = {50: "1:50", 100: "1:100", 200: "1:200", 250: "1:250", 500: "1:500", 750: "1:750", 1000: "1:1000",
               1250: "1:1250", 2000: "1:2000", 2500: "1:2500", 5000: "1:5000", 10000: "1:10000"}
 

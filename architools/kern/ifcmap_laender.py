@@ -100,6 +100,17 @@ def _json_orte():
 def profile(log=None):
     """Eingebaute Profile + Aenderungen aus system/laender.json und ~/.ifcmap/laender.json."""
     p = json.loads(json.dumps(PROFILE))
+    try:                                                    # Länderprofile aus Zusatzmodulen (Plugins je Bundesland)
+        import sys as _sys
+        _pk = _sys.modules.get("architools.zusatz")
+        if _pk is None:
+            import architools.zusatz as _pk
+        for _n, _m in _pk.module().items():
+            for _land, _w in (getattr(_m, "LAENDER", None) or {}).items():
+                if isinstance(_w, dict):
+                    p[_land] = json.loads(json.dumps(_w))
+    except Exception:
+        pass
     for pfad in _json_orte():
         if not os.path.exists(pfad):
             continue

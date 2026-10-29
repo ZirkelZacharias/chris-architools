@@ -171,24 +171,6 @@ def _akt(a):
 
 
 # ------------------------------------------------------------------ Modell bauen
-def _teststreifen(RG, bild, extent_m, tw_xy, weite, kont, hell, log):
-    """Probestück 100 x 100 mm: dasselbe Bildstück in drei Stufen (schwächer, normal, kräftiger) - vor der Gravur der ganzen Platte prüfen"""
-    from shapely.geometry import box
-    cx, cy = extent_m.centroid.x, extent_m.centroid.y
-    teile = []
-    reg = box(cx - 50, cy - 50, cx + 50, cy + 50)
-    polys_ = []
-    for i, faktor in enumerate((0.6, 1.0, 1.5)):
-        band = box(cx - 50, cy - 50 + i * 100 / 3.0, cx + 50, cy - 50 + (i + 1) * 100 / 3.0 - 0.5)
-        polys_ += RG.bild_raster(bild, band, tw_xy, weite, kont * faktor, hell)
-    quad = box(0, 0, 100, 100)
-    from shapely import affinity
-    g = [affinity.translate(p, -(cx - 50), -(cy - 50)) for p in polys_]
-    teile.append({"id": "TEST", "poly": quad, "ritzen": [], "gravieren": g, "layer": -1, "raster_mm2": 100 * 100.0, "art": "Teststreifen"})
-    log("  Rastergravur: Teststreifen 100 x 100 mm (drei Stufen: schwächer / normal / kräftiger) liegt mit auf den Platten")
-    return teile
-
-
 def _gebaeude_platten(cfg, parts_g, parts_ge, sorte_g, t_g, formate, d_laser, name, svgs, svgs_v, log):
     """Gebäudeteile aus eigenem Material (oder ohne Gelände-Lasercut) auf Platten legen und schreiben"""
     import copy as _copy
@@ -342,20 +324,16 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         log("4/6  Laserteile")
         lc = cfg["laser"]
         stuetzen_e = stuetzen if E_w is not None else []
-        rb = cfg.get("raster_bild") or {}
         teststreifen = []
-        if rb.get("aktiv"):
-            log("  Rastergravur (EXPERIMENTELL, an der Werkstatt ungetestet): Bild laden")
-            try:
-                from . import rastergravur as RG
-                bild = RG.bild_beschaffen(cfg, extent_w.bounds, log)
-                if bild is not None:
-                    kont, hell, weite = float(rb.get("kontrast", 1.0)), float(rb.get("helligkeit", 0.0)), float(rb.get("weite_mm", 0.5))
-                    cfg["_rasterbild"] = lambda reg, bild=bild: RG.bild_raster(bild, reg, tw_xy, weite, kont, hell)
-                    if rb.get("teststreifen", True):
-                        teststreifen = _teststreifen(RG, bild, extent_m, tw_xy, weite, kont, hell, log)
-            except Exception as e:
-                log(f"  HINWEIS: Rastergravur nicht möglich ({str(e)[:100]})")
+        if (cfg.get("raster_bild") or {}).get("aktiv"):
+            # Rastergravur eines Bildes: gehört zum Zusatzmodul (Plugin); ohne Modul wird sie übersprungen
+            from .. import zusatz
+            rr = zusatz.erstes("modell_raster_bild", cfg, extent_w.bounds, extent_m, tw_xy, log, log=log)
+            if rr:
+                cfg["_rasterbild"] = rr.get("region")
+                teststreifen = rr.get("teststreifen") or []
+            else:
+                log("  HINWEIS: Rastergravur eines Bildes ist angekreuzt, aber das Zusatzmodul dafür ist nicht installiert - übersprungen")
         parts, Q, stuetzen, rippen = L.make_parts(P_haupt, blds, feats, cfg, log)
         cfg.pop("_rasterbild", None)
         rippen_3d = [r["lage"] for r in rippen if r.get("lage") is not None]

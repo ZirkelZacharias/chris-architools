@@ -112,3 +112,9 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
 - **Umweltatlas-Gebäudehöhen jetzt Standard (an):** Im Pankow-Testlauf hatten 278 von 288 ergänzten Gebäuden (ohne LoD2) nur eine geschätzte Höhe, weil ALKIS-`aog` und OSM-`building:levels` dort fehlen. Amtliche Daten gehen vor Schätzung (Regel „amtlich zuerst“). Fällt der Dienst aus, schätzt der Kern wie bisher (Meldung im Protokoll). **Ungetestet** (Dienst aus der Entwicklungsumgebung nicht erreichbar). Bestehende Projekte behalten ihren gespeicherten Wert; der Bericht gibt dann den Hinweis, den Haken zu setzen.
 - **Bericht, Abschnitt 5:** „Gelände höher als Gebäude-Oberkante“ wird mit den betroffenen Gebäuden und einer Prüfanleitung ausgegeben.
 - **Beobachtung Rundlokschuppen:** OSM liefert dort Flachdach mit ca. 23 m Höhe – vermutlich falsch bzw. Dachform fehlt. Es gibt (noch) keine Plausibilitätsprüfung für OSM-Höhen; mögliche Ergänzung: bei Flachdach über 20 m ohne Geschossangabe im Bericht vermerken.
+
+## Plugins: Rastergravur und Fassadenfotos ausgelagert (29.10.2026)
+- **Entscheidung (Wunsch des Nutzers):** Fassadenfotos und Rastergravur sind ein gemeinsames, nicht öffentliches Zusatzmodul (`zusatz/fassaden`). Der öffentliche Kern enthält nur die Einhängepunkte (`architools/zusatz.py`): `gui_laser`, `raster_flaechen`, `modell_raster_bild` (neu), dazu die bestehenden. Ohne Modul gibt es die Aktion „Raster-Gravur“ und die Bild-Rastergravur nicht; gespeicherte Raster-Aktionen werden zu „gravieren“, ein angekreuztes Bild-Raster wird mit Hinweis übersprungen.
+- **Liste der Module:** Einstellungen → Zusatzmodule (Plugins). Module melden NAME, VERSION, BESCHREIBUNG.
+- **Länder-Plugins (später):** Ein Zusatzmodul kann `LAENDER = {"kennung": dict(name, epsg, box, dgm, lod2, …)}` anbieten; `ifcmap_laender.profile()` übernimmt sie, die Landeserkennung nutzt die `box`. Noch ohne echtes Länder-Plugin geprüft.
+- Smoke-Test prüft beide Fälle (mit und ohne Modul).
