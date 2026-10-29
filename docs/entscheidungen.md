@@ -88,3 +88,7 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
 - **Fenstermuster (Vorschlag 2):** optional in der IFC (Ebene „Gebaeude_Fenstermuster“, nur Nahbereich, Standard aus) und im Modellbau (gravierte Rechtecke bei Flächen/Faltmodell). Ein MUSTER nach Wandbreite und -höhe, keine Messung; jedes IFC-Element trägt den Vermerk „MUSTER“. Nicht im Schnitt. Getestet mit künstlichen Wänden (`beispiel/testdaten/lod2_waende.gml`), nicht mit echten Berliner Wänden verglichen.
 - **Release:** Der Apple-Silicon-Runner (macos-15) von GitHub war ausgelastet (Job nie zugeteilt). Der Release läuft deshalb auch ohne dieses Paket (`continue-on-error`); es wird nachgeliefert. Stand 3 enthält Windows und Mac Intel.
 - **Fassaden mit Foto-Textur** (experimentell, außerhalb von GitHub): in Planung, noch nicht gebaut.
+
+## Zusatzmodule (29.10.2026)
+- Das Programm lädt optionale Zusatzmodule aus `zusatz/` neben dem Paket (oder `~/.zacharias-tools/zusatz`, oder `ZACHARIAS_ZUSATZ`). `zusatz/` steht in der `.gitignore`: Zusatzmodule sind nicht Teil des öffentlichen Repositories. Haken: Einstellungen (Umgebung, Modellbau), IFC nach dem Schreiben der Elemente, Gravurflächen je Wand im Modellbau, Ende des Modellbau-Laufs. Ein fehlerhaftes Modul bricht nie einen Lauf ab.
+- Erstes Zusatzmodul (privat): Fassadenfotos aus Straßenfotos, schwarz-weiß mit Körnung, für IFC und Modellbau. Dieser Teil des Repositories enthält nur die Haken, keine Fotos, Schlüssel oder Abruf-Code.

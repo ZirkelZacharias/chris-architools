@@ -202,6 +202,10 @@ class ModellEinst:
                         ui.number("Abstand mm", min=10, step=5).bind_value(g, "stift_abstand_mm").classes("w-28") \
                             .tooltip("Bei langen Gebäuden alle x mm ein weiterer Stift")
                     ausgrauen(st, sw)
+            # --- optionale Zusatzmodule (nicht im öffentlichen Repository)
+            g.setdefault("zusatz", {})
+            from .. import zusatz as _zusatz
+            _zusatz.rufe("gui_modell", ui, g)
 
     def _karte_restplatten(self):
         lc = self.cfg["laser"]

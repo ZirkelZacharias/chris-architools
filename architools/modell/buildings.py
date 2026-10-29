@@ -201,7 +201,7 @@ def build_buildings(bldgs, extent_m, f, P, cfg, log=print):
                                      max(2.0, float(gc.get("stift_laenge_mm") or 4.0) / 2.0))
         res.append({"gml_id": b["id"], "footprint": fp, "mesh": mesh, "status": status,
                     "height_mm": height, "layer": k, "gruppe": "einsatz" if b["id"] in sep else "umgebung",
-                    "art": "Gebäude", "lod": "LoD2" if (in_near and prisms) else "Block",
+                    "art": "Gebäude", "lod": "LoD2" if (in_near and prisms) else "Block", "zmin_m": float(zmin),
                     "prismen": prisms if (in_near and prisms) else None, "dach3d": roof_xy if (in_near and roof_xy) else None,
                     "stifte": stifte})
     log(f"  Gebäude: {sum(r['status']=='druck' for r in res)} druckbar, "

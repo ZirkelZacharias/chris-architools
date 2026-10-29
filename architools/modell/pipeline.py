@@ -536,6 +536,12 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         "druck_stls": [d["datei"] for d in drucke], "druck_plaene": drucke,
         "n_laserplatten": len(platten), "n_teile": len(parts), "dauer_s": time.time() - t0,
     })
+    try:
+        from .. import zusatz as ZU
+        if ZU.vorhanden():
+            ZU.rufe("modell_ende", dict(cfg=cfg, buildings=blds + blds_in, ausgabe=out, name=name, massstab=scale, log=log), log=log)
+    except Exception as e:
+        log(f"  HINWEIS: Zusatzmodule im Modellbau nicht ausgeführt ({str(e)[:100]})")
     log(f"Fertig in {stats['dauer_s']:.0f} s: {len(platten)} Laserplatten, {len(drucke)} Druckplatten. Ausgabe: {out}")
     return stats
 

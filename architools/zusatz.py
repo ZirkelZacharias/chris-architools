@@ -1,0 +1,72 @@
+"""Optionale Zusatzmodule: werden nur geladen, wenn sie neben dem Programm liegen. Sie sind nicht Teil des öffentlichen Repositories.
+
+Suchorte (in dieser Reihenfolge): Umgebungsvariable ZACHARIAS_ZUSATZ, Ordner `zusatz/` neben dem Paket `architools`,
+`~/.zacharias-tools/zusatz`. Jedes Modul ist ein Python-Paket (Ordner mit __init__.py) und darf folgende Funktionen anbieten:
+
+    NAME                                  Anzeigename
+    gui_umgebung(ui, u)                   zusätzliche Einstellungen im Reiter Umgebung (u = Einstellungen, Schlüssel "zusatz")
+    gui_modell(ui, g)                     zusätzliche Einstellungen im Reiter Modellbau (g = Einstellungen der Gebäude)
+    ifc_ende(ctx)                         nach dem Schreiben der IFC-Elemente (ctx: dict, siehe ifcmap_kern.schreibe_ifc)
+    modell_wand(b, ri, i, prof, L, cfg)   Gravurflächen (shapely, Wandkoordinaten s/z in mm) für eine Wand des Modellbaus
+    modell_ende(ctx)                      nach dem Modellbau-Lauf (ctx: cfg, buildings, ausgabe, log)
+
+Ein fehlerhaftes Modul bricht nie einen Lauf ab: der Fehler steht im Protokoll.
+"""
+import importlib.util
+import os
+import sys
+
+_GELADEN = None
+
+
+def suchordner():
+    out = []
+    e = os.environ.get("ZACHARIAS_ZUSATZ")
+    if e:
+        out.append(e)
+    out.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "zusatz"))
+    out.append(os.path.join(os.path.expanduser("~"), ".zacharias-tools", "zusatz"))
+    return [o for o in out if os.path.isdir(o)]
+
+
+def module():
+    """{Ordnername: Modul}"""
+    global _GELADEN
+    if _GELADEN is not None:
+        return _GELADEN
+    _GELADEN = {}
+    for ordner in suchordner():
+        for n in sorted(os.listdir(ordner)):
+            init = os.path.join(ordner, n, "__init__.py")
+            if n.startswith((".", "_")) or not os.path.isfile(init) or n in _GELADEN:
+                continue
+            try:
+                spec = importlib.util.spec_from_file_location("zusatz_" + n, init, submodule_search_locations=[os.path.join(ordner, n)])
+                m = importlib.util.module_from_spec(spec)
+                sys.modules["zusatz_" + n] = m
+                spec.loader.exec_module(m)
+                _GELADEN[n] = m
+            except Exception as e:                       # kaputtes Modul: überspringen
+                print("Zusatzmodul %s nicht geladen: %s" % (n, str(e)[:120]), flush=True)
+    return _GELADEN
+
+
+def vorhanden(name=None):
+    return bool(module().get(name)) if name else bool(module())
+
+
+def rufe(hook, *a, log=print, **k):
+    """Ruft `hook` in allen Modulen auf, die ihn anbieten. -> Liste der Rückgaben (Fehler werden protokolliert)"""
+    out = []
+    for n, m in module().items():
+        fn = getattr(m, hook, None)
+        if not callable(fn):
+            continue
+        try:
+            out.append(fn(*a, **k))
+        except Exception as e:
+            try:
+                log("  HINWEIS: Zusatzmodul %s (%s) fehlgeschlagen: %s" % (n, hook, str(e)[:160]))
+            except Exception:
+                pass
+    return out

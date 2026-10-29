@@ -232,6 +232,24 @@ def fenster_muster(profil, L, massstab, x0=0.0):
     return out
 
 
+_CTX = {"cfg": None}
+
+
+def zusatz_gravur(b, ri, i, prof, L, x0=0.0):
+    """Gravurflächen optionaler Zusatzmodule für eine Wand (Wandkoordinaten s/z in mm, um x0 verschoben)"""
+    if not _CTX.get("zusatz"):
+        return []
+    try:
+        from .. import zusatz as ZU
+        out = []
+        for r in ZU.rufe("modell_wand", b, ri, i, prof, L, _CTX["cfg"]):
+            for g in (r or []):
+                out.append(shapely.affinity.translate(g, xoff=x0) if x0 else g)
+        return out
+    except Exception:
+        return []
+
+
 def _teil(tid, poly, b, art, ritzen=None):
     return {"id": tid, "poly": poly, "ritzen": list(ritzen or []), "gravieren": [], "gebaeude": b["nr"], "art": art}
 
@@ -254,6 +272,7 @@ def flaechen_teile(b, beschriften=True, massstab=None):
         t = _teil(f"{b['nr']}-W{j:02d}", shapely.union_all(polys(pg)), b, "Wand")
         if massstab:
             t["gravieren"] += fenster_muster(prof, L, massstab)
+        t["gravieren"] += zusatz_gravur(b, ri, i, prof, L)
         teile.append(t)
     for j, (pg, xyz) in enumerate(dach_flaechen(b), 1):
         teile.append(_teil(f"{b['nr']}-D{j:02d}", pg, b, "Dach"))
@@ -293,16 +312,16 @@ def falt_teile(b, breite, max_laenge, beschriften=True, massstab=None):
     # --- Wände je Ring als Streifen
     ringe = {}
     for ri, i, prof, L in waende(b):
-        ringe.setdefault(ri, []).append((prof, L))
+        ringe.setdefault(ri, []).append((prof, L, i))
     nr = 0
     for ri, ws in ringe.items():
         # in Streifen höchstens max_laenge lang teilen
         gruppen, akt, lng = [], [], 0.0
-        for prof, L in ws:
+        for prof, L, i_ in ws:
             if akt and lng + L > max_laenge:
                 gruppen.append(akt)
                 akt, lng = [], 0.0
-            akt.append((prof, L))
+            akt.append((prof, L, i_))
             lng += L
         if akt:
             gruppen.append(akt)
@@ -310,9 +329,10 @@ def falt_teile(b, breite, max_laenge, beschriften=True, massstab=None):
             nr += 1
             x = 0.0
             oben, falten, fenster = [], [], []
-            for prof, L in gr:
+            for prof, L, i_ in gr:
                 if massstab:
                     fenster += fenster_muster(prof, L, massstab, x)
+                fenster += zusatz_gravur(b, ri, i_, prof, L, x)
                 for s, z in prof:
                     oben.append((x + s, z))
                 falten.append(x)
@@ -389,6 +409,12 @@ def teile_fuer(buildings, cfg, t_mm, formate, rand_mm, log=print):
     breite = float(gc.get("lasche_mm") or 3.0)
     max_l = max(f[0] for f in formate) - 2 * rand_mm - 6.0
     beschr = bool(gc.get("teile_beschriften", True))
+    _CTX["cfg"] = cfg
+    try:
+        from .. import zusatz as ZU
+        _CTX["zusatz"] = ZU.vorhanden() and modus in ("flaeche", "falt")
+    except Exception:
+        _CTX["zusatz"] = False
     massstab = float(cfg["massstab"]) if gc.get("fenstermuster") else None       # Fenstermuster: nur bei Flaechen/Faltmodell
     alle = []
     n_geb = 0

@@ -182,6 +182,7 @@ class Config:
     geschosslinien: bool = False          # IFC: waagerechte Linien an den LoD2-Waenden fuer die Geschosse (Zahl aus LoD2/ALKIS/OSM, sonst geschaetzt)
     geschosslinien_quelle: str = "auto"   # "auto" = fehlende Zahl aus der Traufhoehe schaetzen, "daten" = nur Gebaeude mit echter Geschosszahl
     fenstermuster: bool = False           # IFC: Fenster-/Tuermuster auf den LoD2-Waenden - ein MUSTER nach Wandmassen, KEINE Messung
+    zusatz: dict = field(default_factory=dict)   # Einstellungen optionaler Zusatzmodule (siehe architools/zusatz.py)
     fenstermuster_radius: float = 100.0   # nur Gebaeude bis zu diesem Abstand vom Mittelpunkt (m)
     geschosslinien_radius: float = 150.0  # nur Gebaeude bis zu diesem Abstand vom Mittelpunkt (m)
     sonne: bool = False                   # Sonnenbahn-Diagramm (IFC + DXF; je Datei ueber die Ebene "Sonne" abwaehlbar)
@@ -3248,6 +3249,7 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
     gl_zahlen = {}
     fm_an = bool(getattr(d.cfg, "fenstermuster", False)) and ebene_an(d.cfg, "ifc", "Gebaeude_Fenstermuster")
     n_fm = n_fmf = n_fmt = 0
+    zusatz_geb = []                                       # Nahbereichs-Gebaeude fuer optionale Zusatzmodule
     leer = []                                             # Gebaeude, aus denen keine Flaechen entstanden
     # markante Gebaeude zuerst: nur was wirklich geschrieben wurde, wird unten aus den normalen Gebaeuden herausgenommen
     # (sonst verschwaende ein Gebaeude, dessen markantes Element leer bleibt oder dessen Ebene abgeschaltet ist)
@@ -3335,6 +3337,8 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
                     g1, b1 = _geschosslinien_schreiben(d, {gid: teile}, gl_zahlen, element, sto)
                     n_gl += g1
                     n_glb += b1
+                if not fern:
+                    zusatz_geb.append((gid, teile))
                 if fm_an and not fern:
                     g2, f2, t2 = _fenstermuster_schreiben(d, {gid: teile}, element, sto)
                     n_fm += g2
@@ -3357,6 +3361,13 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
             qs[q_.split(" (")[0].split(" aus ")[0]] = qs.get(q_.split(" (")[0].split(" aus ")[0], 0) + 1
         log("  Geschosslinien: %d Baender an %d Gebaeuden (Geschosszahl aus: %s; Teilung gleichmaessig ueber die Traufhoehe, keine gemessenen Geschosshoehen)"
             % (n_glb, n_gl, ", ".join("%s %d" % (k, v) for k, v in sorted(qs.items())) or "keine Angaben"))
+    if zusatz_geb and getattr(d.cfg, "zusatz", None):
+        try:
+            import zusatz as _ZU
+        except ImportError:
+            from architools import zusatz as _ZU
+        _ZU.rufe("ifc_ende", dict(f=f, d=d, sto=sto, body=body, shift=shift, platzierung=platzierung, gebaeude=zusatz_geb, interp=interp,
+                                  pfad=pfad, log=log, einstellungen=d.cfg.zusatz, ifcopenshell=ifcopenshell), log=log)
     if fm_an:
         log("  Fenstermuster: %d Fenster und %d Tueren an %d Gebaeuden - ein MUSTER nach Wandbreite und -hoehe, KEINE Messung (LoD2 enthaelt keine Oeffnungen)"
             % (n_fmf, n_fmt, n_fm))

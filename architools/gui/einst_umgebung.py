@@ -141,6 +141,9 @@ def seiten(p):
                             "nach Wandbreite und -höhe (Achse ca. 3 m, Fenster 1,2 × 1,4 m, Tür im Erdgeschoss). Die echte Lage der Fenster stimmt damit nicht. "
                             "Jedes Element trägt den Vermerk „MUSTER“. Nicht im Schnitt.")
                 ausgrauen(fm_in, fm)
+                u.setdefault("zusatz", {})
+                from .. import zusatz as _zusatz
+                _zusatz.rufe("gui_umgebung", ui, u)
             with karte("Markante Gebäude – experimentell", OCKER, offen=False) as k_markant:
                 ui.label("EXPERIMENTELL: Diese Funktion klappt noch nicht immer – Gebäude können fehlen oder falsche Formen haben.") \
                     .classes("text-caption").style(f"color:{OCKER}")
