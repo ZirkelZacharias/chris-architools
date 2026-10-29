@@ -42,6 +42,7 @@ u.update(land="berlin", quelle="berlin", online_dgm=False, online_lod2=False, dg
          lod2=[B + "/testdaten/lod2_waende.gml"], breite=300.0, hoehe=300.0, nah_breite=200.0, nah_hoehe=200.0,
          dgm_notfall=False, markant=False, alkis_zusatz=False, lod2_luecken=False, grundrisse_abgleich=False,
          buergersteige="keine", schatten="aus")
+u["zusatz"] = {"fassaden": {"ifc": True}}     # Plugin-Hook ifc_ende MUSS laufen (Regression: Namenskonflikt mit dem Ordner "zusatz")
 m = MC.load(B + "/beispiel_projekt.json")
 m["gebiet"] = p["gebiet"]; p["gebiet"].update(breite_cm=80.0, hoehe_cm=60.0)
 for k in ("dgm", "gebaeude", "einsatz", "laser", "druck", "gelaende", "ebenen", "markierungen", "bauwerke", "quelle"):
@@ -135,6 +136,10 @@ print("LUFTBILD-TEXTUR IM IFC OK", len(_m.by_type("IfcIndexedTriangleTextureMap"
 assert any("Höhenlinien auf den Platten" in x for x in LOG), "Höhenlinien auf den Platten fehlen"
 print("HOEHENLINIEN-GRAVUR OK")
 from architools import zusatz as _Z
+assert not any("FEHLER in umgebung" in x for x in LOG), "Umgebung ist abgestürzt (Plugin-Hook?)"
+if _Z.hat("ifc_ende"):
+    assert any("Fassadenfotos" in x for x in LOG), "Plugin-Hook ifc_ende wurde nicht aufgerufen"
+    print("PLUGIN-HOOK IFC OK")
 if _Z.hat("modell_raster_bild"):
     assert any("Teststreifen" in x for x in LOG), "Rastergravur (Zusatzmodul) hat keinen Teststreifen erzeugt"
     print("RASTERGRAVUR (ZUSATZMODUL) OK")

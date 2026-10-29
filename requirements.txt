@@ -19,3 +19,4 @@ ifcopenshell
 nicegui>=3,<4
 pywebview>=5,<7
 manifold3d
+networkx

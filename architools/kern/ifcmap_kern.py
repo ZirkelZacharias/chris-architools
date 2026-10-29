@@ -3386,10 +3386,10 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         log("  Geschosslinien: %d Baender an %d Gebaeuden (Geschosszahl aus: %s; Teilung gleichmaessig ueber die Traufhoehe, keine gemessenen Geschosshoehen)"
             % (n_glb, n_gl, ", ".join("%s %d" % (k, v) for k, v in sorted(qs.items())) or "keine Angaben"))
     if zusatz_geb and getattr(d.cfg, "zusatz", None):
-        try:
-            import zusatz as _ZU
-        except ImportError:
+        try:                                  # NICHT "import zusatz": der Plugin-Ordner "zusatz" neben dem Programm waere sonst ein leeres Namensraum-Paket
             from architools import zusatz as _ZU
+        except ImportError:
+            import zusatz as _ZU
         _ZU.rufe("ifc_ende", dict(f=f, d=d, sto=sto, body=body, shift=shift, platzierung=platzierung, gebaeude=zusatz_geb, interp=interp,
                                   pfad=pfad, log=log, einstellungen=d.cfg.zusatz, ifcopenshell=ifcopenshell), log=log)
     if fm_an:
