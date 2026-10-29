@@ -109,8 +109,49 @@ def bauen():
             'PY=python/bin/python3\n"$PY" architools_update.py\n'
             '"$PY" architools_app.py "$@" || { echo; read -r -p "Fehler - Enter ..." _; }\n')
         os.chmod(p, 0o755)
+    schlank(prog)
     print(f"Paket gebaut in {time.time() - t0:.0f} s", flush=True)
     return sysname, ziel, prog, py
+
+
+def schlank(prog):
+    """Entfernt, was zur Laufzeit nie gebraucht wird (Tests der Bibliotheken, Beispieldaten, Tcl/Tk, IDLE, Python-Tests, Zwischenspeicher
+    der Installation). Das Paket wird so kleiner, das Programm läuft unverändert; der Rauchtest danach prüft das."""
+    vorher = _groesse(prog)
+    py = os.path.join(prog, "python")
+    weg = []
+    for r, ds, _ in os.walk(py):
+        in_sp = "site-packages" in r.replace("\\", "/")
+        for d in ds:
+            if in_sp and d in ("tests", "test"):                           # Tests der Bibliotheken
+                weg.append(os.path.join(r, d))
+            elif not in_sp and d in ("test", "idlelib", "tkinter", "turtledemo", "lib2to3"):   # Pythons Tests, IDLE, Tk-Oberfläche
+                weg.append(os.path.join(r, d))
+            elif d == "sample_data" and os.path.basename(r) == "mpl-data":
+                weg.append(os.path.join(r, d))
+            elif not in_sp and (d in ("tcl", "tk") or d.startswith(("tcl8", "tk8"))):
+                weg.append(os.path.join(r, d))
+    for pfad in {w for w in weg if os.path.exists(w)}:
+        shutil.rmtree(pfad, ignore_errors=True)
+    for f in glob.glob(os.path.join(py, "**", "*"), recursive=True):
+        n = os.path.basename(f).lower()
+        if n in ("_tkinter.pyd", "tcl86t.dll", "tk86t.dll", "_tkinter.so") or re.match(r"lib(tcl|tk)\d", n) or n.endswith(".pyi"):
+            try:
+                os.remove(f)
+            except OSError:
+                pass
+    print(f"Schlank gemacht: {vorher:.0f} MB -> {_groesse(prog):.0f} MB", flush=True)
+
+
+def _groesse(pfad):
+    n = 0
+    for r, _, fs in os.walk(pfad):
+        for f in fs:
+            try:
+                n += os.path.getsize(os.path.join(r, f))
+            except OSError:
+                pass
+    return n / 1e6
 
 
 def packen(sysname, ziel):
@@ -119,13 +160,13 @@ def packen(sysname, ziel):
     if os.path.exists(out):
         os.remove(out)
     if os.name == "nt":
-        with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+        with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
             for r, _, fs in os.walk(ziel):
                 for f in fs:
                     voll = os.path.join(r, f)
                     z.write(voll, os.path.relpath(voll, DIST))
     else:                                                     # zip erhält Symlinks und Ausführrechte
-        run(["zip", "-r", "-y", "-q", out, NAME], cwd=DIST)
+        run(["zip", "-r", "-y", "-q", "-9", out, NAME], cwd=DIST)
     print("ZIP:", out, round(os.path.getsize(out) / 1e6), "MB", flush=True)
     return out
 

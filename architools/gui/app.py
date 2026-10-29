@@ -13,8 +13,8 @@ from .werkzeuge import Werkzeuge
 ABLAUF = [("start", "1 · Start", "flag"), ("gebiet", "2 · Gebiet", "map"),
           ("einst", "3 · Einstellungen", "tune"), ("export", "4 · Vorschau & Export", "view_in_ar")]
 WERKZEUGE = [("layout", "Lasercut-Layout", "grid_view"), ("druck3d", "3D-Druck-Layout", "view_in_ar"),
-             ("bib", "Materialbibliothek", "inventory_2"), ("quellen", "Quellen", "menu_book"),
-             ("prog", "Einstellungen", "settings")]
+             ("bib", "Materialbibliothek", "inventory_2"), ("prog", "Einstellungen", "settings"),
+             ("quellen", "Quellen", "menu_book")]
 
 
 def seite():
