@@ -48,6 +48,7 @@ class Werkzeuge:
                         ui.number("Exemplare", min=1, step=1).bind_value(w, "anzahl").classes("w-28")
                     ui.select({"schneiden": "andere Linien schneiden", "ignorieren": "andere Linien ignorieren"},
                               label="Linien ohne Werkstattfarbe").bind_value(w, "unbekannt").classes("w-72")
+                self._zusatz_layout(w)
                 with karte("Material und Platte", OCKER):
                     self.me.material_format(self.cfg["laser"])
                 with karte("Ausgabe", INK):
@@ -65,14 +66,26 @@ class Werkzeuge:
                 fs.set_visibility(False)
         self.lauf_l = Lauf(logel, [knopf], fs)
 
+    def _zusatz_layout(self, w):
+        """Karten der Zusatzmodule im Lasercut-Layout (z. B. „Rasterlaser-Bild einpassen“)"""
+        from types import SimpleNamespace
+        from .. import zusatz as _z
+        from .stil import TERRA, ausgrauen
+        h = SimpleNamespace(karte=karte, hinweis=hinweis, feld_pfad=feld_pfad, ausgrauen=ausgrauen, TERRA=TERRA, OCKER=OCKER,
+                            SCHIEFER=SCHIEFER, SALBEI=SALBEI, GRAU=GRAU, AKZENT=AKZENT, waehlen=waehlen)
+        _z.rufe("gui_layout", ui, w, h)
+
     async def _layout_start(self):
+        from .. import zusatz as _z
         from ..modell import layout as LY
         w = copy.deepcopy(self.cfg["werkzeuge"]["layout"])
-        if not w["dateien"]:
+        zus = any(_z.rufe("layout_hat_teile", w))
+        if not w["dateien"] and not zus:
             ui.notify("Bitte Dateien angeben", type="warning")
             return
         if not w.get("ausgabe_ordner"):
-            w["ausgabe_ordner"] = os.path.join(os.path.dirname(w["dateien"][0]), "lasercut")
+            w["ausgabe_ordner"] = os.path.join(os.path.dirname(w["dateien"][0]), "lasercut") if w["dateien"] else \
+                os.path.join(os.path.expanduser("~"), "ZachariasTools_Lasercut")
         cfg = copy.deepcopy(self.cfg)
         r = await self.lauf_l.starten(lambda w, cfg, log: LY.layout(w, cfg, log), w, cfg)
         if r:

@@ -15,6 +15,10 @@ Suchorte (in dieser Reihenfolge): Umgebungsvariable ZACHARIAS_ZUSATZ, Ordner `zu
     modell_raster_bild(cfg, welt_grenzen, ausdehnung_mm, zu_welt, log)
                                           Bild als Rastergravur auf die Geländeschichten -> dict(region=Funktion Region->Polygone,
                                           teststreifen=[Teile]) oder None
+    gui_layout(ui, w, h)                  zusätzliche Karte im Werkzeug „Lasercut-Layout“ (w = Werkzeug-Einstellungen, h wie bei gui_laser)
+    layout_hat_teile(w)                   True, wenn das Modul im Lasercut-Layout eigene Teile beisteuert (dann sind Dateien kein Muss)
+    layout_teile(teile, w, cfg, log)      Lasercut-Layout: darf die gelesenen Teile ergänzen (z. B. Rastergravur eines Bildes) -> Liste
+                                          zusätzlicher Teile oder None
     LAENDER                               (Dict) Länderprofile wie in ifcmap_laender.PROFILE, z. B. {"sachsen": dict(name=..., epsg=..., ...)}
 
 Ein fehlerhaftes Modul bricht nie einen Lauf ab: der Fehler steht im Protokoll.

@@ -76,7 +76,8 @@ DEFAULTS = {
         "staerke_gemessen_mm": None,       # gemessene Stärke (Messschieber) – hat Vorrang
         "rand_mm": 3.0,                    # Werkstatt: 2–4 mm
         "abstand_mm": 2.0,                 # Abstand zwischen Teilen
-        "nesting_raster_mm": 1.0,          # kleiner = dichter, aber langsamer
+        "nesting_raster_mm": 1.0,          # (alt, nur noch ohne "anordnung")
+        "anordnung": "schnell",            # schnell | standard | gruendlich (siehe blatt.ANORDNUNG)
         "drehungen": [0, 90, 180, 270],
         "ringe_teilen": True,              # lange dünne Ringteile in Stücke teilen (packt dichter)
         "teilstueck_mm": 250.0,

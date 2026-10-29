@@ -112,10 +112,11 @@ class ModellEinst:
                 .bind_enabled_from(lc, "format", backward=frei).tooltip("Werkstatt: 2–4 mm Abstand zum Plattenrand")
             ui.number("Abstand Teile mm", min=0.5, step=0.5).bind_value(lc, "abstand_mm").classes("w-36") \
                 .bind_enabled_from(lc, "format", backward=frei)
-            ui.select({1.0: "Standard (1 mm)", 0.5: "dicht (0,5 mm, langsam)", 2.0: "schnell (2 mm)"},
-                      label="Nesting").bind_value(lc, "nesting_raster_mm").classes("w-44") \
-                .bind_enabled_from(lc, "format", backward=frei)
-        sperre = ui.label("Werkstatt-Laser: Rand, Abstand und Nesting sind auf die Werkstatt-Vorgaben festgelegt.") \
+            from ..modell.blatt import ANORDNUNG_TEXT
+            lc.setdefault("anordnung", "schnell")
+            ui.select(ANORDNUNG_TEXT, label="Anordnung auf den Platten").bind_value(lc, "anordnung").classes("min-w-[300px]") \
+                .tooltip("Schnell rechnet ein Vielfaches schneller und braucht selten mehr Platten; gründlich spart Material, dauert aber lange")
+        sperre = ui.label("Werkstatt-Laser: Rand und Abstand sind auf die Werkstatt-Vorgaben festgelegt.") \
             .classes("text-caption").style(f"color:{GRAU}")
         sperre.bind_visibility_from(lc, "format", backward=lambda f: f != "eigen")
 

@@ -4,7 +4,7 @@ Jede gewaehlte Karte wird fuer das Gebiet als PNG geladen und ueber die vorhande
 als eigene DXF mit DXF-IMAGE, PNG und World-File geschrieben - im selben Nullpunkt wie alle anderen Ausgaben.
 Die Karten sind nur Hintergruende zum Daruntermalen (Raster, nicht vektorisiert).
 Die Dienstadressen stammen aus den Metadaten von gdi.berlin.de; die Ebenennamen werden beim Laden per GetCapabilities
-ermittelt. Der Abruf selbst ist noch nicht gegen die Live-Dienste getestet.
+ermittelt. Bei Luftbildern wird mit einem Probebild geprüft, ob die Ebene wirklich ein Foto ist (nicht Befliegung/Blattschnitt).
 """
 import io
 import math
@@ -77,10 +77,84 @@ def ebenen_lesen(basis, ctx):
     return out
 
 
-def _gewaehlt(ebenen, wahl):
+# In Luftbild-Diensten liegen neben dem Orthofoto oft Hilfsebenen (Befliegungsgebiete, Blattschnitt, Bildflugdaten).
+# Wird so eine Ebene genommen, ist das "Luftbild" eine fast einfarbige Fläche (Rastergravur: lauter gleich dicke Linien).
+NICHT_FOTO = ("blatt", "schnitt", "kachel", "uebersicht", "übersicht", "bildflug", "befliegung", "flug", "datum", "mittelpunkt",
+              "grenze", "info", "index", "footprint", "umring", "cir", "infrarot", "beschrift", "label", "stand")
+FOTO_GUT = ("rgb", "dop", "ortho", "luftbild", "farb", "true")
+
+
+def _foto_rang(e):
+    t = (e[0] + " " + e[1]).lower()
+    if any(w in t for w in NICHT_FOTO):
+        return 2
+    return 0 if any(w in t for w in FOTO_GUT) else 1
+
+
+def kandidaten(ebenen, foto=True):
+    """Ebenen eines Dienstes, beste zuerst: mit EPSG:25833, bei Fotos Hilfsebenen (Blattschnitt, Befliegung, CIR) nach hinten."""
+    gut = [e for e in ebenen if e[2]] or ebenen
+    if foto:
+        gut = sorted(gut, key=_foto_rang)            # stabil: Reihenfolge des Dienstes bleibt innerhalb des Rangs
+    return [e[0] for e in gut]
+
+
+def foto_pruefen(im):
+    """Ist das geladene Bild ein Foto (und keine Übersichtskarte / einfarbige Fläche)? -> (ok, Beschreibung)"""
+    import numpy as np
+    a = np.asarray(im.convert("RGB")).astype(np.int16)
+    g = a.mean(axis=2)
+    st = float(g.std())
+    p2, p98 = (float(v) for v in np.percentile(g, [2, 98]))
+    _, anz = np.unique((g[::2, ::2] // 4).astype(np.int16), return_counts=True)   # Grauwerte in 64 Stufen (auch Schwarz-Weiß-Luftbilder)
+    dominant = float(anz.max()) / float(anz.sum())
+    text = "Streuung %.0f, Tonwerte %.0f-%.0f, %d Graustufen, häufigste %.0f %%" % (st, p2, p98, len(anz), dominant * 100)
+    ok = st >= 5 and (p98 - p2) >= 20 and len(anz) >= 12 and dominant < 0.5
+    return ok, text
+
+
+def probe(basis, ebene, rect, ctx, foto=True, px=256):
+    """Kleines Probebild (Gebietsmitte) einer Ebene -> (ok, Beschreibung). Spart den vollen Abruf falscher Ebenen."""
+    from PIL import Image
+    x0, y0, x1, y1 = rect
+    cx, cy, r = (x0 + x1) / 2, (y0 + y1) / 2, min(150.0, (x1 - x0) / 2, (y1 - y0) / 2)
+    u = _url(basis, SERVICE="WMS", VERSION="1.1.1", REQUEST="GetMap", LAYERS=ebene, STYLES="", SRS=EPSG,
+             BBOX="%.3f,%.3f,%.3f,%.3f" % (cx - r, cy - r, cx + r, cy + r), WIDTH=px, HEIGHT=px,
+             FORMAT="image/jpeg" if foto else "image/png", TRANSPARENT="FALSE")
+    roh, typ = _holen(u, ctx, 60)
+    if not typ.startswith("image/"):
+        return False, "kein Bild: " + roh[:120].decode("utf-8", "replace").replace("\n", " ")
+    return foto_pruefen(Image.open(io.BytesIO(roh)))
+
+
+def luftbild_suchen(dienste, rect, ctx, log=print):
+    """Dienste der Reihe nach (z. B. dop_2026, dop_2025 …): erste Ebene, deren Probebild wirklich ein Luftbild ist.
+    -> (basis, ebene) oder (None, None). Jede Entscheidung steht im Protokoll."""
+    for b in dienste:
+        kurz = b.rstrip("/").rsplit("/", 1)[-1]
+        try:
+            ebenen = ebenen_lesen(b, ctx)
+        except Exception as e:
+            log("    %s: nicht erreichbar (%s)" % (kurz, str(e)[:60]))
+            continue
+        for name in kandidaten(ebenen, True)[:4]:
+            try:
+                ok, text = probe(b, name, rect, ctx, True)
+            except Exception as e:
+                ok, text = False, "Fehler %s" % str(e)[:60]
+            if ok:
+                log("    %s, Ebene %s: Luftbild erkannt (%s)" % (kurz, name, text))
+                return b, name
+            log("    %s, Ebene %s: kein Luftbild (%s) - nächste" % (kurz, name, text))
+    return None, None
+
+
+def _gewaehlt(ebenen, wahl, foto=False):
     gut = [e for e in ebenen if e[2]] or ebenen
     if not gut:
         return []
+    if foto:
+        gut = sorted(gut, key=_foto_rang)
     if wahl == "alle":
         return [e[0] for e in gut]
     if wahl == "letzte":
@@ -123,21 +197,18 @@ def luftbild_fuer_gelaende(d, cfg, log=print):
     ctx = K.ssl_kontext(cfg.cafile, cfg.unsicher)
     rect = (d.xmin, d.ymin, d.xmax, d.ymax)
     name, dienste, wahl, foto = WMS_KATALOG["luftbild"]
-    fehler = []
-    for s in dienste:
-        basis = WMS_BASIS + s
+    log("  Luftbild suchen (neuester Jahrgang, der für das Gebiet ein echtes Orthofoto liefert):")
+    basis, ebene = luftbild_suchen([WMS_BASIS + s for s in dienste], rect, ctx, log)
+    if basis:
         try:
-            eb = _gewaehlt(ebenen_lesen(basis, ctx), wahl)
-            if not eb:
-                raise RuntimeError("keine Ebenen im Dienst")
-            im, W, H, px = bild_holen(basis, eb, rect, float(getattr(cfg, "luftbild_aufloesung", 0.5) or 0.5), True, ctx, log)
+            im, W, H, px = bild_holen(basis, [ebene], rect, float(getattr(cfg, "luftbild_aufloesung", 0.5) or 0.5), True, ctx, log)
             if max(W, H) > 4096:
                 im = im.resize((min(W, 4096), min(H, 4096)))
-            log("  Luftbild (%s): %d x %d Pixel, %.2f m je Pixel" % (s, im.size[0], im.size[1], px))
+            log("  Luftbild (%s, Ebene %s): %d x %d Pixel, %.2f m je Pixel" % (basis.rsplit("/", 1)[-1], ebene, im.size[0], im.size[1], px))
             return im, rect
         except Exception as e:
-            fehler.append("%s: %s" % (s, str(e)[:70]))
-    log("  HINWEIS: Luftbild nicht erreichbar oder ausserhalb des Dienstgebiets (%s) - Gelaende bleibt ohne Textur" % "; ".join(fehler[:3]))
+            log("  HINWEIS: Luftbild-Abruf fehlgeschlagen (%s)" % str(e)[:80])
+    log("  HINWEIS: kein Luftbild für das Gebiet gefunden - Gelaende bleibt ohne Textur")
     return None
 
 
@@ -175,7 +246,12 @@ def schreibe_wms(d, cfg, ordner, log=print, praefix=""):
             basis, ebenen, fehler = None, a["ebenen"], []
             for b in a["dienste"]:
                 try:
-                    if not ebenen:
+                    if not ebenen and a["foto"]:
+                        fb, fe = luftbild_suchen([b], rect, ctx, log)
+                        if not fb:
+                            raise RuntimeError("kein echtes Luftbild in diesem Dienst")
+                        eb = [fe]
+                    elif not ebenen:
                         el = ebenen_lesen(b, ctx)
                         eb = _gewaehlt(el, a["wahl"])
                         if not eb:

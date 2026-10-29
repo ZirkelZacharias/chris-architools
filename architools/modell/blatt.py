@@ -118,13 +118,25 @@ def restplatten(cfg):
     return out
 
 
+# Anordnung auf den Platten: Rechenraster (mm) und Zahl der probierten Reihenfolgen. Gröber/weniger = schneller, aber etwas mehr Material.
+ANORDNUNG = {"schnell": (2.0, 1), "standard": (1.0, 3), "gruendlich": (0.5, 3)}
+ANORDNUNG_TEXT = {"schnell": "schnell (2-mm-Raster, eine Reihenfolge)", "standard": "Standard (1 mm, drei Reihenfolgen)",
+                  "gruendlich": "gründlich (0,5 mm, spart Material, langsam)"}
+
+
+def anordnung(lc):
+    """-> (Raster mm, Reihenfolgen) laut Einstellung „anordnung“ (fehlt sie, z. B. in älteren Projekten: schnell)"""
+    return ANORDNUNG.get(lc.get("anordnung") or "schnell", ANORDNUNG["schnell"])
+
+
 def anordnen(teile, formate, cfg, log=print, filler=None, n_filler=0, fest=None):
     """Teile auf Platten verteilen. Rückgabe: Liste Platten dict(format, teile=[verschobene Teile])."""
     lc = cfg["laser"]
     items = [N.Item(i, t["poly"], lc.get("drehungen", [0, 90, 180, 270])) for i, t in enumerate(teile)]
+    res, tries = anordnung(lc)
     sheets, rest = N.nest(items, formate, float(lc.get("rand_mm", WERKSTATT["rand_mm"])),
-                          float(lc.get("abstand_mm", 2.0)), float(lc.get("nesting_raster_mm", 1.0)),
-                          log, "Laserplatte", filler=filler, n_filler=n_filler, fest=fest)
+                          float(lc.get("abstand_mm", 2.0)), res,
+                          log, "Laserplatte", filler=filler, n_filler=n_filler, fest=fest, tries=tries)
     out = []
     for si, s in enumerate(sheets, 1):
         drin = []

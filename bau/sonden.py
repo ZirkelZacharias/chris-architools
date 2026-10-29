@@ -117,7 +117,28 @@ def wms_sonde():
                     print(f"    GetMap {d}/{e} {fmt}: Fehler {str(ex)[:160]}")
 
 
+def luftbildsuche_live():
+    """Die Luftbildsuche des Programms (Probebild je Ebene) gegen die echten Dienste: welche Ebene wird je Katalogeintrag gewählt?"""
+    import os
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "architools", "kern"))
+    import ssl
+    import ifcmap_wms as WM
+    ctx = ssl.create_default_context()
+    print("\n=== Luftbildsuche des Programms (live, Betriebswerk Pankow) ===")
+    for k, (name, dienste, wahl, foto) in WM.WMS_KATALOG.items():
+        if not foto:
+            continue
+        print(f"  {k}: {name}")
+        b, e = WM.luftbild_suchen([WM.WMS_BASIS + s for s in dienste], (393550, 5826450, 393850, 5826750), ctx, print)
+        print(f"  -> {k}: {(b or '').rsplit('/', 1)[-1] or 'KEIN LUFTBILD'} / {e}")
+
+
 if __name__ == "__main__":
+    try:
+        luftbildsuche_live()
+    except Exception as e:
+        print("Luftbildsuche Fehler:", e)
     try:
         wms_sonde()
     except Exception as e:

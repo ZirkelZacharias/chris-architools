@@ -243,6 +243,11 @@ def layout(cfg_w, cfg, log=print):
         else:
             raise ValueError(f"Format nicht unterstützt: {p}")
         teile += teile_bilden(el, faktor, cfg_w.get("unbekannt", "schneiden"), log, f"D{i + 1}-")
+    from .. import zusatz
+    for extra in zusatz.rufe("layout_teile", teile, cfg_w, cfg, log, log=log):      # z. B. Rasterlaser-Bilder (Zusatzmodul)
+        teile += extra or []
+    if not teile:
+        raise ValueError("Keine Teile: Dateien angeben oder ein Bild einpassen")
     n = max(1, int(cfg_w.get("anzahl", 1)))
     import copy
     alle = [copy.copy(t) for _ in range(n) for t in teile]

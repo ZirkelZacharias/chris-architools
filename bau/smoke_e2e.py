@@ -84,12 +84,23 @@ p["modell"].setdefault("ebenen", {})["Gebäudenummern"] = "raster"
 p["modell"]["holz"]["rahmen"]["aktiv"] = True; p["modell"]["holz"]["podest"]["aktiv"] = True
 import ifcmap_wms as WM, io
 from PIL import Image
-_CAP = b'<WMT_MS_Capabilities version="1.1.1"><Capability><Layer><SRS>EPSG:25833</SRS><Layer><Name>x</Name><Title>x</Title></Layer></Layer></Capability></WMT_MS_Capabilities>'
+# Nachgebauter Dienst: erst eine Hilfsebene (einfarbige Befliegungsübersicht), dann die Bildebene "x" mit Struktur.
+# Die Hilfsebene hat absichtlich einen neutralen Namen: die Luftbildsuche muss sie am Probebild erkennen und überspringen.
+_CAP = (b'<WMT_MS_Capabilities version="1.1.1"><Capability><Layer><SRS>EPSG:25833</SRS>'
+        b'<Layer><Name>ebene_a</Name><Title>a</Title></Layer><Layer><Name>x</Name><Title>x</Title></Layer>'
+        b'</Layer></Capability></WMT_MS_Capabilities>')
+WMS_EBENEN = []
 def _wms_fake(url, ctx, timeout=90):
     if "GetCapabilities" in url:
         return _CAP, "text/xml"
     w = int(url.split("WIDTH=")[1].split("&")[0]); h = int(url.split("HEIGHT=")[1].split("&")[0])
-    b = io.BytesIO(); Image.new("RGB", (w, h), (120, 160, 200)).save(b, "PNG"); return b.getvalue(), "image/png"
+    ebene = url.split("LAYERS=")[1].split("&")[0]; WMS_EBENEN.append(ebene)
+    if ebene == "x":
+        yy, xx = np.mgrid[0:h, 0:w]
+        im = Image.fromarray(((np.sin(xx / 7.0) * np.cos(yy / 11.0) + 1) * 110 + np.random.default_rng(len(WMS_EBENEN)).normal(0, 12, (h, w))).clip(0, 255).astype("uint8")).convert("RGB")
+    else:
+        im = Image.new("RGB", (w, h), (120, 160, 200))
+    b = io.BytesIO(); im.save(b, "PNG"); return b.getvalue(), "image/png"
 WM._holen = _wms_fake
 u["gelaende_luftbild"] = True; u["luftbild_aufloesung"] = 2.0
 p["schnitt"]["seite"]="rechts"; p["ziel"]={"ordner":os.path.join(TMP,"ziel"),"name":"MeinExport"}
@@ -130,6 +141,8 @@ assert _ifcs, "keine IFC"
 _txt = open(_ifcs[0], encoding="utf-8", errors="ignore").read()
 assert "IFCINDEXEDTRIANGLETEXTUREMAP" in _txt and "IFCIMAGETEXTURE" in _txt, "IFC ohne Luftbild-Textur"
 assert [f_ for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f_ in fs_ if f_.endswith("_luftbild.jpg")], "Luftbild-Datei fehlt"
+assert any("ebene_a: kein Luftbild" in x for x in LOG) and any("Ebene x: Luftbild erkannt" in x for x in LOG), "Luftbildsuche hat die Hilfsebene nicht übersprungen"
+print("LUFTBILD-EBENENWAHL OK (Befliegungsübersicht übersprungen)")
 import ifcopenshell as _io
 _m = _io.open(_ifcs[0]); assert _m.by_type("IfcIndexedTriangleTextureMap"), "Texturzuordnung fehlt"
 print("LUFTBILD-TEXTUR IM IFC OK", len(_m.by_type("IfcIndexedTriangleTextureMap")))
