@@ -29,7 +29,9 @@ def _draw_viele(ax, geoms, **kw):
     from matplotlib.collections import PolyCollection
     ringe = [np.asarray(p.exterior.coords) for g in geoms for p in polys(g)]
     if ringe:
-        ax.add_collection(PolyCollection(ringe, facecolors=kw.get("facecolor", "#000"), edgecolors="none", linewidths=0), autolim=False)
+        # ab einigen Tausend Flächen als Bild in die Übersicht (die echten Vektoren stehen in DXF/SVG, hier zählt nur der Überblick)
+        ax.add_collection(PolyCollection(ringe, facecolors=kw.get("facecolor", "#000"), edgecolors="none", linewidths=0,
+                                         rasterized=len(ringe) > 3000), autolim=False)
 
 
 def _draw(ax, g, **kw):
@@ -38,6 +40,13 @@ def _draw(ax, g, **kw):
 
 
 def _lines(ax, ls, **kw):
+    ls = list(ls)
+    if len(ls) > 50:  # viele Linien: eine Sammlung statt je ein Plot-Aufruf
+        from matplotlib.collections import LineCollection
+        segs = [np.asarray(l.coords)[:, :2] for l in ls if not l.is_empty]
+        ax.add_collection(LineCollection(segs, colors=kw.get("color", "#000"), linewidths=kw.get("lw", 0.5),
+                                         rasterized=len(segs) > 3000), autolim=False)
+        return
     for l in ls:
         x, y = l.xy
         ax.plot(x, y, **kw)
