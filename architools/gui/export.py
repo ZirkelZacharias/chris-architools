@@ -31,7 +31,6 @@ def seite(p, speichern):
         with ui.tabs().classes("w-full").props("dense align=left") as tabs:
             t_uebersicht = ui.tab("Übersicht", icon="map")
             t_3d = ui.tab("3D-Ansicht", icon="view_in_ar")
-            t_eb = ui.tab("Ebenen", icon="layers")
             t_erg = ui.tab("Ergebnis", icon="inventory_2")
             t_log = ui.tab("Protokoll", icon="article")
         with ui.tab_panels(tabs, value=t_uebersicht).classes("w-full bg-transparent").style("flex:1 1 auto; min-height:0") \
@@ -46,9 +45,6 @@ def seite(p, speichern):
                     drei_d = ui.column().classes("w-full pr-3")
                     with drei_d:
                         hinweis("Die 3D-Ansicht erscheint nach „Vorschau laden“. Maus: drehen · Rad: zoomen · rechte Taste: verschieben.")
-            with ui.tab_panel(t_eb).classes("p-0 h-full"):
-                with ui.scroll_area().classes("h-full w-full"):
-                    eb_box = ui.column().classes("w-full pr-3")
             with ui.tab_panel(t_erg).classes("p-0 h-full"):
                 with ui.scroll_area().classes("h-full w-full"):
                     ergebnis = ui.column().classes("w-full pr-3")
@@ -189,8 +185,7 @@ def seite(p, speichern):
                 tabs.set_value(t_3d)
         return r
 
-    from .ebenen import ebenen_panel
-    ebenen_panel(eb_box, p, None)
+    from . import ebenen as _eb
 
     def vorschau_job(p, aus, test, log, prog):
         return L.umgebung_vorschau(p, aus, log, prog, test=test)
@@ -209,7 +204,7 @@ def seite(p, speichern):
         r = await lauf.starten(vorschau_job, p, aus, opt["test"])
         if r:
             d = r.pop("daten", None)
-            ebenen_panel(eb_box, p, d)
+            _eb.aktualisieren(p, d)
             uebersicht.clear()
             with uebersicht:
                 ui.label("Gebiet (gestrichelt: Nahbereich)").classes("text-subtitle2")

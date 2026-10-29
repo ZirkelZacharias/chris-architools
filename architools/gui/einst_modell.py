@@ -7,7 +7,18 @@ from nicegui import ui
 from ..modell import bibliothek as BIB
 from ..modell.laser import EBENEN_STANDARD
 from .stil import (AKTION_TEXT, AKZENT, GRAU, INK, MASSSTAEBE, OCKER, SALBEI, SCHIEFER, TERRA, ausgrauen, feld_pfad,
-                   hinweis, karte, mm_text)
+                   hinweis, mm_text)
+from .stil import karte as _karte
+
+_UNTER = {"an": False}
+
+
+def karte(titel, farbe=AKZENT, offen=True):
+    """Eigene Kachel – oder, innerhalb einer Sammel-Kachel (Gelände Lasercut), ein Unterabschnitt davon."""
+    if _UNTER["an"]:
+        return ui.expansion(titel, value=offen).classes("w-full").props("header-class=text-weight-medium dense") \
+            .style(f"border-left:3px solid {farbe}; background:#fafbfb")
+    return _karte(titel, farbe, offen)
 
 BAUWEISE_TEXT = {"voll": "voll (jede Schicht ganz)", "steckrippen": "hohl mit Steckrippen",
                  "stuetzkloetze": "hohl mit Stützklötzen"}
@@ -131,7 +142,7 @@ class ModellEinst:
     def _karte_bauweise(self):
         g = self.cfg["gelaende"]
         hohl = lambda b: b != "voll"
-        with karte("Gelände: Bauweise (hohl oder voll)", SALBEI):
+        with karte("Bauweise (hohl oder voll)", SALBEI):
             ui.select(BAUWEISE_TEXT, label="Bauweise").bind_value(g, "bauweise").classes("w-full")
             with ui.row().classes("gap-2"):
                 ui.number("Raster mm", step=10).bind_value(g, "rippen_abstand_mm").classes("w-28") \
@@ -159,7 +170,7 @@ class ModellEinst:
         g.setdefault("modus", "druck")
         ist_druck = lambda m: m == "druck"
         ist_laser = lambda m: m != "druck"
-        with karte("Gebäude: Form im Modell", AKZENT):
+        with karte("Gebäude im Modell (3D-Druck oder Laser) – alle Einstellungen", AKZENT):
             ui.select(self.GEB_MODI, label="Gebäude werden gebaut als").bind_value(g, "modus").classes("w-full")
             # --- Laserformen
             with ui.column().classes("w-full gap-1").bind_visibility_from(g, "modus", backward=ist_laser):
@@ -210,7 +221,7 @@ class ModellEinst:
     def _karte_restplatten(self):
         lc = self.cfg["laser"]
         rp = lc.setdefault("restplatten", [])
-        with karte("Lasercut: Restplatten verwerten", SALBEI, offen=bool(rp)):
+        with karte("Restplatten verwerten", SALBEI, offen=bool(rp)):
             hinweis("Angebrochene Platten (gleiches Material und gleiche Stärke wie oben) hier anlegen. Das Programm belegt sie zuerst "
                     "mit den passenden Teilen, alles Übrige kommt auf das oben gewählte Plattenformat.")
             box = ui.column().classes("w-full gap-1")
@@ -270,7 +281,7 @@ class ModellEinst:
             quellen = {k: v for k, v in _WM.WMS_NAMEN.items() if not k.startswith("ua_")}
         except Exception:
             quellen = {"luftbild": "Luftbild (Berlin)"}
-        with karte("Lasercut: Rastergravur eines Bildes (experimentell)", TERRA, offen=False):
+        with karte("Rastergravur eines Bildes (experimentell)", TERRA, offen=False):
             sw = ui.checkbox("Luftbild / Bild als Rastergravur auf die Geländeschichten").bind_value(rb, "aktiv")
             box = ui.column().classes("w-full gap-1")
             with box:
@@ -433,34 +444,46 @@ class ModellEinst:
             regeln.append((col, wann))
             return col
 
+        teile = {}
         with ui.column().classes("w-full gap-3") as wurzel:
-            with abschnitt(lambda: ausg.get("laser") or ausg.get("druck")):
+            with abschnitt(lambda: ausg.get("laser") or ausg.get("druck")) as a_daten:
                 self._karte_daten()
-            with abschnitt(lambda: ausg.get("laser")):
-                with karte("Lasercut: Material und Platte", OCKER):
-                    self.material_format(cfg["laser"])
-                    self.lbl_schicht2 = ui.label("").classes("text-body2").style(f"color:{AKZENT}")
-                self._karte_restplatten()
-                self._karte_raster()
-                self._karte_bauweise()
-                with karte("Lasercut: Was wird geritzt, graviert, geschnitten?", SCHIEFER):
-                    self._ebenen_tabelle()
-                with karte("Lasercut: Feineinstellungen", GRAU, offen=False):
-                    g = cfg["gelaende"]
-                    with ui.row().classes("gap-2"):
-                        ui.number("Min. Stegbreite Gelände mm").bind_value(g, "min_breite_mm").classes("w-56")
-                        ui.number("Min. Inselfläche mm²").bind_value(g, "min_flaeche_mm2").classes("w-48")
-                        ui.number("DGM glätten m").bind_value(cfg["dgm"], "glaettung_m").classes("w-40")
-                    ui.checkbox("Gebäude auf höheren Schichten aussparen (stehen eben)").bind_value(g, "gebaeude_aussparen")
-                    ui.checkbox("lange dünne Ringe teilen (packt dichter)").bind_value(cfg["laser"], "ringe_teilen")
-                    ui.checkbox("zusätzlich DXF (Kontrolle in Archicad)").bind_value(cfg["laser"], "ausgabe_dxf")
-            with abschnitt(lambda: ausg.get("laser") or ausg.get("druck")):
+            teile["modell_daten"] = a_daten
+            # Alles zum Gelände-Lasercut in EINER Kachel (Unterabschnitte zum Aufklappen)
+            with abschnitt(lambda: ausg.get("laser")) as a_laser:
+                with _karte("Gelände Lasercut – alle Einstellungen", OCKER):
+                    _UNTER["an"] = True
+                    try:
+                        with karte("Material und Platte", OCKER):
+                            self.material_format(cfg["laser"])
+                            self.lbl_schicht2 = ui.label("").classes("text-body2").style(f"color:{AKZENT}")
+                        self._karte_restplatten()
+                        self._karte_raster()
+                        self._karte_bauweise()
+                        with karte("Was wird geritzt, graviert, geschnitten?", SCHIEFER):
+                            self._ebenen_tabelle()
+                        with karte("Feineinstellungen", GRAU, offen=False):
+                            g = cfg["gelaende"]
+                            with ui.row().classes("gap-2"):
+                                ui.number("Min. Stegbreite Gelände mm").bind_value(g, "min_breite_mm").classes("w-56")
+                                ui.number("Min. Inselfläche mm²").bind_value(g, "min_flaeche_mm2").classes("w-48")
+                                ui.number("DGM glätten m").bind_value(cfg["dgm"], "glaettung_m").classes("w-40")
+                            ui.checkbox("Gebäude auf höheren Schichten aussparen (stehen eben)").bind_value(g, "gebaeude_aussparen")
+                            ui.checkbox("lange dünne Ringe teilen (packt dichter)").bind_value(cfg["laser"], "ringe_teilen")
+                            ui.checkbox("zusätzlich DXF (Kontrolle in Archicad)").bind_value(cfg["laser"], "ausgabe_dxf")
+                    finally:
+                        _UNTER["an"] = False
+            teile["laser"] = a_laser
+            with abschnitt(lambda: ausg.get("laser") or ausg.get("druck")) as a_holz:
                 self._karte_holz()
-            with abschnitt(lambda: ausg.get("druck")):
+            teile["holz"] = a_holz
+            with abschnitt(lambda: ausg.get("druck")) as a_druck:
                 self._karte_gebaeude()
                 if not ausg.get("laser"):
                     with karte("Maßstab", TERRA):
                         hinweis("Der Maßstab steht auf der Seite „Gebiet“.")
+            teile["druck"] = a_druck
+        wurzel.teile = teile
         ui.timer(0.5, self._schicht_info)
 
         def aktualisieren():

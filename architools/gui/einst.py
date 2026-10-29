@@ -166,9 +166,10 @@ def hoehenlinien_karte(p):
     return wurzel
 
 
-SPRUNG = [("Formate", "Dateiformate"), ("Daten", "Daten"), ("IFC", "Archicad-IFC"), ("Pläne", "Lageplan und Schwarzplan"),
-          ("Informations-DWG", "Informations-DWG"), ("Zusatzpläne", "Zusatzpläne"), ("Modellbau", "Modell: Daten"),
-          ("Schnitt", "Geländeschnitt"), ("Höhenlinien", "Höhenlinien: Ausgabe"), ("Erweitert", "#erweitert-anker")]
+SPRUNG = [("Formate", "Dateiformate"), ("Daten", "Daten"), ("Modell-Daten", "Modell: Daten"), ("Ebenen", "Ebenen: welche"),
+          ("IFC", "Archicad-IFC"), ("Lageplan", "Lageplan und Schwarzplan"), ("Informations-DWG", "Informations-DWG"),
+          ("Gelände Lasercut", "Gelände Lasercut"), ("3D-Druck", "Gebäude im Modell"), ("Schnitt", "Geländeschnitt"),
+          ("Höhenlinien", "Höhenlinien: Ausgabe"), ("Erweitert", "#erweitert-anker")]
 
 
 def _springen(ziel):
@@ -177,6 +178,16 @@ def _springen(ziel):
           "if(el&&!el.classList.contains('q-expansion-item--expanded')){const h=el.querySelector('.q-item'); if(h)h.click();}}"
           "if(el)el.scrollIntoView({behavior:'smooth',block:'start'});})()") % ziel
     ui.run_javascript(js)
+
+
+def ebenen_karte(p):
+    """Auswahl der Ebenen (welche Teile in IFC und DXF) – gehört zu den Einstellungen; gefüllt, sobald Daten geladen sind."""
+    from . import ebenen
+    with ui.column().classes("w-full") as wurzel:
+        with karte("Ebenen: welche Teile in IFC und DXF", SCHIEFER, offen=False):
+            box = ui.column().classes("w-full")
+            ebenen.registrieren(box, p)
+    return wurzel
 
 
 def seite(p, wechsel=None):
@@ -191,17 +202,36 @@ def seite(p, wechsel=None):
             with leer:
                 ui.label("Noch nichts gewählt").classes("text-subtitle1")
                 hinweis("Wähle auf der Startseite aus, was am Ende herauskommen soll – hier erscheinen dann die passenden Einstellungen.")
-            voreinstellungen.karte_zeigen(p, ui.navigate.reload)
-            formate_karte(p)
-            einst_umgebung.seiten(p)
-            ModellEinst(p).seite()
-            sk = schnitt_karte(p)
-            hk = hoehenlinien_karte(p)
+            # Reihenfolge: erst alles, was nicht zu EINEM Export gehört, dann je gewähltem Export eine Kachel (wie in Schritt 1)
+            plaetze = {n: ui.column().classes("w-full gap-3") for n in
+                       ("allgemein", "ifc", "lageplan", "info", "laser", "druck", "schnitt", "hoehenlinien", "erweitert")}
+            with plaetze["allgemein"]:
+                voreinstellungen.karte_zeigen(p, ui.navigate.reload)
+            staging = ui.column().classes("w-full gap-3")
+            with staging:
+                fk = formate_karte(p)
+                eu = einst_umgebung.seiten(p)
+                me = ModellEinst(p).seite()
+                ek = ebenen_karte(p)
+                sk = schnitt_karte(p)
+                hk = hoehenlinien_karte(p)
+            ziel = [(fk, "allgemein"), (eu.teile.get("daten"), "allgemein"), (me.teile["modell_daten"], "allgemein"),
+                    (ek, "allgemein"), (eu.teile.get("allgemein"), "allgemein"), (eu.teile.get("zusatzplan"), "allgemein"),
+                    (me.teile["holz"], "allgemein"),
+                    (eu.teile.get("ifc"), "ifc"), (eu.teile.get("genauigkeit"), "ifc"),
+                    (eu.teile.get("lageplan"), "lageplan"), (eu.teile.get("lageplan_text"), "lageplan"),
+                    (eu.teile.get("info"), "info"),
+                    (me.teile["laser"], "laser"), (me.teile["druck"], "druck"), (sk, "schnitt"), (hk, "hoehenlinien"),
+                    (eu.teile.get("erweitert"), "erweitert"), (eu.teile.get("sonne"), "erweitert"), (eu.teile.get("weitere"), "erweitert")]
+            for el, name in ziel:
+                if el is not None:
+                    el.move(plaetze[name])
 
             def pruefen():
                 leer.set_visibility(not P.gewaehlt(p))
                 sk.set_visibility(bool(ausg.get("schnitt")))
                 hk.set_visibility(bool(ausg.get("hoehenlinien")))
+                ek.set_visibility(any(ausg.get(k) for k in ("ifc", "lageplan", "schwarzplan", "info_dwg")))
             ui.timer(0.4, pruefen)
             pruefen()
     if wechsel:

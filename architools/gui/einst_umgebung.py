@@ -65,15 +65,18 @@ def seiten(p):
     u = p["umgebung"]
     ausg = p["ausgaben"]
     regeln = []                       # (Element, Funktion) – Sichtbarkeit nach Auswahl
+    teile = {}                        # Name -> Abschnitt (die Seite „Einstellungen“ ordnet sie nach den gewählten Exports)
 
-    def abschnitt(wann):
+    def abschnitt(wann, name=None):
         col = ui.column().classes("w-full gap-3")
         regeln.append((col, wann))
+        if name:
+            teile[name] = col
         return col
 
     with ui.column().classes("w-full gap-3") as wurzel:
         # -------------------------------------------------- Gebiet und Daten (immer, wenn Umgebung gewählt)
-        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg")):
+        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "daten"):
             with karte("Koordinatensystem", AKZENT, offen=False) as k_koord:
                 hinweis("Größe von Gebiet, Nah- und Mittelbereich stellst du auf der Seite „Gebiet“ ein (dort siehst du sie in der Karte).")
                 _wahl("Koordinatensystem", KBS, u, "epsg")
@@ -101,7 +104,8 @@ def seiten(p):
                     feld_pfad("Bäume (GeoJSON)", u, "baum_dateien", mehrere=True, typen=("GeoJSON (*.geojson;*.json)",))
 
         # -------------------------------------------------- IFC
-        with abschnitt(_wenn_aus(p, "ifc")):
+        a_ifc = abschnitt(_wenn_aus(p, "ifc"), "ifc")
+        with a_ifc:
             with karte("Archicad-IFC – 3D-Modell", AKZENT):
                 _wahl("Gelände teilen nach", AUFTEILUNG, u, "aufteilung")
                 _wahl("Gebäude im Fernbereich", FERN, u, "fern_gebaeude")
@@ -166,7 +170,7 @@ def seiten(p):
                 ausgrauen(mk_in, mk)
 
         # -------------------------------------------------- Lageplan / Schwarzplan
-        with abschnitt(_wenn_aus(p, "lageplan", "schwarzplan", "ifc")):
+        with abschnitt(_wenn_aus(p, "lageplan", "schwarzplan", "ifc"), "allgemein"):
             with karte("Bürgersteige", SALBEI):
                 _wahl("Darstellung (Lageplan und IFC-Gelände)", BUERGERSTEIGE, u, "buergersteige")
                 _haken("Breite nach Straßenbreite: 2,0 / 3,0 / 4,0 m (Berliner Richtwerte)", u, "gehweg_auto")
@@ -175,7 +179,7 @@ def seiten(p):
                     _zahl("", u, "gehweg_breite", min=0.5, step=0.5, breite="w-20")
                     ui.label("m").classes("text-body2")
                 _haken("Bürgersteige auch im Fernbereich (Standard: nur im Nahbereich)", u, "gehweg_ueberall")
-        with abschnitt(_wenn_aus(p, "lageplan", "schwarzplan")):
+        with abschnitt(_wenn_aus(p, "lageplan", "schwarzplan"), "lageplan"):
             with karte("Lageplan und Schwarzplan", SCHIEFER):
                 with ui.column().classes("w-full gap-0") as lp:
                     ui.label("Lageplan").classes("text-subtitle2")
@@ -207,7 +211,7 @@ def seiten(p):
                 regeln.append((lp, lp_regel))
 
         # -------------------------------------------------- Lageplan-Beschriftung
-        with abschnitt(_wenn_aus(p, "lageplan")):
+        with abschnitt(_wenn_aus(p, "lageplan"), "lageplan_text"):
             with karte("Lageplan-Beschriftung", SCHIEFER, offen=False):
                 bt = _haken("Lageplan beschriften (jede Art auf eigener Ebene, Schrift 2,5 mm auf dem Papier)", u, "lp_text")
                 with ui.column().classes("w-full gap-0") as bt_in:
@@ -225,7 +229,7 @@ def seiten(p):
                 ausgrauen(bt_in, bt)
 
         # -------------------------------------------------- Informations-DWG
-        with abschnitt(_wenn_aus(p, "info_dwg")):
+        with abschnitt(_wenn_aus(p, "info_dwg"), "info"):
             with karte("Informations-DWG – alle Ebenen in einer Zeichnung", INK, offen=True):
                 _wahl("Ausgabe", DXF_MODI, u, "dxf_modus")
                 hinweis("Einzeldateien liegen im Unterordner dxf_ebenen und haben alle denselben Nullpunkt.")
@@ -267,20 +271,20 @@ def seiten(p):
                         "Abruf noch nicht gegen die Live-Dienste getestet. Karten liegen als Bild vor – bitte Quelle und Lizenz "
                         "(Geoportal Berlin) beim Veröffentlichen angeben.")
 
-        with abschnitt(_wenn_aus(p, "info_dwg", "lageplan", "schwarzplan")):
+        with abschnitt(_wenn_aus(p, "info_dwg", "lageplan", "schwarzplan"), "zusatzplan"):
             from . import zusatzplan
             zusatzplan.liste_karte(p)
 
         # -------------------------------------------------- Erweitert: selten gebrauchte Karten wandern hierher
-        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg")):
+        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "erweitert"):
             ui.label("Erweitert – selten gebraucht").classes("text-subtitle2 q-mt-md").style(f"color:{GRAU}").props("id=erweitert-anker")
             erweitert = ui.column().classes("w-full gap-3")
         k_koord.move(erweitert)
-        k_markant.move(erweitert)
+        k_markant.move(a_ifc)
         regeln.append((k_markant, _wenn_aus(p, "ifc")))
 
         # -------------------------------------------------- Sonnenbank-Flavour (Sonnenbahn)
-        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg")):
+        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "sonne"):
             with karte("Sonnenbank-Flavour", OCKER, offen=False):
                 sn = _haken("Sonnenbahn-Diagramm miterzeugen (IFC und DXF)", u, "sonne")
                 with ui.column().classes("w-full gap-1") as sn_in:
@@ -296,7 +300,7 @@ def seiten(p):
                 ausgrauen(sn_in, sn)
 
         # -------------------------------------------------- Genauigkeit und Erweitertes
-        with abschnitt(_wenn_aus(p, "ifc", "info_dwg")):
+        with abschnitt(_wenn_aus(p, "ifc", "info_dwg"), "genauigkeit"):
             with karte("Genauigkeit des Geländes", SCHIEFER, offen=False):
                 aktuell = next((n for n, v in GENAUIGKEIT.items()
                                 if (float(u.get("toleranz") or 0), float(u.get("toleranz_fern") or 0),
@@ -316,7 +320,7 @@ def seiten(p):
                 vor.on_value_change(setze)
                 hinweis("Schnell = kleine, rasch geschriebene IFC · Standard = guter Kompromiss · Fein = sehr genau (groß, langsam). "
                         "Toleranz = größte erlaubte Abweichung des Netzes vom DGM.")
-        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg")):
+        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "weitere"):
             with karte("Weitere Optionen", GRAU, offen=False):
                 _haken("Bäume nur im Nahbereich laden und ausgeben", u, "baeume_nur_nah")
                 _haken("2D-Pläne: in ALKIS fehlende Gebäude aus LoD2/OpenStreetMap ergänzen", u, "grundrisse_abgleich")
@@ -342,4 +346,5 @@ def seiten(p):
             el.set_visibility(bool(f()))
     ui.timer(0.4, aktualisieren)
     aktualisieren()
+    wurzel.teile = teile
     return wurzel

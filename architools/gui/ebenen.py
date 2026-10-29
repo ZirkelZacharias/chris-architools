@@ -162,3 +162,28 @@ def nutzung_panel(box, p, d, geaendert=None):
                           on_change=lambda e, t=text: aendern(t, e.value)).props("dense borderless").style("width:240px")
                 ui.label(str(n)).style("width:70px")
                 ui.label("%.2f" % ha).style("width:70px")
+
+
+# ---------------------------------------------------------------- Ebenen-Karte in den Einstellungen
+_BOX = {"box": None, "p": None, "d": None}
+
+
+def registrieren(box, p):
+    """Die Ebenen-Auswahl sitzt in den Einstellungen; nach Vorschau/Export wird sie mit den geladenen Daten gefüllt."""
+    _BOX.update(box=box, p=p)
+    if _BOX["d"] is None:
+        try:
+            from .. import laufen
+            _BOX["d"] = laufen._cache.get("d")             # schon geladene Daten (früherer Lauf in dieser Sitzung)
+        except Exception:
+            pass
+    ebenen_panel(box, p, _BOX["d"])
+
+
+def aktualisieren(p, d):
+    _BOX["d"] = d
+    if _BOX["box"] is not None:
+        try:
+            ebenen_panel(_BOX["box"], p, d)
+        except Exception:
+            pass
