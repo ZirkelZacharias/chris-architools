@@ -154,3 +154,7 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
 
 ## Build 8: Fehler im Aufräumen von Build 7 behoben (29.10. spät)
 - In Build 7 fehlten Vorschau und Ergebnis (2D und 3D leer): Beim Aufräumen waren die Datei-Routen `/datei` und `/bild/...` in `gui/stil.py` gelöscht worden. Sie werden nur über Dekoratoren (`@app.get`) angemeldet und erschienen dem Prüfwerkzeug deshalb als „ungenutzt“. Wiederhergestellt; der Smoke-Test prüft jetzt, dass die Routen vorhanden sind. Lehre: beim Entfernen „ungenutzter“ Funktionen Dekoratoren (Routen, Event-Handler) immer ausnehmen und die Oberfläche danach mit einem echten Export im Browser ansehen.
+
+## Zusatzmodule: gemeinsamer Bereich `zusatz.gemeinsam` (29.10.2026 spät)
+- `projekt.zusatz_gemeinsam(p)`: `umgebung.zusatz.gemeinsam` und `modell.gebaeude.zusatz.gemeinsam` sind dasselbe Objekt (wie beim Gebiet), nach dem Laden neu verknüpft. Anlass: Fassadenmodul 1.6 – die Liste eigener Fassadenfotos gilt für IFC und Modell gemeinsam.
+- Fassadenmodul 1.6 (nicht öffentlich): Mapillary ausgebaut (Wunsch des Nutzers); Fassadenfotos nur noch aus eigenen Aufnahmen mit Passpunkten (4 Ecken im Foto, 2 untere Ecken auf der Karte) → Homographie Wandebene → Foto, Zuordnung zu allen Wänden in der Linie der Kartenpunkte. Google Earth Enterprise geprüft und verworfen: Server-Software ohne Google-Daten.

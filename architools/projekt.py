@@ -99,6 +99,17 @@ def umgebung_standard():
     return out
 
 
+def zusatz_gemeinsam(p):
+    """Zusatzmodule: ein gemeinsamer Bereich „gemeinsam“ in den Umgebungs- und den Modellbau-Einstellungen (dasselbe Objekt, wie beim
+    Gebiet), z. B. für die Liste eigener Fassadenfotos, die für IFC und Modell gilt. Nach dem Laden (zwei gespeicherte Kopien) neu verknüpft."""
+    uz = p["umgebung"].setdefault("zusatz", {})
+    gz = p["modell"].setdefault("gebaeude", {}).setdefault("zusatz", {})
+    gem = uz.get("gemeinsam") or gz.get("gemeinsam") or {}
+    uz["gemeinsam"] = gem
+    gz["gemeinsam"] = gem
+    return gem
+
+
 def neues_projekt(name="Neues Projekt", ordner=None):
     modell = MC.default_config()
     ordner = ordner or os.path.join(os.path.expanduser("~"), "ArchItools", sicher(name))
@@ -120,6 +131,7 @@ def neues_projekt(name="Neues Projekt", ordner=None):
     p["modell"]["gebiet"] = p["gebiet"]                       # gemeinsam benutzt (gleiches Objekt)
     p["modell"]["quelle"] = "auto"
     p["modell"].setdefault("werkzeuge", {})
+    zusatz_gemeinsam(p)
     return p
 
 
@@ -138,6 +150,7 @@ def verbinden(p):
         p.setdefault(k, base[k])
     p["modell"]["gebiet"] = p["gebiet"]
     p["modell"]["projekt_name"] = sicher(p["name"])
+    zusatz_gemeinsam(p)
     return p
 
 
