@@ -20,6 +20,9 @@ Suchorte (in dieser Reihenfolge): Umgebungsvariable ZACHARIAS_ZUSATZ, Ordner `zu
     layout_teile(teile, w, cfg, log)      Lasercut-Layout: darf die gelesenen Teile ergänzen (z. B. Rastergravur eines Bildes) -> Liste
                                           zusätzlicher Teile oder None
     LAENDER                               (Dict) Länderprofile wie in ifcmap_laender.PROFILE, z. B. {"sachsen": dict(name=..., epsg=..., ...)}
+    WERKZEUGE                             (Liste) eigene Seiten in der linken Werkzeugleiste: je Eintrag ein Dict
+                                          {"schluessel": "videoscan", "titel": "Video → 3D", "icon": "videocam",
+                                           "seite": f(p, h)}  (p = Projekt, h = Hilfen der Oberfläche, siehe werkzeug_hilfen)
 
 Ein fehlerhaftes Modul bricht nie einen Lauf ab: der Fehler steht im Protokoll.
 """
@@ -102,4 +105,23 @@ def rufe(hook, *a, log=print, **k):
                 log("  HINWEIS: Zusatzmodul %s (%s) fehlgeschlagen: %s" % (n, hook, str(e)[:160]))
             except Exception:
                 pass
+    return out
+
+
+def werkzeuge():
+    """Seiten der Zusatzmodule für die linke Werkzeugleiste -> [dict(schluessel, titel, icon, seite, modul)].
+    Ungültige Einträge werden still übergangen; Schlüssel der eingebauten Werkzeuge sind gesperrt."""
+    vergeben = {"start", "gebiet", "einst", "export", "layout", "druck3d", "bib", "prog", "quellen"}
+    out = []
+    for n, m in module().items():
+        for w in (getattr(m, "WERKZEUGE", None) or []):
+            try:
+                k = "zusatz_" + str(w["schluessel"])
+                if k in vergeben or not callable(w.get("seite")):
+                    continue
+                vergeben.add(k)
+                out.append({"schluessel": k, "titel": str(w.get("titel") or w["schluessel"]),
+                            "icon": str(w.get("icon") or "extension"), "seite": w["seite"], "modul": n})
+            except (KeyError, TypeError):
+                continue
     return out

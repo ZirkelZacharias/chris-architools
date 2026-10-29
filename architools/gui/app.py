@@ -17,6 +17,17 @@ WERKZEUGE = [("layout", "Lasercut-Layout", "grid_view"), ("druck3d", "3D-Druck-L
              ("quellen", "Quellen", "menu_book")]
 
 
+def werkzeug_hilfen():
+    """Bausteine der Oberfläche für Zusatzmodul-Seiten (damit sie wie das übrige Programm aussehen)."""
+    from . import stil as S
+    from .ergebnis import ergebnis_zeigen
+    return {"karte": S.karte, "hinweis": S.hinweis, "hinweis_info": S.hinweis_info, "feld_pfad": S.feld_pfad,
+            "ausgrauen": S.ausgrauen, "Lauf": S.Lauf, "szene3d": S.szene3d, "url": S.url, "waehlen": S.waehlen,
+            "oeffnen": S.oeffnen, "ergebnis_zeigen": ergebnis_zeigen, "en_zu_ll": S.en_zu_ll, "ll_zu_en": S.ll_zu_en,
+            "HOEHE": S.HOEHE, "AKZENT": S.AKZENT, "TERRA": S.TERRA, "OCKER": S.OCKER, "SALBEI": S.SALBEI,
+            "SCHIEFER": S.SCHIEFER, "INK": S.INK, "GRAU": S.GRAU, "LINIE": S.LINIE, "NATIVE": S.NATIVE}
+
+
 def seite():
     for el in (ui.input, ui.number, ui.select):
         el.default_props("dense")
@@ -133,8 +144,15 @@ def seite():
             knopf = ui.button(icon="chevron_right", on_click=umschalten).props("flat round dense color=white") \
                 .tooltip("Werkzeuge ein-/ausklappen")
             ui.label("Werkzeuge").classes("text-caption text-uppercase").style("color:#9fb0bf; letter-spacing:.08em; white-space:nowrap")
+        try:                                          # Zusatzmodule dürfen eigene Werkzeuge einhängen (vor „Einstellungen“)
+            from .. import zusatz as _zus
+            plug = _zus.werkzeuge()
+        except Exception:
+            plug = []
+        eintraege = [w for w in WERKZEUGE if w[0] not in ("prog", "quellen")] + \
+            [(w["schluessel"], w["titel"], w["icon"]) for w in plug] + [w for w in WERKZEUGE if w[0] in ("prog", "quellen")]
         with ui.list().props("dense").classes("w-full"):
-            for k, t, ic in WERKZEUGE:
+            for k, t, ic in eintraege:
                 it = ui.item(on_click=lambda k=k: wechsel(k)).props("clickable").style("color:#dbe3ea")
                 with it:
                     with ui.item_section().props("avatar").style("min-width:34px"):
@@ -171,6 +189,14 @@ def seite():
             quellen_seite.seite()
         with ui.tab_panel("prog").classes("py-2"):
             wz.seite_einstellungen()
+        for w in plug:
+            with ui.tab_panel(w["schluessel"]).classes("py-2"):
+                try:
+                    w["seite"](p, werkzeug_hilfen())
+                except Exception as e:                # ein kaputtes Zusatzmodul legt nie das Programm lahm
+                    import traceback
+                    ui.label(f"Zusatzmodul „{w['modul']}“ konnte seine Seite nicht aufbauen: {e}").classes("text-negative")
+                    ui.label(traceback.format_exc()[-1500:]).classes("text-caption").style("white-space:pre-wrap; font-family:monospace")
     eier.fuss()
     assistent.start(p)
     ui.timer(12, lambda: sp(True) if p.get("_pfad") else None)
