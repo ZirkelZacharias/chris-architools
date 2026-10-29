@@ -56,7 +56,72 @@ def zusammenfassen(fc, titel):
             print(f"    {k}: {len(c)} verschiedene Werte, z. B. {list(c)[:4]}")
 
 
+def wms_sonde():
+    """Luftbild-Dienste: welche Ebenen gibt es, und was liefert ein Probebild am Betriebswerk Pankow (Statistik)?
+    Hintergrund: Die Rastergravur ergab gleichförmige Linien – Verdacht: falsche Ebene (Übersicht statt Orthofoto)."""
+    import io
+    import xml.etree.ElementTree as ET
+    try:
+        import numpy as np
+        from PIL import Image
+    except Exception as e:
+        print("WMS-Sonde: numpy/PIL fehlen", e)
+        return
+    wbasis = "https://gdi.berlin.de/services/wms/"
+    bb = (393550, 5826450, 393850, 5826750)             # 300 x 300 m um den Ringlokschuppen
+    dienste = ["dop_%d" % j for j in range(2026, 2017, -1)] + ["luftbild_1998_05", "luftbild_1953_22", "luftbild_1928_04"]
+    print("\n=== WMS-Sonde Luftbilder (Betriebswerk Pankow, 300 x 300 m, 1 m/Pixel) ===")
+    for d in dienste:
+        try:
+            x = holen(wbasis + d + "?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.1.1", 60)
+        except Exception as e:
+            print(f"  {d}: GetCapabilities Fehler {str(e)[:100]}")
+            continue
+        root = ET.fromstring(x)
+        lok = lambda t: t.rsplit("}", 1)[-1]
+        ebenen = []
+
+        def lauf(k, tiefe):
+            name = next((c.text for c in k if lok(c.tag) == "Name" and c.text), None)
+            titel = next((c.text for c in k if lok(c.tag) == "Title" and c.text), "")
+            abstr = next((c.text for c in k if lok(c.tag) == "Abstract" and c.text), "")
+            kinder = [c for c in k if lok(c.tag) == "Layer"]
+            srs = sorted({w for c in k if lok(c.tag) in ("SRS", "CRS") and c.text for w in c.text.split()})
+            print(f"  {d}: {'  ' * tiefe}Ebene name={name!r} titel={titel!r} blatt={not kinder} srs25833={'EPSG:25833' in srs} "
+                  f"abstract={abstr[:120]!r}")
+            if not kinder and name:
+                ebenen.append(name)
+            for c in kinder:
+                lauf(c, tiefe + 1)
+        for cap in root.iter():
+            if lok(cap.tag) == "Capability":
+                for l in cap:
+                    if lok(l.tag) == "Layer":
+                        lauf(l, 0)
+                break
+        for e in ebenen[:6]:
+            for fmt in ("image/jpeg", "image/png"):
+                u = (wbasis + d + "?" + urllib.parse.urlencode({"SERVICE": "WMS", "VERSION": "1.1.1", "REQUEST": "GetMap", "LAYERS": e, "STYLES": "",
+                     "SRS": "EPSG:25833", "BBOX": ",".join(map(str, bb)), "WIDTH": 300, "HEIGHT": 300, "FORMAT": fmt, "TRANSPARENT": "FALSE"}, safe=",:"))
+                try:
+                    roh = holen(u, 90)
+                    im = Image.open(io.BytesIO(roh)).convert("RGB")
+                    a = np.asarray(im).astype(float)
+                    g = a.mean(axis=2)
+                    farben, anz = np.unique(a.reshape(-1, 3).astype(int), axis=0, return_counts=True)
+                    print(f"    GetMap {d}/{e} {fmt}: {im.size}, Grau Mittel {g.mean():.0f} Streuung {g.std():.1f} P2/P98 "
+                          f"{np.percentile(g, 2):.0f}/{np.percentile(g, 98):.0f}, {len(np.unique(g.astype(int)))} Grauwerte, "
+                          f"{len(farben)} Farben, häufigste Farbe {tuple(farben[anz.argmax()])} = {anz.max() / anz.sum() * 100:.0f} %, "
+                          f"weiß {np.mean(g > 250) * 100:.0f} %")
+                except Exception as ex:
+                    print(f"    GetMap {d}/{e} {fmt}: Fehler {str(ex)[:160]}")
+
+
 if __name__ == "__main__":
+    try:
+        wms_sonde()
+    except Exception as e:
+        print("WMS-Sonde Fehler:", e)
     for d in DIENSTE:
         print(f"\n=== {d} ===")
         try:
