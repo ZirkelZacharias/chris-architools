@@ -51,6 +51,7 @@ def szene_laden(p, box, log):
     cfg["gebiet"] = {"mitte_en": [(x0 + x1) / 2, (y0 + y1) / 2], "drehung_grad": 0.0,
                      "breite_cm": (x1 - x0) * 100 / 1000.0, "hoehe_cm": (y1 - y0) * 100 / 1000.0}
     cfg["_basis"] = p["ordner"]
+    cfg["_nur_dgm"] = True                       # Hoehenlinien brauchen nur das Gelaende
     u = p.get("umgebung", {})
     cfg["netz"] = {"cafile": u.get("cafile", "") or "", "unsicher": bool(u.get("unsicher", False))}
     return pipeline.szene_laden(cfg, log)

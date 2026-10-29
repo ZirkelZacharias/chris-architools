@@ -78,6 +78,10 @@ def szene_laden(cfg, log=print):
     r = rahmen(cfg)
     if q in ("auto", "ifcmap"):
         from . import ifcmap_adapter as A
+        if q == "auto" and cfg.get("_nur_dgm"):
+            sz = A.dgm_aus_koordinaten(cfg, _bbox_rahmen(r), log)
+            sz["rahmen"] = r
+            return sz
         if q == "auto":
             sz = A.szene_aus_koordinaten(cfg, _bbox_rahmen(r), log)
             sz["rahmen"] = r

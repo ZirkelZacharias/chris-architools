@@ -2279,7 +2279,7 @@ def lade(cfg, log=print, prog=_noop):
     d.kacheln = kp
     if not kp["aktiv"] and d.land in (None, "keins", "berlin"):
         log("  (Kachelpruefung nur fuer Berliner Daten - bitte selbst darauf achten, dass die Dateien das Gebiet abdecken)")
-    for n in kp["dgm_fehlt"]:
+    for n in (kp["dgm_fehlt"] if cfg.mit_gelaende else []):
         log("  FEHLT: DGM-Kachel %s (Gelaende dort unvollstaendig)" % n)
     for n in kp["lod_fehlt"]:
         log("  FEHLT: LoD2-Kachel %s (Gebaeude dort unvollstaendig)" % n)

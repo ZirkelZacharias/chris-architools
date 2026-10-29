@@ -195,6 +195,25 @@ def _laeuft_schon(port):
         return False
 
 
+def _wache_starten(port, sekunden=30):
+    """Meldet sich innerhalb von `sekunden` kein Fenster beim Server, öffnet sich die Weboberfläche im Browser."""
+    from nicegui import background_tasks
+
+    async def _wache():
+        import asyncio
+        await asyncio.sleep(sekunden)
+        try:
+            from nicegui import Client
+            verbunden = any(getattr(c, "has_socket_connection", False) for c in list(Client.instances.values()))
+        except Exception:
+            verbunden = True
+        if not verbunden:
+            print("Kein Programmfenster erschienen – die Weboberfläche öffnet sich im Browser.", flush=True)
+            import webbrowser
+            webbrowser.open(f"http://127.0.0.1:{port}/")
+    background_tasks.create(_wache(), name="fenster-wache")
+
+
 def start(native=None, port=None, show=True):
     if native is None:
         try:
@@ -232,6 +251,9 @@ def start(native=None, port=None, show=True):
     kw = dict(title=f"Zacharias Tools – {WASSERZEICHEN}", reload=False, language="de", show_welcome_message=False,
               favicon="📐")
     if native:
-        ui.run(native=True, window_size=(1500, 950), port=port, **kw)
+        # Nur das Programmfenster öffnen (kein zusätzlicher Browser-Tab). Meldet sich innerhalb von 30 s kein Fenster beim Server, klappt das
+        # Fenster nicht (z. B. fehlende WebView-Komponenten): dann öffnet sich die Weboberfläche im Browser.
+        _app.on_startup(lambda: _wache_starten(port))
+        ui.run(native=True, show=False, window_size=(1500, 950), port=port, **kw)
     else:
         ui.run(port=port, show=show, **kw)

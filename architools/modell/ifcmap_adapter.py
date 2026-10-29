@@ -193,6 +193,53 @@ def szene_aus_koordinaten(cfg, rahmen, log=print):
     return _szene(K, kc, cfg, log)
 
 
+def dgm_aus_koordinaten(cfg, rahmen, log=print):
+    """Schlanker Weg nur fuers Gelaende (Hoehenlinien): DGM1-Kacheln pruefen/holen und lesen -
+    ohne LoD2, ALKIS, Baeume, OSM. -> Szene mit "dgm" (und leeren Listen sonst)"""
+    K = kern(cfg)
+    (e, n), b, h = rahmen
+    nz = cfg.get("netz", {})
+    kc = K.Config(mitte_en=(e, n), epsg=25833, breite=b, hoehe=h, nah_breite=b, nah_hoehe=h,
+                  online_dgm=True, online_lod2=False, land="auto", quelle="auto", fern_gebaeude="keine",
+                  lod2_luecken=False, markant=False, extra=[], alkis_zusatz=False, dxf_plaene=[],
+                  ifc=False, dxf2d=False, mit_gelaende=True, baeume_nur_nah=False,
+                  cafile=nz.get("cafile", "") or "", unsicher=bool(nz.get("unsicher", False)))
+    log(f"Gelaende laden (nur DGM1): Mitte {e:.0f} / {n:.0f}, {b:.0f} x {h:.0f} m")
+    import ifcmap_laender as L
+    kc, land = L.vorbereiten(kc, K, log)
+    ce, cn, xmin, xmax, ymin, ymax = K.rechteck(kc)
+    dgm = list(kc.dgm)
+    kp = K.kacheln_pruefen(kc)
+    if kp["aktiv"] and kc.epsg == 25833 and K.ist_berlin(kc) and kp["dgm_fehlt"]:
+        dn, _, _ = K.kacheln_online_holen(kc, kp, log)
+        dgm += dn
+    elif land not in (None, "berlin", "keins"):
+        class _D:
+            pass
+        dd = _D()
+        dd.xmin, dd.xmax, dd.ymin, dd.ymax, dd.ce, dd.cn, dd.land = xmin, xmax, ymin, ymax, ce, cn, land
+        dd.rect = shapely.geometry.box(xmin, ymin, xmax, ymax)
+        dgm = list(K.laender_kacheln(kc, dd, land, log, dgm=True, lod2=False).dgm)
+    pad = 30.0
+    keep, _ = K.dgm_filtern(dgm, (xmin - pad, ymin - pad, xmax + pad, ymax + pad), log)
+    teile = []
+    bb = (xmin - pad, xmax + pad, ymin - pad, ymax + pad)
+    for p in keep:
+        try:
+            a = K.lade_xyz(p, bb)
+            if a is not None and len(a):
+                teile.append(a)
+        except Exception as ex:
+            log(f"  DGM {os.path.basename(p)}: {ex}")
+    if not teile:
+        raise RuntimeError("Keine Gelaendedaten fuer das Gebiet (DGM-Kacheln fehlen)")
+    sz = {"quelle": "IFCmap", "extent": shapely.geometry.box(xmin, ymin, xmax, ymax),
+          "dgm": _punkte_zu_raster(np.vstack(teile)), "gebaeude": [], "baeume": [], "bloecke": [], "ebenen": []}
+    z = sz["dgm"]["z"]
+    log(f"  DGM: {z.shape[1]} x {z.shape[0]} Zellen, Hoehe {np.nanmin(z):.1f} - {np.nanmax(z):.1f} m")
+    return sz
+
+
 def _szene(K, kc, cfg, log):
     ic = cfg["ifcmap"]
     d = K.lade(kc, log=lambda s: log("  " + s))
