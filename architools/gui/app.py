@@ -4,7 +4,7 @@ import os
 from nicegui import ui
 
 from .. import VERSION
-from . import eier, einst, export, start as start_seite, stil, zustand as Z
+from . import eier, einst, export, quellen_seite, start as start_seite, stil, zustand as Z
 from .einst_modell import ModellEinst
 from .gebiet import Gebiet
 from .stil import AKZENT, BG, CSS, GRAU, INK, LINIE, NATIVE, OCKER, SCHIEFER, TERRA, TEXT, WASSERZEICHEN
@@ -13,7 +13,8 @@ from .werkzeuge import Werkzeuge
 ABLAUF = [("start", "1 · Start", "flag"), ("gebiet", "2 · Gebiet", "map"),
           ("einst", "3 · Einstellungen", "tune"), ("export", "4 · Vorschau & Export", "view_in_ar")]
 WERKZEUGE = [("layout", "Lasercut-Layout", "grid_view"), ("druck3d", "3D-Druck-Layout", "view_in_ar"),
-             ("bib", "Materialbibliothek", "inventory_2"), ("prog", "Einstellungen", "settings")]
+             ("bib", "Materialbibliothek", "inventory_2"), ("quellen", "Quellen", "menu_book"),
+             ("prog", "Einstellungen", "settings")]
 
 
 def seite():
@@ -165,6 +166,8 @@ def seite():
             wz.seite_druck()
         with ui.tab_panel("bib").classes("py-2"):
             wz.seite_bibliothek()
+        with ui.tab_panel("quellen").classes("py-2"):
+            quellen_seite.seite()
         with ui.tab_panel("prog").classes("py-2"):
             wz.seite_einstellungen()
     eier.fuss()
