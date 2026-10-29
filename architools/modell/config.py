@@ -85,7 +85,7 @@ DEFAULTS = {
         # [{"name": "Rest 1", "b_mm": 400, "h_mm": 300, "anzahl": 1}, ...]  (gleiches Material und gleiche Stärke)
         "restplatten": [],
         # Rahmen ums Modell, aus demselben Material mitgelasert (je Schicht vier Leisten, Stapel = Höhe des Modells)
-        "rahmen": {"aktiv": False, "breite_mm": 15.0},
+        "rahmen": {"aktiv": False, "ueberstand_mm": 0.0},
         # Höhenlinien auf die Platten: Hauptlinien graviert, Nebenlinien geritzt (Standard aus)
         "hoehenlinien": {"aktiv": False, "aequidistanz_m": 1.0, "haupt_alle": 5, "haupt": "gravieren", "neben": "ritzen"},
     },

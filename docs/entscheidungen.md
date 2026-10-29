@@ -138,3 +138,7 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
 - Standort-Warnung: ein Plugin-Land ohne automatischen Download zeigt weiterhin einen Hinweis (nicht still „ok“).
 - Montageplan: Raster ab 3000 Flächen/Linien rasterisiert gezeichnet (Punktraster mit ~100k Punkten sonst Minuten).
 - Gesichtet, nicht eingebaut: leafmap (MIT; Notebook-Karten, nur als Ideenquelle), GeoServer (GPL-Server, kein Baustein), maplab ETH (Robotik-SLAM, nicht passend), LOD3_buildings (Forschungscode, Fotos -> LoD3).
+
+## Rahmen als vier stehende Wände (29.10.2026)
+- Der gelaserte Rahmen besteht nicht mehr aus Leisten je Schicht (220 Teile bei 55 Schichten), sondern aus **vier stehenden Wänden** aus demselben Material, so hoch wie das Modell (Plattenstärke = Dicke, optional Überstand oben). Wie die Steckrippen: flach gelasert, aufgestellt, in der 3D-Vorschau aufrecht. Lange Wände (unten/oben) laufen durch, kurze sitzen dazwischen; Wände über Plattenlänge werden geteilt.
+- Podest richtet sich nach dem Außenmaß (Modell + 2 × Spiel 0,5 mm + 2 × Plattenstärke). Einstellung `laser.rahmen = {aktiv, ueberstand_mm}`; `breite_mm` entfällt.

@@ -393,9 +393,13 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         rz = (lc.get("rahmen") or {})
         if rz.get("aktiv"):
             n_sch = 1 + max([p["layer"] for p in parts if not p.get("rippe")] or [0])
-            rt = L.rahmen_teile(extent_m.bounds, n_sch, float(rz.get("breite_mm") or 15.0))
+            rt = L.rahmen_teile(extent_m.bounds, n_sch * t, t, ueberstand_mm=float(rz.get("ueberstand_mm") or 0.0))
+            rippen_3d += [r["lage"] for r in rt if r.get("lage") is not None]
+            for r in rt:
+                r.pop("lage", None)
             parts = parts + rt
-            log(f"  Rahmen mitgelasert: {len(rt)} Leisten ({n_sch} Schichten x 4), {float(rz.get('breite_mm') or 15.0):.0f} mm breit")
+            log(f"  Rahmen mitgelasert: 4 stehende Wände aus demselben Material, {n_sch * t + float(rz.get('ueberstand_mm') or 0):.1f} mm hoch "
+                f"(Modellhöhe), Dicke {t:g} mm")
         for _ in range(2):
             parts = L.tile_parts(parts, formate, lc["rand_mm"], log, lc.get("ringe_teilen", True),
                                  float(lc.get("teilstueck_mm", 250)))
@@ -497,7 +501,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
     try:
         if (laser or druck) and ((cfg.get("holz") or {}).get("podest") or {}).get("aktiv"):
             from . import podest as PO
-            holz_res = PO.berechnen(cfg, modell_b, modell_h, len(P) * t)
+            holz_res = PO.berechnen(cfg, modell_b, modell_h, len(P) * t, t=t)
             holz_dateien = PO.schreiben(os.path.join(out, "holz"), name, holz_res, log)
     except Exception as e:
         log(f"  Hinweis: Holz (Rahmen/Podest) nicht berechnet ({e})")
@@ -514,7 +518,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         "n_druck": len(printable) if modus == "druck" else 0, "n_gebaeude_laser": len(printable) if modus != "druck" else 0, "n_gravur": sum(b["status"] == "gravur" for b in blds + blds_in),
         "n_platz": sum(b["status"] == "platzhalter" for b in blds + blds_in),
         "n_druckplatten": len(drucke), "n_stuetzen": len(stuetzen),
-        "n_rippen": sum(1 for p in parts if p.get("rippe")),
+        "n_rippen": sum(1 for p in parts if p.get("rippe") and not p.get("rahmen")),
         "volumen_cm3": vol / 1000.0,
         "filament_g": vol / 1000.0 * fil["dichte_g_cm3"] * cfg["druck"].get("fuellgrad_effektiv", 0.35),
         "material": f"{sorte} {mm(t)} mm", "bauweise": L.bauweise(cfg),

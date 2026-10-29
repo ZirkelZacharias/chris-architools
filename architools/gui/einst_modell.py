@@ -429,16 +429,18 @@ class ModellEinst:
                             self.lbl_schicht2 = ui.label("").classes("text-body2").style(f"color:{AKZENT}")
                         self._karte_restplatten()
                         with karte("Rahmen ums Modell mitlasern", OCKER, offen=False):
-                            rz = cfg["laser"].setdefault("rahmen", {"aktiv": False, "breite_mm": 15.0})
+                            rz = cfg["laser"].setdefault("rahmen", {"aktiv": False, "ueberstand_mm": 0.0})
                             rz.setdefault("aktiv", False)
-                            rz.setdefault("breite_mm", 15.0)
-                            sw_r = ui.checkbox("Rahmen aus demselben Material mitlasern (je Schicht vier Leisten, so hoch wie das Modell)") \
+                            rz.setdefault("ueberstand_mm", 0.0)
+                            sw_r = ui.checkbox("Rahmen aus demselben Material mitlasern (vier stehende Wände, so hoch wie das Modell)") \
                                 .bind_value(rz, "aktiv")
                             b_r = ui.row().classes("gap-2 items-center")
                             with b_r:
-                                ui.number("Leistenbreite mm", min=5).bind_value(rz, "breite_mm").classes("w-40").tooltip("Breite von oben gesehen")
+                                ui.number("Überstand oben mm", min=0).bind_value(rz, "ueberstand_mm").classes("w-44") \
+                                    .tooltip("0 = Oberkante bündig mit der obersten Geländeschicht")
                             ausgrauen(b_r, sw_r)
-                            hinweis("Standard aus. Die langen Leisten laufen durch, die kurzen sitzen dazwischen; die Leisten liegen mit auf den Platten.")
+                            hinweis("Standard aus. Keine Schichten: vier flache Wände (zwei lange, zwei kurze), die aufgestellt und verklebt werden. "
+                                    "Die langen laufen durch, die kurzen sitzen dazwischen. Die Dicke ist die Plattenstärke; die Wände liegen mit auf den Platten.")
                         with karte("Höhenlinien auf die Platten ritzen/gravieren", OCKER, offen=False):
                             hz = cfg["laser"].setdefault("hoehenlinien", {"aktiv": False, "aequidistanz_m": 1.0, "haupt_alle": 5,
                                                                           "haupt": "gravieren", "neben": "ritzen"})

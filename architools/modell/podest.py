@@ -11,7 +11,7 @@ import os
 SPIEL = 0.5          # Luft zwischen Modellplatte und Rahmen je Seite
 
 
-def berechnen(cfg, modell_b, modell_h, stapel_hoehe):
+def berechnen(cfg, modell_b, modell_h, stapel_hoehe, t=1.0):
     """-> dict(teile=[...], rahmen=dict|None, podest=dict|None, hinweise=[...]).
     Ein Teil: dict(pos, name, stueck, laenge, breite, dicke, bemerkung)"""
     hc = cfg.get("holz") or {}
@@ -40,7 +40,7 @@ def berechnen(cfg, modell_b, modell_h, stapel_hoehe):
         if hl < stapel_hoehe - 0.01:
             hinweise.append(f"Rahmenleiste ({hl:.0f} mm hoch) ist niedriger als der Geländestapel ({stapel_hoehe:.0f} mm)")
     if lr.get("aktiv"):
-        bl = float(lr.get("breite_mm") or 15.0)
+        bl = float(t or 1.0)                                     # gelaserter Rahmen: vier stehende Wände in Plattenstärke
         aussen_b, aussen_h = modell_b + 2 * SPIEL + 2 * bl, modell_h + 2 * SPIEL + 2 * bl
         res["rahmen"] = {"innen": (modell_b + 2 * SPIEL, modell_h + 2 * SPIEL), "aussen": (aussen_b, aussen_h), "leiste": (bl, stapel_hoehe)}
     if pc.get("aktiv"):

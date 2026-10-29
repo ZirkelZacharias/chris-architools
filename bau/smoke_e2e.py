@@ -73,7 +73,7 @@ u["wms_karten"] = ["luftbild"]                      # Kartenbild (Dienst gestell
 u["geschosslinien"] = True; u["fenstermuster"] = True; u["lp_text"] = True                                                       # Lageplan-Beschriftung
 mg = p["modell"]["gebaeude"]
 mg.update(modus="falt", material="Bristolkarton", staerke_mm=0.5, lasche_mm=3.0, fenstermuster=True)       # Gebäude als Faltmodell (Laser)
-p["modell"]["laser"]["rahmen"] = {"aktiv": True, "breite_mm": 15.0}
+p["modell"]["laser"]["rahmen"] = {"aktiv": True, "ueberstand_mm": 0.0}
 p["modell"]["laser"]["hoehenlinien"] = {"aktiv": True, "aequidistanz_m": 1.0, "haupt_alle": 5, "haupt": "gravieren", "neben": "ritzen"}
 p["modell"]["laser"]["restplatten"] = [{"name": "Rest A", "b_mm": 400, "h_mm": 300, "anzahl": 1}]
 from PIL import Image
@@ -123,7 +123,7 @@ rp = [f for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f in fs_ if "Re
 assert rp, "Restplatten-PDF fehlt"
 lt = [f for r_, _, fs_ in os.walk(TMP) for f in fs_ if f.endswith("lageplan.dxf") or f.endswith("Lageplan.dxf")]
 print("GEBAEUDE-LASER, HOLZ, RESTPLATTEN OK")
-assert any("Rahmen mitgelasert" in x for x in LOG), "Laser-Rahmen wurde nicht erzeugt"
+assert any("Rahmen mitgelasert: 4 stehende Wände" in x for x in LOG), "Laser-Rahmen wurde nicht erzeugt"
 print("LASER-RAHMEN OK")
 _ifcs = [os.path.join(r_, f_) for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f_ in fs_ if f_.endswith(".ifc")]
 assert _ifcs, "keine IFC"

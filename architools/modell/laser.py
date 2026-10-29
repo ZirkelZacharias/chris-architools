@@ -343,18 +343,30 @@ def tile_parts(parts, formats, margin, log=print, split_sparse=True, sparse_len=
     return out
 
 
-def rahmen_teile(grenzen, n_schichten, breite_mm, spiel=0.5):
-    """Rahmen ums Modell als Laserteile: je Schicht vier Leisten (die langen laufen durch, die kurzen sitzen dazwischen).
-    grenzen = (x0, y0, x1, y1) des Modells in mm. -> Liste Teile (wie make_parts)."""
+def rahmen_teile(grenzen, hoehe_mm, t, spiel=0.5, ueberstand_mm=0.0, schrift=4.0):
+    """Rahmen ums Modell als VIER STEHENDE WÄNDE aus demselben Material (keine Schichten): so hoch wie das Modell, flach gelasert und
+    aufgestellt wie die Steckrippen. Die langen Wände (unten/oben) laufen durch, die kurzen (links/rechts) sitzen dazwischen.
+    grenzen = (x0, y0, x1, y1) des Modells in mm, hoehe_mm = Stapelhöhe, t = Plattenstärke. -> Liste Teile (wie Rippen: poly in (Länge, Höhe))."""
+    import numpy as _np
+    import trimesh
+    from .geomutil import place_text
     x0, y0, x1, y1 = grenzen
-    b = float(breite_mm)
     ix0, iy0, ix1, iy1 = x0 - spiel, y0 - spiel, x1 + spiel, y1 + spiel
-    leisten = [box(ix0 - b, iy0 - b, ix1 + b, iy0), box(ix0 - b, iy1, ix1 + b, iy1 + b),        # unten, oben (durchgehend)
-               box(ix0 - b, iy0, ix0, iy1), box(ix1, iy0, ix1 + b, iy1)]                         # links, rechts (dazwischen)
+    H = float(hoehe_mm) + float(ueberstand_mm)
+    lang, kurz = (ix1 - ix0) + 2 * t, (iy1 - iy0)
+    # (Kennung, Länge, Mitte x, Mitte y, Wand liegt in x-Richtung?)
+    seiten = [("RAHMEN_U", lang, (ix0 + ix1) / 2, iy0 - t / 2, True), ("RAHMEN_O", lang, (ix0 + ix1) / 2, iy1 + t / 2, True),
+              ("RAHMEN_L", kurz, ix0 - t / 2, (iy0 + iy1) / 2, False), ("RAHMEN_R", kurz, ix1 + t / 2, (iy0 + iy1) / 2, False)]
     out = []
-    for k in range(int(n_schichten)):
-        for i, r in enumerate(leisten, 1):
-            out.append({"layer": k, "nr": i, "poly": r, "ritzen": [], "gravieren": [], "hidden": None, "raster_mm2": 0.0, "rahmen": True})
+    for rid, L, cx, cy, inx in seiten:
+        q = box(0, 0, L, H)
+        try:
+            m = trimesh.creation.box(extents=[L, t, H] if inx else [t, L, H])
+            m.apply_translation([cx, cy, H / 2])
+        except Exception:
+            m = None
+        txt = place_text(q.buffer(-3), rid.replace("RAHMEN_", "R"), schrift)
+        out.append({"id": rid + "-1", "poly": q, "ritzen": [], "gravieren": txt, "layer": -1, "rippe": True, "rahmen": True, "lage": m})
     return out
 
 
