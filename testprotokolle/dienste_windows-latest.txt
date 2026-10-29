@@ -2,10 +2,12 @@
 Bundesland: Berlin
 Mitte (EPSG:25833): Ost 393694.5  Nord 5826537.7   Rechteck 300 x 300 m   E0=394000 N0=5827000
 Kacheln online holen (Berliner ATOM-Downloaddienst, Zwischenspeicher: C:\Users\runneradmin\.ifcmap\cache):
-    ... 6 MB von 17 MB
-    ... 14 MB von 17 MB
-  geladen: DGM1_392_5826.zip (17.3 MB, 14 s)
-  geladen: LoD2_393_5826.zip (1.9 MB, 2 s)
+    ... 4 MB von 17 MB
+    ... 8 MB von 17 MB
+    ... 13 MB von 17 MB
+    ... 17 MB von 17 MB
+  geladen: DGM1_392_5826.zip (17.3 MB, 23 s)
+  geladen: LoD2_393_5826.zip (1.9 MB, 3 s)
 Quelle fuer Nutzung/Baeume (automatisch): Berliner ALKIS und Baumbestand (amtlich)
 Netzabfragen (bahn, baum, fgn, nutz, osm_geb, zusatz) laufen im Hintergrund, waehrend Dateien gelesen werden.
 Gelaende:
@@ -17,11 +19,11 @@ Gebaeude (LoD2):
     (schnell gelesen: 326 Gebaeude geparst, 207 weit ausserhalb uebersprungen)
   LoD2 LoD2_33_393_5826_1_BE.xml: 19 Teile im Rechteck (0 s)
 Luecken im LoD2:
-  OpenStreetMap: overpass.openstreetmap.fr antwortete nach 1.3 s (41 Objekte)
+  OpenStreetMap: overpass.openstreetmap.fr antwortete nach 1.5 s (41 Objekte)
   OpenStreetMap: 41 Gebaeude/-teile im Rechteck
-    (16.5 s, im Hintergrund)
+    (16.7 s, im Hintergrund)
   WFS: https://gdi.berlin.de/services/wfs/alkis?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=alkis%3Agebaeudeflaechen&count=5000&startIndex=0
-    (0.3 s, im Hintergrund)
+    (0.5 s, im Hintergrund)
   WFS: https://gdi.berlin.de/services/wfs/ua_gebaeudehoehen?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=ua_gebaeudehoehen%3Agebaeudehoehen&count=5000&startIndex=0
   ua_gebaeudehoehen:gebaeudehoehen: 29 geladen, 29 im Rechteck (erstes Objekt bei Ost 393768 / Nord 5826606, Gebiet bei Ost 393694 / Nord 5826538)
   Umweltatlas Gebaeudehoehen: 29 Gebaeude mit Hoehe im Rechteck (Feature-Typ ua_gebaeudehoehen:gebaeudehoehen); Dachart nicht zugeordnet: Sonstiges
@@ -49,7 +51,7 @@ Luecken im LoD2:
   Quellen der Gebaeude: LoD2 19, OSM 33
 Nutzungsflaechen (Berliner WFS):
   WFS: https://gdi.berlin.de/services/wfs/alkis?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=alkis%3Atatsaechlichenutzungflaechen&count=5000&startIndex=0
-    (0.4 s, im Hintergrund)
+    (0.5 s, im Hintergrund)
   21 Nutzungsobjekte; Attribute (Beispiel): {'objectid': 5148, 'nam': '', 'fkt': None, 'bezfkt': '', 'zus': None, 'bezzus': '', 'veg': None, 'bezveg': None, 'agt': None, 'bezagt': None}
 Radverkehrsnetz als Quelle fuer Wege (Berlin):
   WFS: https://gdi.berlin.de/services/wfs/radverkehrsnetz?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=radverkehrsnetz%3Aradverkehrsnetz&count=5000&startIndex=0
@@ -63,12 +65,12 @@ Radverkehrsnetz als Quelle fuer Wege (Berlin):
   -> 0 Wegeflaechen aus dem Radverkehrsnetz (Breite 2.5 m, wenn der Dienst keine angibt)
 Baeume (Berliner WFS):
   WFS: https://gdi.berlin.de/services/wfs/baumbestand?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=baumbestand%3Astrassenbaeume&count=5000&startIndex=0
-    (0.4 s, im Hintergrund)
+    (0.5 s, im Hintergrund)
   WFS: https://gdi.berlin.de/services/wfs/baumbestand?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=baumbestand%3Aanlagenbaeume&count=5000&startIndex=0
-    (0.4 s, im Hintergrund)
+    (0.5 s, im Hintergrund)
   37 Baumobjekte; Attribute (Beispiel): {'gisid': '00008100_00186137', 'pitid': '00008100:00186137', 'standortnr': '10539', 'kennzeich': '08751VK', 'namenr': 'VK Parkplatz P+R, Bahnhof Heinersdorf', 'art_dtsch': 'Berg-Ahorn, Weiss-Ahorn', 'art_bot': 'Acer pseudoplatanus', 'gattung_deutsch': 'Ahorn', 'gattung': 'Acer', 'art_gruppe': 'Laubbäume'}
-  OpenStreetMap (Nutzung, Baeume): overpass-api.de nicht erreichbar nach 0 s (HTTP Error 429: Too Many Requests) - wird in diesem Lauf nicht mehr versucht
-  OpenStreetMap (Nutzung, Baeume): overpass.openstreetmap.fr antwortete nach 2.7 s (90 Objekte)
+  OpenStreetMap (Nutzung, Baeume): overpass-api.de nicht erreichbar nach 1 s (HTTP Error 429: Too Many Requests) - wird in diesem Lauf nicht mehr versucht
+  OpenStreetMap (Nutzung, Baeume): overpass.openstreetmap.fr antwortete nach 2.9 s (90 Objekte)
   OpenStreetMap: 90 Flaechen/Strassen, 0 Baeume
   WFS: https://gdi.berlin.de/services/wfs/ua_vegetationshoehen_2020?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=ua_vegetationshoehen_2020%3Aa_vegetationshoehe_2020&count=5000&startIndex=0
   ua_vegetationshoehen_2020:a_vegetationshoehe_2020: 20 geladen, 17 im Rechteck (erstes Objekt bei Ost 392572 / Nord 5825861, Gebiet bei Ost 393694 / Nord 5826538)
@@ -76,16 +78,16 @@ Baeume (Berliner WFS):
   Baeume im Nahbereich samt Uebergangszone: 37 (davon 37 mit Kronendurchmesser aus den Daten, Rest Standard 6 m)
 ALKIS-Zusatzdaten (Berliner WFS):
   WFS: https://gdi.berlin.de/services/wfs/alkis?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=alkis%3Aflurstuecke&count=5000&startIndex=0
-    (0.4 s, im Hintergrund)
+    (0.5 s, im Hintergrund)
   Flurstuecke: 25 Objekte; Attribute (Beispiel): {'uuid': 'DEBE00YY1xV0000G', 'bezeich': 'AX_Flurstueck', 'afl': 7685, 'fsko': '11056015605171____', 'zae': '5171', 'nen': '', 'gmk': '0560', 'namgmk': 'Pankow'}
   Gebaeude: 10 Objekte; Attribute (Beispiel): {'uuid': 'DEBE03AL1uv0002F', 'gfk': 2422, 'bezgfk': 'Lokschuppen, Wagenhalle', 'ofl': None, 'bezofl': '', 'aog': 3, 'aug': None, 'hoh': ''}
   WFS: https://gdi.berlin.de/services/wfs/alkis?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=alkis%3Abauwerkeflaechen&count=5000&startIndex=0
-    (0.4 s, im Hintergrund)
+    (0.5 s, im Hintergrund)
   Bauwerke: 37 Objekte; Attribute (Beispiel): {'uuid': 'DEBE00YY1P200024', 'bwf': '1840', 'bezbwf': 'Brückenpfeiler', 'nam': '', 'art': None, 'bezart': None, 'spo': None, 'bezspo': None}
   Fussgaengernetz: Feature-Typen des Dienstes: fussgaengernetz:b_strassenelemente, fussgaengernetz:a_verbindungspunkte
   WFS: https://gdi.berlin.de/services/wfs/fussgaengernetz?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=fussgaengernetz%3Ab_strassenelemente&count=5000&startIndex=0
   Fussgaengernetz fussgaengernetz:b_strassenelemente: 9 Linien im Rechteck
-    (0.8 s, im Hintergrund)
+    (1.2 s, im Hintergrund)
   OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 1.8 s (20 Objekte)
   Gleisachsen (OpenStreetMap): 4 Linien, 1238 m; Bruecken in OSM: 12
     (17.0 s, im Hintergrund)
@@ -101,7 +103,7 @@ Zusatzdaten OEPNV-Vorrangnetz: Strassenbahn, Bus, S-Bahn, geplante Strecken, mit
   oepnv_ungestoert:b_tramstopp: keine Objekte geliefert
   WFS: https://gdi.berlin.de/services/wfs/oepnv_ungestoert?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393544.5%2C5826387.7%2C393844.5%2C5826687.7%2CEPSG%3A25833&typeNames=oepnv_ungestoert%3Aa_busstopp&count=5000&startIndex=0
   oepnv_ungestoert:a_busstopp: keine Objekte geliefert
-  OpenStreetMap: overpass.openstreetmap.fr antwortete nach 0.6 s (4 Objekte)
+  OpenStreetMap: overpass.openstreetmap.fr antwortete nach 0.7 s (4 Objekte)
   OpenStreetMap ergaenzt (amtlich nicht vorhanden: SBahn): 4 Objekte
   -> 5 Objekte uebernommen
 Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - ungetestet:
@@ -128,11 +130,12 @@ Zusatzdaten Gewaessernetz (ATKIS: Fliessgewaesser, Gewaesserachsen, Standgewaess
   -> 1 Objekte uebernommen
 Zusatzdaten Denkmalkarte (Denkmalbereiche, Baudenkmale, Gartendenkmale, Bodendenkmale):
   Quelle: amtlich (Berlin)
-    ... 7 MB von 11 MB
-  geladen: PS_Denkmalkarte.zip (11.1 MB, 9 s)
+    ... 4 MB von 11 MB
+    ... 9 MB von 11 MB
+  geladen: PS_Denkmalkarte.zip (11.1 MB, 14 s)
   Denkmal-Objekte im Rechteck: 5; Attribute (Beispiel): {'localId': 'ProtectedSite_BAUD_09050599', 'namespace': 'https://registry.gdi-de.org/id/de.be.ps.denk/', 'designationScheme': 'GermanMonumentsRecordDesignation', 'designation': 'baudenkmal', 'percentageUnderDesignation': '100', 'siteProtectionClassification': 'cultural'}
   -> 5 Objekte uebernommen
-Zeiten: Gelaende lesen und ausduennen 4 s; Gebaeude (LoD2) lesen 0 s; LoD2-Luecken (OSM/ALKIS) 13 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 15 s; Zusatzdaten (Denkmal, OePNV ...) 30 s; Laden insgesamt 79 s
+Zeiten: Gelaende lesen und ausduennen 4 s; Gebaeude (LoD2) lesen 0 s; LoD2-Luecken (OSM/ALKIS) 13 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 16 s; Zusatzdaten (Denkmal, OePNV ...) 36 s; Laden insgesamt 97 s
 Gelaende nach Nutzung aufteilen:
   Buergersteige: Breite nach Strassenbreite (Berliner Richtwerte): Strassenraum ab 24 m 4.0 m (14503 m2 Strassenflaeche), Strassenraum ab 14 m 3.0 m (111 m2 Strassenflaeche), schmale Strassen 2.0 m (32 m2 Strassenflaeche)
   Buergersteige: Fussgaengernetz Berlin (9 Linien), Breite nach Strassenbreite; 1 Fahrbahnquerungen nicht als Gehweg gezeichnet, 1 Wegflaechen ausserhalb der Strassenflaeche (Parkwege u. a.) ergaenzt
@@ -184,13 +187,13 @@ Automatisch laden: Mitte 393700 / 5826590, 350 × 150 m (Daten-Kern: D:\a\zachari
   Netzabfragen (bahn, baum, nutz, osm_geb, zusatz) laufen im Hintergrund, waehrend Dateien gelesen werden.
   Gebaeude (LoD2):
       (schnell gelesen: 317 Gebaeude geparst, 216 weit ausserhalb uebersprungen)
-    LoD2 LoD2_33_393_5826_1_BE.xml: 8 Teile im Rechteck (1 s)
+    LoD2 LoD2_33_393_5826_1_BE.xml: 8 Teile im Rechteck (0 s)
   Luecken im LoD2:
-    OpenStreetMap: overpass.openstreetmap.fr antwortete nach 1.0 s (9 Objekte)
+    OpenStreetMap: overpass.openstreetmap.fr antwortete nach 1.2 s (9 Objekte)
     OpenStreetMap: 9 Gebaeude/-teile im Rechteck
-      (16.1 s, im Hintergrund)
+      (16.4 s, im Hintergrund)
     WFS: https://gdi.berlin.de/services/wfs/alkis?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393525.0%2C5826515.0%2C393875.0%2C5826665.0%2CEPSG%3A25833&typeNames=alkis%3Agebaeudeflaechen&count=5000&startIndex=0
-      (0.4 s, im Hintergrund)
+      (0.5 s, im Hintergrund)
     WFS: https://gdi.berlin.de/services/wfs/ua_gebaeudehoehen?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393525.0%2C5826515.0%2C393875.0%2C5826665.0%2CEPSG%3A25833&typeNames=ua_gebaeudehoehen%3Agebaeudehoehen&count=5000&startIndex=0
     ua_gebaeudehoehen:gebaeudehoehen: 15 geladen, 15 im Rechteck (erstes Objekt bei Ost 393768 / Nord 5826606, Gebiet bei Ost 393700 / Nord 5826590)
     Umweltatlas Gebaeudehoehen: 15 Gebaeude mit Hoehe im Rechteck (Feature-Typ ua_gebaeudehoehen:gebaeudehoehen); Dachart nicht zugeordnet: Sonstiges
@@ -211,30 +214,30 @@ Automatisch laden: Mitte 393700 / 5826590, 350 × 150 m (Daten-Kern: D:\a\zachari
     Quellen der Gebaeude: ALKIS 1, LoD2 8, OSM 7
   Nutzungsflaechen (Berliner WFS):
     WFS: https://gdi.berlin.de/services/wfs/alkis?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393525.0%2C5826515.0%2C393875.0%2C5826665.0%2CEPSG%3A25833&typeNames=alkis%3Atatsaechlichenutzungflaechen&count=5000&startIndex=0
-      (0.3 s, im Hintergrund)
+      (0.5 s, im Hintergrund)
     18 Nutzungsobjekte; Attribute (Beispiel): {'objectid': 38368, 'nam': '', 'fkt': None, 'bezfkt': '', 'zus': 2100, 'bezzus': 'Außer Betrieb, stillgelegt, verlassen', 'veg': None, 'bezveg': None, 'agt': None, 'bezagt': None}
   Baeume (Berliner WFS):
     WFS: https://gdi.berlin.de/services/wfs/baumbestand?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393525.0%2C5826515.0%2C393875.0%2C5826665.0%2CEPSG%3A25833&typeNames=baumbestand%3Astrassenbaeume&count=5000&startIndex=0
-      (0.4 s, im Hintergrund)
+      (0.5 s, im Hintergrund)
     WFS: https://gdi.berlin.de/services/wfs/baumbestand?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393525.0%2C5826515.0%2C393875.0%2C5826665.0%2CEPSG%3A25833&typeNames=baumbestand%3Aanlagenbaeume&count=5000&startIndex=0
-      (0.3 s, im Hintergrund)
+      (0.5 s, im Hintergrund)
     26 Baumobjekte; Attribute (Beispiel): {'gisid': '00008100_0018613a', 'pitid': '00008100:0018613a', 'standortnr': '10535', 'kennzeich': '08751VK', 'namenr': 'VK Parkplatz P+R, Bahnhof Heinersdorf', 'art_dtsch': 'Gemeine Rosskastanie', 'art_bot': 'Aesculus hippocastanum', 'gattung_deutsch': 'Rosskastanie', 'gattung': 'Aesculus', 'art_gruppe': 'Laubbäume'}
-    OpenStreetMap (Nutzung, Baeume): overpass-api.de nicht erreichbar nach 0 s (HTTP Error 429: Too Many Requests) - wird in diesem Lauf nicht mehr versucht
+    OpenStreetMap (Nutzung, Baeume): overpass-api.de nicht erreichbar nach 1 s (HTTP Error 429: Too Many Requests) - wird in diesem Lauf nicht mehr versucht
     OpenStreetMap (Nutzung, Baeume): overpass.openstreetmap.fr antwortete nach 2.8 s (71 Objekte)
     OpenStreetMap: 71 Flaechen/Strassen, 0 Baeume
     Baeume im Rechteck: 26 (davon 26 mit Kronendurchmesser aus den Daten, Rest Standard 6 m)
   ALKIS-Zusatzdaten (Berliner WFS):
     WFS: https://gdi.berlin.de/services/wfs/alkis?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393525.0%2C5826515.0%2C393875.0%2C5826665.0%2CEPSG%3A25833&typeNames=alkis%3Aflurstuecke&count=5000&startIndex=0
-      (0.4 s, im Hintergrund)
+      (0.5 s, im Hintergrund)
     Flurstuecke: 25 Objekte; Attribute (Beispiel): {'uuid': 'DEBE00YY1xV0000G', 'bezeich': 'AX_Flurstueck', 'afl': 7685, 'fsko': '11056015605171____', 'zae': '5171', 'nen': '', 'gmk': '0560', 'namgmk': 'Pankow'}
     Gebaeude: 5 Objekte; Attribute (Beispiel): {'uuid': 'DEBE03AL1uv00036', 'gfk': 2424, 'bezgfk': 'Betriebsgebäude des Güterbahnhofs', 'ofl': None, 'bezofl': '', 'aog': 1, 'aug': None, 'hoh': ''}
     WFS: https://gdi.berlin.de/services/wfs/alkis?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=393525.0%2C5826515.0%2C393875.0%2C5826665.0%2CEPSG%3A25833&typeNames=alkis%3Abauwerkeflaechen&count=5000&startIndex=0
-      (0.3 s, im Hintergrund)
+      (0.5 s, im Hintergrund)
     Bauwerke: 14 Objekte; Attribute (Beispiel): {'uuid': 'DEBE00YY1P200025', 'bwf': '1840', 'bezbwf': 'Brückenpfeiler', 'nam': '', 'art': None, 'bezart': None, 'spo': None, 'bezspo': None}
-    OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 1.7 s (19 Objekte)
+    OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 2.2 s (19 Objekte)
     Gleisachsen (OpenStreetMap): 6 Linien, 943 m; Bruecken in OSM: 9
-      (16.9 s, im Hintergrund)
-  Zeiten: Gelaende lesen und ausduennen 0 s; Gebaeude (LoD2) lesen 1 s; LoD2-Luecken (OSM/ALKIS) 16 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 13 s; Laden insgesamt 30 s
+      (17.4 s, im Hintergrund)
+  Zeiten: Gelaende lesen und ausduennen 0 s; Gebaeude (LoD2) lesen 0 s; LoD2-Luecken (OSM/ALKIS) 17 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 14 s; Laden insgesamt 31 s
 Kacheln online holen (Berliner ATOM-Downloaddienst, Zwischenspeicher: C:\Users\runneradmin\.ifcmap\cache):
   (aus Zwischenspeicher) DGM1_392_5826.zip
   DGM: 2000 × 2000 Zellen, Höhe 39.6 – 55.8 m
@@ -242,19 +245,19 @@ Kacheln online holen (Berliner ATOM-Downloaddienst, Zwischenspeicher: C:\Users\r
   Ebenen: Gewaesser (gravieren), Bahn (aus), Strasse (ritzen), Gruen (aus), Siedlung (aus), Sonstige (aus), Gleisachsen (ritzen), Baeume (schneiden), Flurstuecke (aus), ALKIS_Gebaeude (aus), ALKIS_Bauwerke (ritzen)
   Ansicht dahinter (links, 100 m Tiefe): 4 Gebäude, 15 Bäume (1 davon im Schnitt)
   Schnitt 300 m lang, 0 Gebäudeschnitte, 4 Gebäude und 15 Bäume in der Ansicht dahinter, Gelände 45.9–49.2 m
-Fertig in 115 s
-FERTIG 115 s
+Fertig in 133 s
+FERTIG 133 s
 umgebung -> ok
 schnitt -> ok
-  Datei: \proj\ausgabe\bericht.txt 5514
-  Datei: \proj\ausgabe\protokoll.txt 26806
+  Datei: \proj\ausgabe\bericht.txt 5520
+  Datei: \proj\ausgabe\protokoll.txt 26880
   Datei: \proj\ausgabe\QUELLEN.txt 2680
-  Datei: \proj\ausgabe\schnitt\Dienste_Schnitt.dxf 89665
+  Datei: \proj\ausgabe\schnitt\Dienste_Schnitt.dxf 89663
   Datei: \proj\ausgabe\schnitt\Dienste_Schnitt.png 28923
   Datei: \proj\ausgabe\schnitt\Dienste_Schnitt.svg 35854
-  Datei: \proj\ausgabe\umgebung\Dienste_Informations-DWG.dxf 101398
-  Datei: \proj\ausgabe\umgebung\Dienste_Lageplan.dxf 87796
-  Datei: \proj\ausgabe\umgebung\Dienste_Schwarzplan.dxf 39365
+  Datei: \proj\ausgabe\umgebung\Dienste_Informations-DWG.dxf 101396
+  Datei: \proj\ausgabe\umgebung\Dienste_Lageplan.dxf 87794
+  Datei: \proj\ausgabe\umgebung\Dienste_Schwarzplan.dxf 39361
   Datei: \proj\ausgabe\umgebung\Dienste_Umgebung.ifc 834945
 
 === ÖPNV-Test Alexanderplatz ===
@@ -262,9 +265,11 @@ schnitt -> ok
 Bundesland: Berlin
 Mitte (EPSG:25833): Ost 392300.0  Nord 5820500.0   Rechteck 400 x 400 m   E0=392000 N0=5820000
 Kacheln online holen (Berliner ATOM-Downloaddienst, Zwischenspeicher: C:\Users\runneradmin\.ifcmap\cache):
-    ... 7 MB von 18 MB
-    ... 15 MB von 18 MB
-  geladen: DGM1_392_5820.zip (18.0 MB, 14 s)
+    ... 4 MB von 18 MB
+    ... 8 MB von 18 MB
+    ... 13 MB von 18 MB
+    ... 17 MB von 18 MB
+  geladen: DGM1_392_5820.zip (18.0 MB, 22 s)
   FEHLT: LoD2-Kachel LoD2_33_392_5820_1_BE (Gebaeude dort unvollstaendig)
 Quelle fuer Nutzung/Baeume (automatisch): Berliner ALKIS und Baumbestand (amtlich)
 Netzabfragen (baum, nutz) laufen im Hintergrund, waehrend Dateien gelesen werden.
@@ -275,15 +280,15 @@ Gelaende:
     Nahbereich: 3257 Punkte (Toleranz 0.15 m)   Uebergang/Fern: 829 Punkte (bis 1.50 m, Uebergang 60 m, Raster 6 m)
 Nutzungsflaechen (Berliner WFS):
   WFS: https://gdi.berlin.de/services/wfs/alkis?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=392100.0%2C5820300.0%2C392500.0%2C5820700.0%2CEPSG%3A25833&typeNames=alkis%3Atatsaechlichenutzungflaechen&count=5000&startIndex=0
-    (0.5 s, im Hintergrund)
+    (0.9 s, im Hintergrund)
   100 Nutzungsobjekte; Attribute (Beispiel): {'objectid': 2378, 'nam': '', 'fkt': None, 'bezfkt': '', 'zus': None, 'bezzus': '', 'veg': None, 'bezveg': None, 'agt': None, 'bezagt': None}
 Baeume (Berliner WFS):
   WFS: https://gdi.berlin.de/services/wfs/baumbestand?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=392100.0%2C5820300.0%2C392500.0%2C5820700.0%2CEPSG%3A25833&typeNames=baumbestand%3Astrassenbaeume&count=5000&startIndex=0
-    (0.5 s, im Hintergrund)
+    (0.7 s, im Hintergrund)
   WFS: https://gdi.berlin.de/services/wfs/baumbestand?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=392100.0%2C5820300.0%2C392500.0%2C5820700.0%2CEPSG%3A25833&typeNames=baumbestand%3Aanlagenbaeume&count=5000&startIndex=0
-    (0.3 s, im Hintergrund)
+    (0.5 s, im Hintergrund)
   225 Baumobjekte; Attribute (Beispiel): {'gisid': '00008100_0014f15e', 'pitid': '00008100:0014f15e', 'standortnr': '29/11 -52', 'kennzeich': '138750', 'namenr': 'Karl-Liebknecht-Straße', 'art_dtsch': 'Winter-Linde', 'art_bot': 'Tilia cordata', 'gattung_deutsch': 'Linde', 'gattung': 'Tilia', 'art_gruppe': 'Laubbäume'}
-  OpenStreetMap (Nutzung, Baeume): overpass.openstreetmap.fr antwortete nach 6.5 s (662 Objekte)
+  OpenStreetMap (Nutzung, Baeume): overpass.openstreetmap.fr antwortete nach 3.6 s (662 Objekte)
   OpenStreetMap: 441 Flaechen/Strassen, 195 Baeume
   OpenStreetMap: 14 Baeume ergaenzt, die es in den amtlichen Quellen nicht gibt (kein amtlicher Baum im Umkreis von 3 m)
   Baeume im Nahbereich samt Uebergangszone: 237 (davon 223 mit Kronendurchmesser aus den Daten, Rest Standard 6 m)
@@ -301,20 +306,21 @@ Zusatzdaten OEPNV-Vorrangnetz: Strassenbahn, Bus, S-Bahn, geplante Strecken, mit
   oepnv_ungestoert:b_tramstopp: 3 geladen, 3 im Rechteck (erstes Objekt bei Ost 392219 / Nord 5820455, Gebiet bei Ost 392300 / Nord 5820500)
   WFS: https://gdi.berlin.de/services/wfs/oepnv_ungestoert?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application%2Fjson&srsName=EPSG%3A25833&bbox=392100.0%2C5820300.0%2C392500.0%2C5820700.0%2CEPSG%3A25833&typeNames=oepnv_ungestoert%3Aa_busstopp&count=5000&startIndex=0
   oepnv_ungestoert:a_busstopp: 11 geladen, 11 im Rechteck (erstes Objekt bei Ost 392486 / Nord 5820316, Gebiet bei Ost 392300 / Nord 5820500)
-  OpenStreetMap: overpass.openstreetmap.fr antwortete nach 0.8 s (4 Objekte)
+  OpenStreetMap: overpass-api.de nicht erreichbar nach 1 s (HTTP Error 502: Bad Gateway) - wird in diesem Lauf nicht mehr versucht
+  OpenStreetMap: overpass.openstreetmap.fr antwortete nach 1.1 s (4 Objekte)
   OpenStreetMap ergaenzt (amtlich nicht vorhanden: SBahn, Geplant): 4 Objekte
   -> 66 Objekte uebernommen
 WARNUNG: Es wurden KEINE Gebaeude im Rechteck gefunden (weder LoD2 noch OpenStreetMap/ALKIS). Fehlende Kacheln siehe Protokoll; ist OpenStreetMap nicht erreichbar, spaeter nochmal versuchen.
-Zeiten: Gelaende lesen und ausduennen 6 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 22 s; Zusatzdaten (Denkmal, OePNV ...) 18 s; Laden insgesamt 60 s
+Zeiten: Gelaende lesen und ausduennen 6 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 19 s; Zusatzdaten (Denkmal, OePNV ...) 15 s; Laden insgesamt 62 s
   DXF-Pruefung (R2010): 32 Schraffuren, 18 Polylinien, 251 Kreise - keine Beanstandungen
   ifcmap_2d.dxf (0.1 MB)
   DXF-Layer in der Datei (20): 2D_Baeume_Krone (237), 2D_Bruecke_Bahn (8), 2D_Bruecke_Strasse (1), 2D_Bruecke_Weg (1), 2D_Nutzung_Bahn (1), 2D_Nutzung_Gruen (1), 2D_Nutzung_Siedlung (13), 2D_Nutzung_Sonstige (5), 2D_Nutzung_Strasse (2), 2D_OEPNV_Bus (2), 2D_OEPNV_Bus_Haltestellen (11), 2D_OEPNV_Nacht_Bus (2), 2D_OEPNV_Nacht_Netz (2), 2D_OEPNV_Nacht_Tram (3), 2D_OEPNV_Netz (2), 2D_OEPNV_SBahn (2), 2D_OEPNV_Tram (3), 2D_OEPNV_Tram_Haltestellen (3), 2D_Rahmen_Gebiet (1), 2D_Rahmen_Nahbereich (1)
-Zeiten der Ausgabe: Arbeits-DXF (ifcmap_2d.dxf) 16 s
+Zeiten der Ausgabe: Arbeits-DXF (ifcmap_2d.dxf) 17 s
 
 Lokaler Nullpunkt: E0 = 392000, N0 = 5820000, Z0 = 30 m  (lokal = Ost-E0 / Nord-N0 / Hoehe-Z0; EPSG:25833, NHN)
-Fertig in 16 s.
+Fertig in 17 s.
 Plausibilitätsprüfung: 0 Hinweis(e)
-Fertig in 77 s
+Fertig in 79 s
 ÖPNV-Ebenen: {'2D_OEPNV_Bus': 2, '2D_OEPNV_Bus_Haltestellen': 11, '2D_OEPNV_Nacht_Bus': 2, '2D_OEPNV_Nacht_Netz': 2, '2D_OEPNV_Nacht_Tram': 3, '2D_OEPNV_Netz': 2, '2D_OEPNV_SBahn': 2, '2D_OEPNV_Tram': 3, '2D_OEPNV_Tram_Haltestellen': 3}
 
 === AUFFÄLLIGKEITEN ===
@@ -323,8 +329,8 @@ Fertig in 77 s
   radverkehrsnetz:radfernwege: keine Objekte geliefert
   radverkehrsnetz:stadtgruen: keine Objekte geliefert
   37 Baumobjekte; Attribute (Beispiel): {'gisid': '00008100_00186137', 'pitid': '00008100:00186137', 'standortnr': '10539', 'kennzeich': '08751VK', 'namenr': 'VK Parkplatz P+R, Bahnhof Heinersdorf', 'art_dtsch': 'Berg-Ahorn, Weiss-Ahorn', 'art_bot': 'Acer pseudoplatanus', 'gattung_deutsch': 'Ahorn',
-  OpenStreetMap (Nutzung, Baeume): overpass-api.de nicht erreichbar nach 0 s (HTTP Error 429: Too Many Requests) - wird in diesem Lauf nicht mehr versucht
-  OpenStreetMap (Nutzung, Baeume): overpass.openstreetmap.fr antwortete nach 2.7 s (90 Objekte)
+  OpenStreetMap (Nutzung, Baeume): overpass-api.de nicht erreichbar nach 1 s (HTTP Error 429: Too Many Requests) - wird in diesem Lauf nicht mehr versucht
+  OpenStreetMap (Nutzung, Baeume): overpass.openstreetmap.fr antwortete nach 2.9 s (90 Objekte)
   Flurstuecke: 25 Objekte; Attribute (Beispiel): {'uuid': 'DEBE00YY1xV0000G', 'bezeich': 'AX_Flurstueck', 'afl': 7685, 'fsko': '11056015605171____', 'zae': '5171', 'nen': '', 'gmk': '0560', 'namgmk': 'Pankow'}
   Gebaeude: 10 Objekte; Attribute (Beispiel): {'uuid': 'DEBE03AL1uv0002F', 'gfk': 2422, 'bezgfk': 'Lokschuppen, Wagenhalle', 'ofl': None, 'bezofl': '', 'aog': 3, 'aug': None, 'hoh': ''}
   Bauwerke: 37 Objekte; Attribute (Beispiel): {'uuid': 'DEBE00YY1P200024', 'bwf': '1840', 'bezbwf': 'Brückenpfeiler', 'nam': '', 'art': None, 'bezart': None, 'spo': None, 'bezspo': None}
@@ -346,7 +352,7 @@ Zusatzdaten OEPNV-Vorrangnetz: Strassenbahn, Bus, S-Bahn, geplante Strecken, mit
   Denkmal-Objekte im Rechteck: 5; Attribute (Beispiel): {'localId': 'ProtectedSite_BAUD_09050599', 'namespace': 'https://registry.gdi-de.org/id/de.be.ps.denk/', 'designationScheme': 'GermanMonumentsRecordDesignation', 'designation': 'baudenkmal', 'percentageUnderDesignation': '100', 'siteProtectionC
     18 Nutzungsobjekte; Attribute (Beispiel): {'objectid': 38368, 'nam': '', 'fkt': None, 'bezfkt': '', 'zus': 2100, 'bezzus': 'Außer Betrieb, stillgelegt, verlassen', 'veg': None, 'bezveg': None, 'agt': None, 'bezagt': None}
     26 Baumobjekte; Attribute (Beispiel): {'gisid': '00008100_0018613a', 'pitid': '00008100:0018613a', 'standortnr': '10535', 'kennzeich': '08751VK', 'namenr': 'VK Parkplatz P+R, Bahnhof Heinersdorf', 'art_dtsch': 'Gemeine Rosskastanie', 'art_bot': 'Aesculus hippocastanum', 'gattung_deutsch': 'Rossk
-    OpenStreetMap (Nutzung, Baeume): overpass-api.de nicht erreichbar nach 0 s (HTTP Error 429: Too Many Requests) - wird in diesem Lauf nicht mehr versucht
+    OpenStreetMap (Nutzung, Baeume): overpass-api.de nicht erreichbar nach 1 s (HTTP Error 429: Too Many Requests) - wird in diesem Lauf nicht mehr versucht
     Flurstuecke: 25 Objekte; Attribute (Beispiel): {'uuid': 'DEBE00YY1xV0000G', 'bezeich': 'AX_Flurstueck', 'afl': 7685, 'fsko': '11056015605171____', 'zae': '5171', 'nen': '', 'gmk': '0560', 'namgmk': 'Pankow'}
     Gebaeude: 5 Objekte; Attribute (Beispiel): {'uuid': 'DEBE03AL1uv00036', 'gfk': 2424, 'bezgfk': 'Betriebsgebäude des Güterbahnhofs', 'ofl': None, 'bezofl': '', 'aog': 1, 'aug': None, 'hoh': ''}
     Bauwerke: 14 Objekte; Attribute (Beispiel): {'uuid': 'DEBE00YY1P200025', 'bwf': '1840', 'bezbwf': 'Brückenpfeiler', 'nam': '', 'art': None, 'bezart': None, 'spo': None, 'bezspo': None}
@@ -357,4 +363,5 @@ Zusatzdaten OEPNV-Vorrangnetz: Strassenbahn, Bus, S-Bahn, geplante Strecken, mit
   Vorrangnetz-Untergruppen: Nacht_Bus 4, Nacht_Netz 5, Nacht_Tram 15
   vorrangnetz:a_oepnv_vorrangnetz: Attribute (Beispiel): {'no': 1993404, 'vorrangtyp': None, 'vorrang': '0', 'v_zukunft': '0', 'v_z_jahr': None, 'nacht': '1', 'n': '1', 'm': '0', 'fh0_1': 0, 'fh1_2': 4}
   Vorrangnetz-Untergruppen: Bus 4, Nacht_Bus 4, Nacht_Netz 5, Nacht_Tram 15, Netz 5, Tram 15
+  OpenStreetMap: overpass-api.de nicht erreichbar nach 1 s (HTTP Error 502: Bad Gateway) - wird in diesem Lauf nicht mehr versucht
 WARNUNG: Es wurden KEINE Gebaeude im Rechteck gefunden (weder LoD2 noch OpenStreetMap/ALKIS). Fehlende Kacheln siehe Protokoll; ist OpenStreetMap nicht erreichbar, spaeter nochmal versuchen.
