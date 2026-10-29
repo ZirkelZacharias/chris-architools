@@ -162,3 +162,8 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
 ## Plugin-Werkzeuge in der linken Leiste (29.10.2026 spät)
 - Der Haken `WERKZEUGE` (Zusatzmodul-Seiten in der linken Werkzeugleiste, `zusatz.werkzeuge()`, `gui/app.py: werkzeug_hilfen()`) stammt aus dem Videoscan-Paket „0.1.6 für Build 6“, das ihn als Ersatz für zwei Programmdateien mitbrachte. Jetzt im Kern; das Videoscan-Plugin braucht ab dem nächsten Build keine Programmdateien mehr. **Das alte Paket nicht über Build 7/8 kopieren**: seine `app.py`/`zusatz.py` sind Build-6-Stand (ohne Verbindungs-Fix und ohne Layout-Haken).
 - Fassadenmodul 1.7 / Videoscan 0.1.7: Videoscan schreibt nach dem Verorten `export/kameras_welt.json` (Kameras in ETRS89/UTM, ausgedünnte Punktwolke); das Fassadenmodul nutzt die Einzelbilder als Fassadenfotos und richtet sie je Gebäude an den LoD2-Wänden fein aus (Punkt-zu-Ebene: Drehung, Versatz, Maßstab; Höhe nicht).
+
+## 3D-Vorschau: Gravur als Bild (30.10.2026)
+- Ritzen und Gravur (auch Rastergravur) erscheinen in der Modell-Vorschau als Bild auf der Oberseite jeder Schicht (`{name}_vorschau_gravur.glb`, je Schicht eine Textur in Materialfarbe, fein gezeichnet und auf ≤ 2048 px verkleinert → Raster als Halbton). Bisher: einzelne Körper, abgeschnitten nach 4000 Teilen. Ersatz bei Fehler: altes STL.
+- glTF-Material ausdrücklich: Farbfaktor 1, nicht metallisch, matt, Eigenleuchten 0,6 (trimesh setzt sonst 0,4 und glTF-Standard metallisch → schwarz in three.js).
+- Bild liegt max(0,15 mm, Modellbreite/2500) über der Platte; vordere Kameraebene der 3D-Ansicht L/400 statt L/2000 (sonst Tiefenpuffer-Flimmern).

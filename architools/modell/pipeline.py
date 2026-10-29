@@ -20,7 +20,7 @@ from . import geo_io as G
 from . import laser as L
 from . import report as R
 from . import terrain as T
-from .geomutil import polys, world_to_model
+from .geomutil import lines, polys, world_to_model
 
 
 def mm(t):
@@ -418,7 +418,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         if len(meldungen) > 20:
             log(f"  … {len(meldungen) - 20} weitere Korrekturen")
 
-        _vorschau_3d(out, name, parts + parts_e, stuetzen, blds + blds_in, t, log, rippen_3d)
+        _vorschau_3d(out, name, parts + parts_e, stuetzen, blds + blds_in, t, log, rippen_3d, BIB.farbe(sorte))
 
         log("5/6  Laserplatten anordnen")
         filler = stuetzen[0]["poly"] if stuetzen else None
@@ -574,7 +574,8 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         "n_einsatzplatten": len(platten_e),
         "vorschau_laser": os.path.join(out, f"{name}_vorschau_laser.stl"),
         "vorschau_druck": os.path.join(out, f"{name}_vorschau_druck.stl"),
-        "vorschau_gravur": os.path.join(out, f"{name}_vorschau_gravur.stl"),
+        "vorschau_gravur": next((x for x in (os.path.join(out, f"{name}_vorschau_gravur.glb"), os.path.join(out, f"{name}_vorschau_gravur.stl"))
+                                 if os.path.exists(x)), os.path.join(out, f"{name}_vorschau_gravur.stl")),
         "montageplan": os.path.join(out, f"{name}_montageplan.pdf"),
         "druck_stls": [d["datei"] for d in drucke], "druck_plaene": drucke,
         "n_laserplatten": len(platten), "n_teile": len(parts), "dauer_s": time.time() - t0,
@@ -599,7 +600,88 @@ def _svg_vorschau(pfad, platte, sorte, titel):
     return ziel
 
 
-def _vorschau_3d(out, name, parts, stuetzen, blds, t, log, rippen_3d=()):
+def _vorschau_gravur_glb(out, name, parts, t, farbe, log, px_mm=4.0, max_px=2048):
+    """Ritzen und Gravur (auch Rastergravur mit Zehntausenden Streifen) als Bild auf der Oberseite jeder Schicht -> .glb oder None.
+    Je Schicht ein Bild in Materialfarbe: fein gezeichnet (px_mm), dann auf höchstens max_px verkleinert – das Raster erscheint so als
+    Halbtonbild, wie es aus etwas Abstand auf dem Material wirkt. Nur für die Vorschau; die Laserdateien bleiben unverändert."""
+    alt_glb = os.path.join(out, f"{name}_vorschau_gravur.glb")
+    if os.path.exists(alt_glb):                                        # Vorschau eines früheren Laufs nicht stehen lassen
+        os.remove(alt_glb)
+    try:
+        import trimesh
+        from PIL import Image, ImageDraw
+    except Exception:
+        return None
+    if not any((p.get("gravieren") or p.get("ritzen")) for p in parts):
+        return None
+    farbe = (farbe or "#d9c7a3").lstrip("#")
+    grund = tuple(int(farbe[i:i + 2], 16) for i in (0, 2, 4))
+    brand, ritz = (62, 42, 30), (105, 78, 58)
+    schichten = {}
+    for p in parts:
+        schichten.setdefault(p["layer"], []).append(p)
+    szene = trimesh.Scene()
+    n_bilder = 0
+    gross = max((max(c.bounds[2] for p in parts for c in polys(p["poly"])) - min(c.bounds[0] for p in parts for c in polys(p["poly"]))), 50.0)
+    abstand = max(0.15, gross / 2500.0)       # Bild knapp über der Platte; genug Abstand, damit die 3D-Ansicht nicht flimmert
+    for k, ps in sorted(schichten.items()):
+        if not any((p.get("gravieren") or p.get("ritzen")) for p in ps):
+            continue
+        flaechen = [c for p in ps for c in polys(p["poly"]) if c.area > 1]
+        if not flaechen:
+            continue
+        x0 = min(c.bounds[0] for c in flaechen); y0 = min(c.bounds[1] for c in flaechen)
+        x1 = max(c.bounds[2] for c in flaechen); y1 = max(c.bounds[3] for c in flaechen)
+        W, H = max(x1 - x0, 1.0), max(y1 - y0, 1.0)
+        f = min(px_mm, 8000.0 / max(W, H))                              # fein zeichnen (Streifen ab ca. 0,25 mm sichtbar) ...
+        iw, ih = max(2, int(W * f)), max(2, int(H * f))
+        im = Image.new("RGB", (iw, ih), grund)
+        dr = ImageDraw.Draw(im)
+        pix = lambda cs: [((x - x0) * f, (y1 - y) * f) for x, y in cs]
+        for p in ps:
+            for g in p.get("gravieren") or []:
+                for c in polys(g):
+                    if len(c.exterior.coords) >= 3:
+                        dr.polygon(pix(c.exterior.coords), fill=brand)
+                        for r in c.interiors:
+                            dr.polygon(pix(r.coords), fill=grund)
+            for l in p.get("ritzen") or []:
+                for ln in lines(l):
+                    dr.line(pix(ln.coords), fill=ritz, width=max(1, int(round(0.3 * f))))
+        sk = min(1.0, max_px / float(max(iw, ih)))                       # ... dann verkleinern: Raster wird Halbton
+        if sk < 1.0:
+            im = im.resize((max(2, int(iw * sk)), max(2, int(ih * sk))), Image.LANCZOS)
+        V, F = [], []
+        for c in flaechen:
+            try:
+                v2, f2 = trimesh.creation.triangulate_polygon(c)
+            except Exception:
+                continue
+            F.append(f2 + sum(len(v) for v in V))
+            V.append(v2)
+        if not V:
+            continue
+        V = np.vstack(V)
+        uv = np.c_[(V[:, 0] - x0) / W, (V[:, 1] - y0) / H]
+        mat = trimesh.visual.material.PBRMaterial(baseColorTexture=im, baseColorFactor=[255, 255, 255, 255], metallicFactor=0.0,
+                                                  roughnessFactor=1.0, emissiveTexture=im, emissiveFactor=[0.6, 0.6, 0.6])
+        # sonst dunkelt glTF ab (Faktor 0,4, metallisch = schwarz); das Eigenleuchten gleicht das schwächere Licht für glTF in der 3D-Ansicht aus
+        m = trimesh.Trimesh(np.c_[V, np.full(len(V), (k + 1) * t + abstand)], np.vstack(F), process=False,
+                            visual=trimesh.visual.TextureVisuals(uv=uv, material=mat))
+        szene.add_geometry(m, node_name=f"Schicht_{k}")
+        n_bilder += 1
+    if not n_bilder:
+        return None
+    ziel = os.path.join(out, f"{name}_vorschau_gravur.glb")
+    szene.export(ziel)
+    alt = os.path.join(out, f"{name}_vorschau_gravur.stl")
+    if os.path.exists(alt):
+        os.remove(alt)
+    log(f"  3D-Vorschau: Gravur und Ritzlinien als Bild auf {n_bilder} Schichten ({os.path.getsize(ziel) / 1e6:.1f} MB)")
+    return ziel
+
+
+def _vorschau_3d(out, name, parts, stuetzen, blds, t, log, rippen_3d=(), farbe=None):
     """Das fertige Modell zusammengesetzt, getrennt nach Laser- und Druckteilen (eigene Farben in der Vorschau)."""
     try:
         import trimesh
@@ -621,26 +703,28 @@ def _vorschau_3d(out, name, parts, stuetzen, blds, t, log, rippen_3d=()):
                 m = b["mesh"].copy()
                 m.apply_translation([0, 0, (b["layer"] + 1) * t])
                 druck.append(m)
-        gravur, grenze = [], 4000                                      # Ritz- und Gravurlinien als dünne dunkle Auflage auf der Plattenoberseite
-        for p in parts:
-            if p.get("rippe") or len(gravur) >= grenze:
-                continue
-            geoms = [g.buffer(0.25) for g in (p.get("ritzen") or []) if g is not None and not g.is_empty]
-            geoms += [g for g in (p.get("gravieren") or []) if g is not None and not g.is_empty]
-            for g in geoms:
-                for comp in polys(g):
-                    if comp.area < 0.05 or len(gravur) >= grenze:
-                        continue
-                    try:
-                        m = trimesh.creation.extrude_polygon(comp, 0.15)
-                    except Exception:
-                        continue
-                    m.apply_translation([0, 0, (p["layer"] + 1) * t + 0.02])
-                    gravur.append(m)
-        if len(gravur) >= grenze:
-            log(f"  3D-Vorschau: Gravuren nur teilweise gezeigt (erste {grenze} Teile)")
-        if gravur:
-            trimesh.util.concatenate(gravur).export(os.path.join(out, f"{name}_vorschau_gravur.stl"))
+        glb = _vorschau_gravur_glb(out, name, [p for p in parts if not p.get("rippe")], t, farbe, log)
+        if not glb:                                                    # Ersatz: Ritz- und Gravurflächen als dünne dunkle Auflage
+            gravur, grenze = [], 4000
+            for p in parts:
+                if p.get("rippe") or len(gravur) >= grenze:
+                    continue
+                geoms = [g.buffer(0.25) for g in (p.get("ritzen") or []) if g is not None and not g.is_empty]
+                geoms += [g for g in (p.get("gravieren") or []) if g is not None and not g.is_empty]
+                for g in geoms:
+                    for comp in polys(g):
+                        if comp.area < 0.05 or len(gravur) >= grenze:
+                            continue
+                        try:
+                            m = trimesh.creation.extrude_polygon(comp, 0.15)
+                        except Exception:
+                            continue
+                        m.apply_translation([0, 0, (p["layer"] + 1) * t + 0.02])
+                        gravur.append(m)
+            if len(gravur) >= grenze:
+                log(f"  3D-Vorschau: Gravuren nur teilweise gezeigt (erste {grenze} Teile)")
+            if gravur:
+                trimesh.util.concatenate(gravur).export(os.path.join(out, f"{name}_vorschau_gravur.stl"))
         if laser:
             trimesh.util.concatenate(laser).export(os.path.join(out, f"{name}_vorschau_laser.stl"))
         if druck:

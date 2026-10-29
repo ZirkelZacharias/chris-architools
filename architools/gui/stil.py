@@ -326,7 +326,7 @@ def szene3d(teile, b, h, hoehe=520, breite=None, mitte=None, z_faktor=1.0, zoom=
     Weite Sichtweite, Kamera passend zur Modellgröße. zoom=False: das Mausrad zoomt nicht, sondern blättert die Seite weiter
     (für Ansichten in langen Seiten wie dem Ergebnis, damit man durch alle Ergebnisse scrollen kann)."""
     L_ = max(b, h, 50.0)
-    cam = ui.scene.perspective_camera(fov=45, near=max(0.05, L_ / 2000), far=L_ * 40)
+    cam = ui.scene.perspective_camera(fov=45, near=max(0.05, L_ / 400), far=L_ * 40)    # vordere Ebene nicht zu nah: sonst flimmern dicht übereinander liegende Flächen
     kw = {"width": breite} if breite else {}
     with ui.scene(height=hoehe, grid=False, background_color="#eef1f3", camera=cam, **kw) \
             .classes("w-full" if not breite else "") as sc:
