@@ -274,6 +274,20 @@ class Werkzeuge:
                     self._update_karte()
                 with karte("Weiteres", SALBEI, offen=False):
                     ui.checkbox("kleine Überraschungen in der Oberfläche zulassen").bind_value(es, "spielereien").on_value_change(sp)
+                    from . import assistent
+                    ass = es.setdefault("assistent", {})
+                    ass.setdefault("an", True)
+                    ass.setdefault("gesehen", [])
+
+                    def ass_an(e):
+                        ass["an"] = bool(e.value)
+                        sp()
+                        if assistent._A.get("figur") is not None:
+                            assistent._A["figur"].classes(remove="assistent-still") if e.value else assistent.ausschalten()
+                    ui.checkbox("Zirkel Zacharias als Assistent: meldet sich mit kurzen Tipps (jeder Tipp nur einmal)", value=bool(ass["an"]),
+                                on_change=ass_an)
+                    ui.button("Tipps wieder von vorn zeigen", on_click=lambda: (ass["gesehen"].clear(), sp(), ui.notify("Fertig"))) \
+                        .props("flat dense no-caps")
                 with karte("Daten und Netzwerk", INK, offen=False):
                     hinweis("Heruntergeladene Geodaten werden im Ordner ~/.ifcmap/cache gesammelt und für alle Projekte weiterverwendet. "
                             "Bei SSL-Fehlern im Uni-Netz: Einstellungen → Weitere Optionen → Netzwerk im jeweiligen Projekt.")

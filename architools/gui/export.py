@@ -7,7 +7,7 @@ from nicegui import ui
 from .. import einstellungen as ES
 from .. import laufen as L
 from .. import projekt as P
-from . import eier
+from . import assistent, eier
 from .ergebnis import ergebnis_zeigen
 from .stil import (AKZENT, GRAU, HOEHE, INK, LINIE, SALBEI, Lauf, feld_pfad, hinweis, karte, oeffnen, szene3d, url)
 
@@ -253,6 +253,13 @@ def seite(p, speichern):
             tabs.set_value(t_erg)
             ui.notify("Fertig – Ergebnis ansehen", type="positive")
             eier.lang_gelaufen(time.time() - t0)
+            fehler = [k for k, v in r.items() if isinstance(v, dict) and v.get("fehler")]
+            if fehler:
+                assistent.sag("Bei einem Teil des Exports ist etwas schiefgegangen. Die Datei protokoll.txt im Ausgabeordner zeigt, was – "
+                              "bei Problemen einfach weitergeben.", "export_fehler", immer=True)
+            else:
+                assistent.sag("Fertig! In bericht.txt stehen Kosten- und Materialschätzung, die Quellen und Hinweise zu den Daten. "
+                              "Quellenvermerke bitte in Pläne und Arbeiten übernehmen.", "export_fertig")
 
     def zeigen(r):
         with ui.row().classes("items-center gap-2 w-full"):

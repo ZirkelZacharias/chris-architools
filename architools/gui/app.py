@@ -4,7 +4,7 @@ import os
 from nicegui import ui
 
 from .. import VERSION
-from . import eier, einst, export, quellen_seite, start as start_seite, stil, zustand as Z
+from . import assistent, eier, einst, export, quellen_seite, start as start_seite, stil, zustand as Z
 from .einst_modell import ModellEinst
 from .gebiet import Gebiet
 from .stil import AKZENT, BG, CSS, GRAU, INK, LINIE, NATIVE, OCKER, SCHIEFER, TERRA, TEXT, WASSERZEICHEN
@@ -118,6 +118,7 @@ def seite():
         for k, it in items.items():
             it.props(add="active" if k == name else None, remove=None if k == name else "active")
         sperre["an"] = False
+        assistent.zu(name)
 
     # ---- Werkzeug-Leiste links: eingeklappt nur Symbole, ausgeklappt mit Namen
     with ui.left_drawer(value=True, fixed=True, bordered=False).props("mini width=232 mini-width=58 behavior=desktop") \
@@ -171,6 +172,7 @@ def seite():
         with ui.tab_panel("prog").classes("py-2"):
             wz.seite_einstellungen()
     eier.fuss()
+    assistent.start(p)
     ui.timer(12, lambda: sp(True) if p.get("_pfad") else None)
 
 
