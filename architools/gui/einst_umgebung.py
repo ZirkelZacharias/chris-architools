@@ -55,6 +55,12 @@ def _haken(text, u, key, **kw):
     return ui.checkbox(text, **kw).bind_value(u, key)
 
 
+def _sub(titel, farbe=SCHIEFER, offen=False):
+    """Unterabschnitt in einer Sammelkarte (aufklappbar, mit farbigem Streifen links)."""
+    return ui.expansion(titel, value=offen).classes("w-full").props("header-class=text-weight-medium dense") \
+        .style(f"border-left:3px solid {farbe}; background:#fafbfb")
+
+
 def _wenn_aus(p, *schluessel):
     """Sichtbarkeit: mindestens eine der Ausgaben ist gewählt."""
     return lambda: any(p["ausgaben"].get(k) for k in schluessel)
@@ -65,6 +71,7 @@ def seiten(p):
     u = p["umgebung"]
     ausg = p["ausgaben"]
     regeln = []                       # (Element, Funktion) – Sichtbarkeit nach Auswahl
+    platz = {}                        # Platzhalter in der Informations-DWG-Karte
     teile = {}                        # Name -> Abschnitt (die Seite „Einstellungen“ ordnet sie nach den gewählten Exports)
 
     def abschnitt(wann, name=None):
@@ -76,11 +83,13 @@ def seiten(p):
 
     with ui.column().classes("w-full gap-3") as wurzel:
         # -------------------------------------------------- Gebiet und Daten (immer, wenn Umgebung gewählt)
-        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "daten"):
-            with karte("Koordinatensystem", AKZENT, offen=False) as k_koord:
-                hinweis("Größe von Gebiet, Nah- und Mittelbereich stellst du auf der Seite „Gebiet“ ein (dort siehst du sie in der Karte).")
+        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "koord"):
+            with karte("Koordinatensystem", AKZENT, offen=False):
+                hinweis("Wird automatisch passend zum Bundesland gewählt (nach dem Mittelpunkt) – nur ändern, wenn es nötig ist. "
+                        "Größe von Gebiet, Nah- und Mittelbereich stellst du auf der Seite „Gebiet“ ein (dort siehst du sie in der Karte).")
                 _wahl("Koordinatensystem", KBS, u, "epsg")
-            with karte("Daten", SCHIEFER):
+        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "daten"):
+            with karte("Daten", SCHIEFER, offen=False):
                 _wahl("Bundesland", LAENDER, u, "land")
                 _wahl("Quelle für Nutzung und Bäume", QUELLEN, u, "quelle")
                 hinweis("Immer die beste Quelle: amtliche Daten, wo es sie gibt (Berlin, Brandenburg …), sonst OpenStreetMap.")
@@ -148,7 +157,8 @@ def seiten(p):
                 u.setdefault("zusatz", {})
                 from .. import zusatz as _zusatz
                 _zusatz.rufe("gui_umgebung", ui, u)
-            with karte("Markante Gebäude – experimentell", OCKER, offen=False) as k_markant:
+        with abschnitt(_wenn_aus(p, "ifc"), "markant"):
+            with karte("Markante Gebäude – experimentell", OCKER, offen=False):
                 ui.label("EXPERIMENTELL: Diese Funktion klappt noch nicht immer – Gebäude können fehlen oder falsche Formen haben.") \
                     .classes("text-caption").style(f"color:{OCKER}")
                 mk = _haken("Markante Gebäude besonders detailliert darstellen", u, "markant")
@@ -169,9 +179,9 @@ def seiten(p):
                             "Dachsprünge teils falsch ab – deshalb ist es nicht Standard.")
                 ausgrauen(mk_in, mk)
 
-        # -------------------------------------------------- Lageplan / Schwarzplan
-        with abschnitt(_wenn_aus(p, "lageplan", "schwarzplan", "ifc"), "allgemein"):
-            with karte("Bürgersteige", SALBEI):
+        # -------------------------------------------------- Modelleinstellungen: Bürgersteige
+        with abschnitt(_wenn_aus(p, "lageplan", "schwarzplan", "ifc"), "buergersteige"):
+            with karte("Bürgersteige", SALBEI, offen=False):
                 _wahl("Darstellung (Lageplan und IFC-Gelände)", BUERGERSTEIGE, u, "buergersteige")
                 _haken("Breite nach Straßenbreite: 2,0 / 3,0 / 4,0 m (Berliner Richtwerte)", u, "gehweg_auto")
                 with ui.row().classes("gap-2 items-center"):
@@ -179,110 +189,107 @@ def seiten(p):
                     _zahl("", u, "gehweg_breite", min=0.5, step=0.5, breite="w-20")
                     ui.label("m").classes("text-body2")
                 _haken("Bürgersteige auch im Fernbereich (Standard: nur im Nahbereich)", u, "gehweg_ueberall")
-        with abschnitt(_wenn_aus(p, "lageplan", "schwarzplan"), "lageplan"):
-            with karte("Lageplan und Schwarzplan", SCHIEFER):
-                with ui.column().classes("w-full gap-0") as lp:
-                    ui.label("Lageplan").classes("text-subtitle2")
-                    _haken("Baumkronen als Kreise", u, "lageplan_baeume")
-                    _haken("Nahbereich: Dachlinien (Firste, Grate, Kehlen)", u, "dach_linien")
-                    _haken("Nahbereich: Dachflächen nach Sonnenstand schattieren (7 Grautöne)", u, "dach_schattierung")
-                _wahl("Schatten in den Plänen", SCHATTEN_MODI, u, "schatten")
-                with ui.column().classes("w-full gap-0") as sch:
-                    with ui.row().classes("gap-2"):
-                        ui.input("Datum (Tag.Monat)").bind_value(u, "schatten_datum").classes("w-36")
-                        ui.input("Uhrzeit (MEZ/MESZ)").bind_value(u, "schatten_zeit").classes("w-36") \
-                            .bind_enabled_from(u, "schatten", backward=lambda s: s == "eigen")
-                    with ui.row().classes("gap-3"):
-                        _haken("im Lageplan", u, "schatten_lageplan")
-                        _haken("im Schwarzplan", u, "schatten_schwarzplan")
-                    _haken("Bäume werfen Schatten", u, "schatten_baeume")
-                    with ui.column().classes("w-full gap-0") as bs:
-                        _wahl("wo", BAUMSCHATTEN_BEREICH, u, "schatten_baeume_bereich", "w-72")
-                        with ui.row().classes("gap-3"):
-                            _haken("Baumschatten im Lageplan", u, "baumschatten_lageplan")
-                            _haken("Baumschatten im Schwarzplan", u, "baumschatten_schwarzplan")
-                    _bsw = ui.checkbox().bind_value_from(u, "schatten_baeume")
-                    _bsw.set_visibility(False)
-                    ausgrauen(bs, _bsw)
-                    sch.bind_visibility_from(u, "schatten", backward=lambda s: s != "aus")
-                hinweis("Jeder Plan ist eine eigene DXF-Datei im selben Nullpunkt wie die IFC. In jedem Plan lässt sich der "
-                        "Schatten über die Ebene „Schatten“ abwählen.")
-                lp_regel = _wenn_aus(p, "lageplan")
-                regeln.append((lp, lp_regel))
 
-        # -------------------------------------------------- Lageplan-Beschriftung
-        with abschnitt(_wenn_aus(p, "lageplan"), "lageplan_text"):
-            with karte("Lageplan-Beschriftung", SCHIEFER, offen=False):
-                bt = _haken("Lageplan beschriften (jede Art auf eigener Ebene, Schrift 2,5 mm auf dem Papier)", u, "lp_text")
-                with ui.column().classes("w-full gap-0") as bt_in:
-                    _haken("Flurstücksnummern (ALKIS, nur Berlin – braucht den Haken „ALKIS-Zusatzdaten“ bei Informations-DWG/Daten)", u, "lp_text_flurstuecke")
-                    _haken("Hausnummern (OpenStreetMap)", u, "lp_text_hausnummern")
-                    _haken("Straßennamen (OpenStreetMap)", u, "lp_text_strassen")
-                    _haken("Gebäudehöhen: Traufe und First (LoD2)", u, "lp_text_hoehen")
-                    _wahl("Höhen angeben", {"gelaende": "über Gelände (Tr = Traufe, Fi = First)", "nhn": "in m ü. NHN"},
-                          u, "lp_text_hoehen_art", "w-80")
-                    with ui.row().classes("gap-2 items-center"):
-                        ui.label("Maßstab für die Schrifthöhe 1:").classes("text-body2")
-                        _zahl("", u, "lp_text_massstab", min=50, step=50, breite="w-24")
-                    hinweis("Wo OpenStreetMap oder ALKIS nichts liefern, bleibt der Text weg (steht im Protokoll). Noch nicht gegen die "
-                            "Live-Dienste getestet.")
-                ausgrauen(bt_in, bt)
-
-        # -------------------------------------------------- Informations-DWG
-        with abschnitt(_wenn_aus(p, "info_dwg"), "info"):
-            with karte("Informations-DWG – alle Ebenen in einer Zeichnung", INK, offen=True):
-                _wahl("Ausgabe", DXF_MODI, u, "dxf_modus")
-                hinweis("Einzeldateien liegen im Unterordner dxf_ebenen und haben alle denselben Nullpunkt.")
-                _haken("Berlin: ALKIS-Flurstücke, -Gebäude und -Bauwerke einbeziehen", u, "alkis_zusatz")
-            with karte("Zusatzdaten (nur Informations-DWG)", TERRA, offen=False):
-                for key, text in EXTRA:
-                    def umschalten(e, key=key):
-                        lst = u.setdefault("extra", [])
-                        if e.value and key not in lst:
-                            lst.append(key)
-                        elif not e.value and key in lst:
-                            lst.remove(key)
-                    ui.checkbox(text, value=key in (u.get("extra") or []), on_change=umschalten)
+        # -------------------------------------------------- 2D-Pläne: Lageplan (mit Beschriftung) und Schwarzplan
+        def schatten_block(plan):
+            """Schatten: Modus, Datum und Uhrzeit gelten für beide Pläne, die Haken je Plan."""
+            _wahl("Schatten", SCHATTEN_MODI, u, "schatten")
+            with ui.column().classes("w-full gap-0") as sch:
                 with ui.row().classes("gap-2"):
-                    ui.select(LAERM_ARTEN, label="Lärmkarte: Art").bind_value(u, "laerm_art").classes("w-64")
-                    ui.select(LAERM_WERTE, label="Wert").bind_value(u, "laerm_wert").classes("w-56")
-                hinweis("Quelle automatisch: amtlich (Berlin), sonst OpenStreetMap – ÖPNV, Gewässer und Denkmäler gibt es so überall.")
-            with karte("Kartenbilder zum Daruntermalen (nur Informations-DWG, optional)", TERRA, offen=False):
-                from .. import projekt as _P
-                _P.kern()
-                import ifcmap_wms as _WM
-                for key, (text, *_r) in _WM.WMS_KATALOG.items():
-                    def wms_umschalten(e, key=key):
-                        lst = u.setdefault("wms_karten", [])
-                        if e.value and key not in lst:
-                            lst.append(key)
-                        elif not e.value and key in lst:
-                            lst.remove(key)
-                    ui.checkbox(text + " – ungetestet", value=key in (u.get("wms_karten") or []), on_change=wms_umschalten)
-                with ui.row().classes("gap-2 items-center"):
-                    ui.label("Auflösung:").classes("text-body2")
-                    _zahl("", u, "wms_aufloesung", min=0.05, max=5, step=0.05, breite="w-20")
-                    ui.label("m je Pixel (höchstens 4096 Pixel Kantenlänge)").classes("text-body2")
-                ui.textarea("Weitere WMS-Dienste (je Zeile: Name | Adresse | Ebene1,Ebene2 – Ebenen optional)") \
-                    .bind_value(u, "wms_eigene").classes("w-full").props("autogrow outlined dense")
-                hinweis("Das sind Rasterbilder (kein Vektor): je Karte eine eigene DXF mit eingebettetem Bild samt PNG und World-File, im "
-                        "selben Nullpunkt. Nur Berlin; weitere Umweltatlas-Themenpläne (Klima, Grünvolumen …) lassen sich über "
-                        "„Weitere WMS-Dienste“ mit der Adresse https://gdi.berlin.de/services/wms/<Dienstname> ergänzen. "
-                        "Abruf noch nicht gegen die Live-Dienste getestet. Karten liegen als Bild vor – bitte Quelle und Lizenz "
-                        "(Geoportal Berlin) beim Veröffentlichen angeben.")
+                    ui.input("Datum (Tag.Monat)").bind_value(u, "schatten_datum").classes("w-36")
+                    ui.input("Uhrzeit (MEZ/MESZ)").bind_value(u, "schatten_zeit").classes("w-36") \
+                        .bind_enabled_from(u, "schatten", backward=lambda s: s == "eigen")
+                _haken("Schatten im " + ("Lageplan" if plan == "lageplan" else "Schwarzplan"), u, "schatten_" + plan)
+                _haken("Bäume werfen Schatten", u, "schatten_baeume")
+                with ui.column().classes("w-full gap-0") as bs:
+                    _wahl("wo", BAUMSCHATTEN_BEREICH, u, "schatten_baeume_bereich", "w-72")
+                    _haken("Baumschatten im " + ("Lageplan" if plan == "lageplan" else "Schwarzplan"), u, "baumschatten_" + plan)
+                _bsw = ui.checkbox().bind_value_from(u, "schatten_baeume")
+                _bsw.set_visibility(False)
+                ausgrauen(bs, _bsw)
+                sch.bind_visibility_from(u, "schatten", backward=lambda s: s != "aus")
+
+        with abschnitt(_wenn_aus(p, "lageplan"), "lageplan"):
+            with karte("Lageplan", SCHIEFER):
+                _haken("Baumkronen als Kreise", u, "lageplan_baeume")
+                _haken("Nahbereich: Dachlinien (Firste, Grate, Kehlen)", u, "dach_linien")
+                _haken("Nahbereich: Dachflächen nach Sonnenstand schattieren (7 Grautöne)", u, "dach_schattierung")
+                schatten_block("lageplan")
+                hinweis("Der Plan ist eine eigene DXF-Datei im selben Nullpunkt wie die IFC; den Schatten kannst du über die Ebene „Schatten“ abwählen.")
+                with _sub("Beschriftung (Flurstücke, Hausnummern, Straßen, Höhen)", SCHIEFER):
+                    bt = _haken("Lageplan beschriften (jede Art auf eigener Ebene, Schrift 2,5 mm auf dem Papier)", u, "lp_text")
+                    with ui.column().classes("w-full gap-0") as bt_in:
+                        _haken("Flurstücksnummern (ALKIS, nur Berlin – braucht den Haken „ALKIS-Zusatzdaten“ bei Informations-DWG/Daten)", u, "lp_text_flurstuecke")
+                        _haken("Hausnummern (OpenStreetMap)", u, "lp_text_hausnummern")
+                        _haken("Straßennamen (OpenStreetMap)", u, "lp_text_strassen")
+                        _haken("Gebäudehöhen: Traufe und First (LoD2)", u, "lp_text_hoehen")
+                        _wahl("Höhen angeben", {"gelaende": "über Gelände (Tr = Traufe, Fi = First)", "nhn": "in m ü. NHN"},
+                              u, "lp_text_hoehen_art", "w-80")
+                        with ui.row().classes("gap-2 items-center"):
+                            ui.label("Maßstab für die Schrifthöhe 1:").classes("text-body2")
+                            _zahl("", u, "lp_text_massstab", min=50, step=50, breite="w-24")
+                        hinweis("Wo OpenStreetMap oder ALKIS nichts liefern, bleibt der Text weg (steht im Protokoll). Noch nicht gegen die "
+                                "Live-Dienste getestet.")
+                    ausgrauen(bt_in, bt)
+        with abschnitt(_wenn_aus(p, "schwarzplan"), "schwarzplan"):
+            with karte("Schwarzplan", INK):
+                hinweis("Figur-Grund-Plan: Gebäude schwarz auf weiß.")
+                schatten_block("schwarzplan")
+                hinweis("Eigene DXF-Datei im selben Nullpunkt wie die IFC; den Schatten kannst du über die Ebene „Schatten“ abwählen.")
+
+        # -------------------------------------------------- Informations-DWG: eine Karte mit Unterabschnitten
+        with abschnitt(_wenn_aus(p, "info_dwg", "hoehenlinien"), "info"):
+            with karte("Informations-DWG", INK, offen=True):
+                with abschnitt(_wenn_aus(p, "info_dwg")):
+                    _wahl("Ausgabe", DXF_MODI, u, "dxf_modus")
+                    hinweis("Einzeldateien liegen im Unterordner dxf_ebenen und haben alle denselben Nullpunkt – so lässt sich jede Ebene einzeln exportieren.")
+                    _haken("Berlin: ALKIS-Flurstücke, -Gebäude und -Bauwerke einbeziehen", u, "alkis_zusatz")
+                platz["ebenen"] = ui.column().classes("w-full gap-3")        # hier sitzt „Ebenen“ (alle an-/abwählbar)
+                platz["hoehenlinien"] = ui.column().classes("w-full gap-3")
+                with abschnitt(_wenn_aus(p, "info_dwg")):
+                    with _sub("Zusatzdaten", TERRA):
+                        for key, text in EXTRA:
+                            def umschalten(e, key=key):
+                                lst = u.setdefault("extra", [])
+                                if e.value and key not in lst:
+                                    lst.append(key)
+                                elif not e.value and key in lst:
+                                    lst.remove(key)
+                            ui.checkbox(text, value=key in (u.get("extra") or []), on_change=umschalten)
+                        with ui.row().classes("gap-2"):
+                            ui.select(LAERM_ARTEN, label="Lärmkarte: Art").bind_value(u, "laerm_art").classes("w-64")
+                            ui.select(LAERM_WERTE, label="Wert").bind_value(u, "laerm_wert").classes("w-56")
+                        hinweis("Quelle automatisch: amtlich (Berlin), sonst OpenStreetMap – ÖPNV, Gewässer und Denkmäler gibt es so überall.")
+                    with _sub("Kartenbilder zum Daruntermalen (optional)", TERRA):
+                        from .. import projekt as _P
+                        _P.kern()
+                        import ifcmap_wms as _WM
+                        for key, (text, *_r) in _WM.WMS_KATALOG.items():
+                            def wms_umschalten(e, key=key):
+                                lst = u.setdefault("wms_karten", [])
+                                if e.value and key not in lst:
+                                    lst.append(key)
+                                elif not e.value and key in lst:
+                                    lst.remove(key)
+                            ui.checkbox(text + " – ungetestet", value=key in (u.get("wms_karten") or []), on_change=wms_umschalten)
+                        with ui.row().classes("gap-2 items-center"):
+                            ui.label("Auflösung:").classes("text-body2")
+                            _zahl("", u, "wms_aufloesung", min=0.05, max=5, step=0.05, breite="w-20")
+                            ui.label("m je Pixel (höchstens 4096 Pixel Kantenlänge)").classes("text-body2")
+                        ui.textarea("Weitere WMS-Dienste (je Zeile: Name | Adresse | Ebene1,Ebene2 – Ebenen optional)") \
+                            .bind_value(u, "wms_eigene").classes("w-full").props("autogrow outlined dense")
+                        hinweis("Das sind Rasterbilder (kein Vektor): je Karte eine eigene DXF mit eingebettetem Bild samt PNG und World-File, im "
+                                "selben Nullpunkt. Nur Berlin; weitere Umweltatlas-Themenpläne (Klima, Grünvolumen …) lassen sich über "
+                                "„Weitere WMS-Dienste“ mit der Adresse https://gdi.berlin.de/services/wms/<Dienstname> ergänzen. "
+                                "Abruf noch nicht gegen die Live-Dienste getestet. Karten liegen als Bild vor – bitte Quelle und Lizenz "
+                                "(Geoportal Berlin) beim Veröffentlichen angeben.")
+                platz["zusatzplan"] = ui.column().classes("w-full gap-3")
 
         with abschnitt(_wenn_aus(p, "info_dwg", "lageplan", "schwarzplan"), "zusatzplan"):
             from . import zusatzplan
             zusatzplan.liste_karte(p)
 
-        # -------------------------------------------------- Erweitert: selten gebrauchte Karten wandern hierher
-        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "erweitert"):
-            ui.label("Erweitert – selten gebraucht").classes("text-subtitle2 q-mt-md").style(f"color:{GRAU}").props("id=erweitert-anker")
-            erweitert = ui.column().classes("w-full gap-3")
-        k_koord.move(erweitert)
-        k_markant.move(a_ifc)
-        regeln.append((k_markant, _wenn_aus(p, "ifc")))
-
+        # -------------------------------------------------- Erweitert: Koordinatensystem kommt aus der Karte „koord“
         # -------------------------------------------------- Sonnenbank-Flavour (Sonnenbahn)
         with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "sonne"):
             with karte("Sonnenbank-Flavour", OCKER, offen=False):
@@ -347,4 +354,5 @@ def seiten(p):
     ui.timer(0.4, aktualisieren)
     aktualisieren()
     wurzel.teile = teile
+    wurzel.platz = platz
     return wurzel

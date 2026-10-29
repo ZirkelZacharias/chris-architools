@@ -250,15 +250,9 @@ class ModellEinst:
         for k, v in (("aktiv", False), ("hoehe_mm", 80.0), ("deckplatte_mm", 12.0), ("ueberstand_mm", 20.0),
                      ("rahmenholz_breite_mm", 12.0), ("stuetz_abstand_mm", 300.0)):
             pc.setdefault(k, v)
-        with karte("Holz: Rahmenleisten und Grundpodest (Zuschnittliste)", OCKER, offen=False):
-            hinweis("Es entstehen eine Zuschnittliste (Text und CSV) und eine Zeichnung – gelasert wird nichts. Maße ohne Sägezugabe.")
-            sw = ui.checkbox("Rahmenleisten ums Modell").bind_value(rc, "aktiv")
-            b1 = ui.row().classes("gap-2 items-center")
-            with b1:
-                ui.number("Leistenbreite mm", min=5).bind_value(rc, "breite_mm").classes("w-36").tooltip("Breite von oben gesehen")
-                ui.number("Leistenhöhe mm (leer = Höhe des Geländestapels)", min=3).bind_value(rc, "hoehe_mm").classes("w-80").props("clearable")
-                ui.checkbox("Gehrung (45°)").bind_value(rc, "gehrung")
-            ausgrauen(b1, sw)
+        with karte("Holz-Podest (Zuschnittliste)", OCKER, offen=False):
+            hinweis("Es entstehen eine Zuschnittliste (Text und CSV) und eine Zeichnung – gelasert wird nichts. Maße ohne Sägezugabe. "
+                    "Der Rahmen ums Modell wird nicht aus Holz geschnitten, sondern bei „Gelände Lasercut“ mitgelasert; das Podest passt sich ihm an.")
             sw2 = ui.checkbox("Grundpodest aus Holz (Deckplatte, Rahmenbretter, bei Bedarf Stützrahmen – kein Boden)").bind_value(pc, "aktiv")
             b2 = ui.row().classes("gap-2 items-center")
             with b2:
@@ -394,7 +388,7 @@ class ModellEinst:
         cfg = self.cfg
         if cfg.get("quelle") not in ("auto", "dateien"):
             cfg["quelle"] = "auto"
-        with karte("Modell: Daten", AKZENT):
+        with karte("Modell: Daten", AKZENT, offen=False):
             ui.toggle({"auto": "Automatisch (Koordinaten)", "dateien": "Eigene Dateien"}).bind_value(cfg, "quelle")
             with ui.column().classes("w-full gap-0").bind_visibility_from(cfg, "quelle", value="auto"):
                 hinweis("Berlin: Gelände (DGM1), Gebäude (LoD2), ALKIS-Nutzung, Bäume und Flurstücke werden automatisch "
@@ -434,6 +428,17 @@ class ModellEinst:
                             self.material_format(cfg["laser"])
                             self.lbl_schicht2 = ui.label("").classes("text-body2").style(f"color:{AKZENT}")
                         self._karte_restplatten()
+                        with karte("Rahmen ums Modell mitlasern", OCKER, offen=False):
+                            rz = cfg["laser"].setdefault("rahmen", {"aktiv": False, "breite_mm": 15.0})
+                            rz.setdefault("aktiv", False)
+                            rz.setdefault("breite_mm", 15.0)
+                            sw_r = ui.checkbox("Rahmen aus demselben Material mitlasern (je Schicht vier Leisten, so hoch wie das Modell)") \
+                                .bind_value(rz, "aktiv")
+                            b_r = ui.row().classes("gap-2 items-center")
+                            with b_r:
+                                ui.number("Leistenbreite mm", min=5).bind_value(rz, "breite_mm").classes("w-40").tooltip("Breite von oben gesehen")
+                            ausgrauen(b_r, sw_r)
+                            hinweis("Standard aus. Die langen Leisten laufen durch, die kurzen sitzen dazwischen; die Leisten liegen mit auf den Platten.")
                         self._zusatz_laser(cfg)
                         self._karte_bauweise()
                         with karte("Was wird geritzt, graviert, geschnitten?", SCHIEFER):

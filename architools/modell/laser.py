@@ -343,6 +343,21 @@ def tile_parts(parts, formats, margin, log=print, split_sparse=True, sparse_len=
     return out
 
 
+def rahmen_teile(grenzen, n_schichten, breite_mm, spiel=0.5):
+    """Rahmen ums Modell als Laserteile: je Schicht vier Leisten (die langen laufen durch, die kurzen sitzen dazwischen).
+    grenzen = (x0, y0, x1, y1) des Modells in mm. -> Liste Teile (wie make_parts)."""
+    x0, y0, x1, y1 = grenzen
+    b = float(breite_mm)
+    ix0, iy0, ix1, iy1 = x0 - spiel, y0 - spiel, x1 + spiel, y1 + spiel
+    leisten = [box(ix0 - b, iy0 - b, ix1 + b, iy0), box(ix0 - b, iy1, ix1 + b, iy1 + b),        # unten, oben (durchgehend)
+               box(ix0 - b, iy0, ix0, iy1), box(ix1, iy0, ix1 + b, iy1)]                         # links, rechts (dazwischen)
+    out = []
+    for k in range(int(n_schichten)):
+        for i, r in enumerate(leisten, 1):
+            out.append({"layer": k, "nr": i, "poly": r, "ritzen": [], "gravieren": [], "hidden": None, "raster_mm2": 0.0, "rahmen": True})
+    return out
+
+
 def finalize_ids(parts, cfg, praefix=""):
     """Teile-IDs vergeben und (verdeckt, falls möglich) aufbringen."""
     th = cfg["gelaende"]["beschriftung_hoehe_mm"]

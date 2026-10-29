@@ -94,6 +94,8 @@ def umgebung_standard():
         else:
             out[f.name] = None
     out["epsg"] = 25833
+    out["markant"] = False                 # Markante Gebäude: experimentell, Standard aus
+    out["buergersteige"] = "keine"         # Bürgersteige: Standard aus
     return out
 
 

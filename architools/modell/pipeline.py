@@ -340,6 +340,12 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         for r in rippen:
             r.pop("lage", None)
         parts = parts + rippen
+        rz = (lc.get("rahmen") or {})
+        if rz.get("aktiv"):
+            n_sch = 1 + max([p["layer"] for p in parts if not p.get("rippe")] or [0])
+            rt = L.rahmen_teile(extent_m.bounds, n_sch, float(rz.get("breite_mm") or 15.0))
+            parts = parts + rt
+            log(f"  Rahmen mitgelasert: {len(rt)} Leisten ({n_sch} Schichten x 4), {float(rz.get('breite_mm') or 15.0):.0f} mm breit")
         for _ in range(2):
             parts = L.tile_parts(parts, formate, lc["rand_mm"], log, lc.get("ringe_teilen", True),
                                  float(lc.get("teilstueck_mm", 250)))
@@ -439,7 +445,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
 
     holz_dateien = []
     try:
-        if (laser or druck) and any(((cfg.get("holz") or {}).get(k) or {}).get("aktiv") for k in ("rahmen", "podest")):
+        if (laser or druck) and ((cfg.get("holz") or {}).get("podest") or {}).get("aktiv"):
             from . import podest as PO
             holz_res = PO.berechnen(cfg, modell_b, modell_h, len(P) * t)
             holz_dateien = PO.schreiben(os.path.join(out, "holz"), name, holz_res, log)

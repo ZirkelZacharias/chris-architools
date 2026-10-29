@@ -12,27 +12,27 @@ DATEI = os.path.join(os.path.expanduser("~"), ".architools", "voreinstellungen.j
 
 # Alle hier genannten Schalter werden von jeder Voreinstellung gesetzt (BASIS) und einzeln überschrieben.
 BASIS = dict(ifc=True, info_dwg=False, lageplan=False, schwarzplan=False, dxf_modus="eine", aufteilung="strassen",
-             fern_gebaeude="bloecke", farben=True, baeume_nur_nah=True, sonne=False, markant=True, markant_dom=True,
+             fern_gebaeude="bloecke", farben=True, baeume_nur_nah=True, sonne=False, markant=False, markant_dom=True,
              markant_osm=True, markant_fern=False, fern_zusammenfassen=True, schatten="aus", schatten_lageplan=True,
-             schatten_schwarzplan=True, buergersteige="fgn", dach_linien=False, dach_schattierung=False, lageplan_baeume=True,
+             schatten_schwarzplan=True, buergersteige="keine", dach_linien=False, dach_schattierung=False, lageplan_baeume=True,
              extra=[], online_dgm=True, genauigkeit="Standard", ebenen={"ifc": {}, "dxf": {}})
 VORGABEN = [
     ("Entwurf: Modell und Pläne", TERRA,
      "IFC mit Gelände, Straßen, Wegen und Gebäuden – dazu Lageplan und Schwarzplan",
-     dict(lageplan=True, schwarzplan=True, ebenen={"ifc": {"Baeume": False}, "dxf": {}})),
+     dict(lageplan=True, schwarzplan=True, buergersteige="fgn", ebenen={"ifc": {"Baeume": False}, "dxf": {}})),
     ("Schwarzplan", INK, "Nur ein Schwarzplan – schnell, ohne Gelände und ohne IFC",
      dict(ifc=False, schwarzplan=True, online_dgm=False, markant=False, schatten="standard")),
     ("Lageplan", AKZENT,
      "Lageplan: Bürgersteige, Grün, Wasser, Brücken, weiße Gebäude mit dünner Kontur und Bäume – ohne IFC",
-     dict(ifc=False, lageplan=True, online_dgm=False, markant=False)),
+     dict(ifc=False, lageplan=True, online_dgm=False, markant=False, buergersteige="fgn")),
     ("Massenmodell", SCHIEFER,
      "Schlanke IFC: grobes Gelände, Gebäude als Blöcke (Fernbereich zusammengefasst), ohne Bäume und Bürgersteige – klein und schnell",
      dict(genauigkeit="Schnell", aufteilung="keine", markant=False, buergersteige="keine", fern_zusammenfassen=True,
           ebenen={"ifc": {"Baeume": False}, "dxf": {}})),
     ("Standortanalyse", SALBEI, "Informations-DWG mit Zusatzdaten (ÖPNV, Gewässer, Denkmal), Lageplan und Sonnenbahn – dazu die IFC",
-     dict(info_dwg=True, lageplan=True, sonne=True, extra=["oepnv", "gewaesser", "denkmal"])),
+     dict(info_dwg=True, lageplan=True, sonne=True, buergersteige="fgn", extra=["oepnv", "gewaesser", "denkmal"])),
     ("Präsentation: alles", OCKER, "Feines Gelände, markante Gebäude (experimentell), Bäume, Sonnenbahn und alle Pläne",
-     dict(genauigkeit="Fein", info_dwg=True, lageplan=True, schwarzplan=True, sonne=True, aufteilung="verkehr_wasser",
+     dict(genauigkeit="Fein", markant=True, buergersteige="fgn", info_dwg=True, lageplan=True, schwarzplan=True, sonne=True, aufteilung="verkehr_wasser",
           schatten="standard", dach_linien=True, dach_schattierung=True)),
 ]
 AUSGABEN_SCHLUESSEL = ("ifc", "info_dwg", "lageplan", "schwarzplan")
@@ -79,7 +79,7 @@ def anwenden(p, werte):
 def karte_zeigen(p, neu_laden):
     """Karte „Voreinstellungen“ (oben auf der Einstellungs-Seite)."""
     state = {"aktiv": None}
-    with karte("Voreinstellungen (Umgebung)", TERRA, offen=False) as k:
+    with karte("Voreinstellungen (Umgebung)", TERRA, offen=True) as k:
         hinweis("Ein Klick stellt die Ausgaben und Optionen der Umgebung passend ein. Danach kannst du alles weiter unten noch ändern.")
         gitter = ui.grid(columns=2).classes("w-full gap-2")
         lbl = hinweis("Keine Voreinstellung gewählt.")

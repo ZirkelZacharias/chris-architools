@@ -1,4 +1,5 @@
-"""Holz fürs Modell: Rahmenleisten und Grundpodest (nur Zuschnittliste und Zeichnung, nichts wird gelasert).
+"""Holz fürs Modell: Grundpodest (nur Zuschnittliste und Zeichnung, nichts wird gelasert). Der Rahmen ums Modell wird nicht mehr aus Holz
+geschnitten, sondern mitgelasert (laser.rahmen); das Podest richtet sich dann nach dessen Außenmaß.
 
 Das Podest hat Deckplatte, Rahmenbretter ringsum und bei Bedarf Stützrahmen im Unterbau – aber keinen Boden.
 Alle Maße in mm; Längen sind Zuschnittlängen (Gehrung: längste Kante).
@@ -14,7 +15,9 @@ def berechnen(cfg, modell_b, modell_h, stapel_hoehe):
     """-> dict(teile=[...], rahmen=dict|None, podest=dict|None, hinweise=[...]).
     Ein Teil: dict(pos, name, stueck, laenge, breite, dicke, bemerkung)"""
     hc = cfg.get("holz") or {}
-    rc, pc = hc.get("rahmen") or {}, hc.get("podest") or {}
+    pc = hc.get("podest") or {}
+    rc = {}                                                    # Holz-Rahmenleisten gibt es nicht mehr
+    lr = (cfg.get("laser") or {}).get("rahmen") or {}
     teile, hinweise = [], []
     aussen_b, aussen_h = modell_b, modell_h
     res = {"teile": teile, "rahmen": None, "podest": None, "hinweise": hinweise}
@@ -36,6 +39,10 @@ def berechnen(cfg, modell_b, modell_h, stapel_hoehe):
         res["rahmen"] = {"innen": (ib, ih), "aussen": (aussen_b, aussen_h), "leiste": (bl, hl)}
         if hl < stapel_hoehe - 0.01:
             hinweise.append(f"Rahmenleiste ({hl:.0f} mm hoch) ist niedriger als der Geländestapel ({stapel_hoehe:.0f} mm)")
+    if lr.get("aktiv"):
+        bl = float(lr.get("breite_mm") or 15.0)
+        aussen_b, aussen_h = modell_b + 2 * SPIEL + 2 * bl, modell_h + 2 * SPIEL + 2 * bl
+        res["rahmen"] = {"innen": (modell_b + 2 * SPIEL, modell_h + 2 * SPIEL), "aussen": (aussen_b, aussen_h), "leiste": (bl, stapel_hoehe)}
     if pc.get("aktiv"):
         H = float(pc.get("hoehe_mm") or 80.0)
         D = float(pc.get("deckplatte_mm") or 12.0)

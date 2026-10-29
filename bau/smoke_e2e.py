@@ -72,6 +72,7 @@ u["wms_karten"] = ["luftbild"]                      # Kartenbild (Dienst gestell
 u["geschosslinien"] = True; u["fenstermuster"] = True; u["lp_text"] = True                                                       # Lageplan-Beschriftung
 mg = p["modell"]["gebaeude"]
 mg.update(modus="falt", material="Bristolkarton", staerke_mm=0.5, lasche_mm=3.0, fenstermuster=True)       # Gebäude als Faltmodell (Laser)
+p["modell"]["laser"]["rahmen"] = {"aktiv": True, "breite_mm": 15.0}
 p["modell"]["laser"]["restplatten"] = [{"name": "Rest A", "b_mm": 400, "h_mm": 300, "anzahl": 1}]
 from PIL import Image
 _rj = os.path.join(TMP, "rasterbild.jpg")
@@ -119,6 +120,8 @@ rp = [f for r_, _, fs_ in os.walk(os.path.join(TMP, "ziel")) for f in fs_ if "Re
 assert rp, "Restplatten-PDF fehlt"
 lt = [f for r_, _, fs_ in os.walk(TMP) for f in fs_ if f.endswith("lageplan.dxf") or f.endswith("Lageplan.dxf")]
 print("GEBAEUDE-LASER, HOLZ, RESTPLATTEN OK")
+assert any("Rahmen mitgelasert" in x for x in LOG), "Laser-Rahmen wurde nicht erzeugt"
+print("LASER-RAHMEN OK")
 from architools import zusatz as _Z
 if _Z.hat("modell_raster_bild"):
     assert any("Teststreifen" in x for x in LOG), "Rastergravur (Zusatzmodul) hat keinen Teststreifen erzeugt"

@@ -84,8 +84,9 @@ DEFAULTS = {
         # Restplatten: werden zuerst belegt; was darauf nicht passt, kommt auf das gewählte Format.
         # [{"name": "Rest 1", "b_mm": 400, "h_mm": 300, "anzahl": 1}, ...]  (gleiches Material und gleiche Stärke)
         "restplatten": [],
+        # Rahmen ums Modell, aus demselben Material mitgelasert (je Schicht vier Leisten, Stapel = Höhe des Modells)
+        "rahmen": {"aktiv": False, "breite_mm": 15.0},
     },
-
     # Rastergravur (EXPERIMENTELL): Bild als Linienraster (schwarze Streifen) auf die Geländeschichten.
     "raster_bild": {
         "aktiv": False,
@@ -97,7 +98,7 @@ DEFAULTS = {
         "teststreifen": True,              # 100 × 100 mm Probestück in drei Stufen mitlasern
     },
 
-    # Holz: Rahmenleisten ums Modell und Grundpodest (nur Zuschnittliste und Zeichnung, kein Laser)
+    # Holz: Grundpodest (nur Zuschnittliste und Zeichnung, kein Laser). Der Rahmen wird jetzt mitgelasert (laser.rahmen); holz.rahmen wird nicht mehr benutzt
     "holz": {
         "rahmen": {
             "aktiv": False,

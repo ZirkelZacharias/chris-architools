@@ -131,7 +131,7 @@ def formate_karte(p):
 def schnitt_karte(p):
     s = p["schnitt"]
     with ui.column().classes("w-full") as wurzel:
-        with karte("Geländeschnitt / Abwicklung: Ausgabe", TERRA):
+        with karte("Geländeschnitt / Abwicklung: Ausgabe", TERRA, offen=False):
             with ui.row().classes("gap-2 items-end"):
                 ui.select(MASSSTAEBE, label="Maßstab", new_value_mode="add-unique", with_input=True) \
                     .bind_value(s, "massstab").classes("w-32")
@@ -146,7 +146,7 @@ def schnitt_karte(p):
 def hoehenlinien_karte(p):
     h = p["hoehenlinien"]
     with ui.column().classes("w-full") as wurzel:
-        with karte("Höhenlinien: Ausgabe", TERRA):
+        with karte("Höhenlinien: Ausgabe", TERRA, offen=False):
             with ui.row().classes("gap-2 items-end"):
                 ui.number("Abstand der Linien (m)", step=0.5, min=0.1).bind_value(h, "aequidistanz_m").classes("w-44") \
                     .tooltip("Äquidistanz: Höhenunterschied zwischen zwei Linien – 1 m ist für Stadtgebiete üblich, 0,5 m für flaches Gelände")
@@ -166,10 +166,9 @@ def hoehenlinien_karte(p):
     return wurzel
 
 
-SPRUNG = [("Formate", "Dateiformate"), ("Daten", "Daten"), ("Modell-Daten", "Modell: Daten"), ("Ebenen", "Ebenen: welche"),
-          ("IFC", "Archicad-IFC"), ("Lageplan", "Lageplan und Schwarzplan"), ("Informations-DWG", "Informations-DWG"),
-          ("Gelände Lasercut", "Gelände Lasercut"), ("3D-Druck", "Gebäude im Modell"), ("Schnitt", "Geländeschnitt"),
-          ("Höhenlinien", "Höhenlinien: Ausgabe"), ("Erweitert", "#erweitert-anker")]
+SPRUNG = [("Formate", "Dateiformate"), ("Daten", "Daten"), ("Modelleinstellungen", "#kat-modell"), ("IFC", "Archicad-IFC"),
+          ("2D-Pläne", "#kat-2d"), ("Informations-DWG", "Informations-DWG"), ("Modellbau", "#kat-modellbau"),
+          ("Erweitert", "#kat-erweitert")]
 
 
 def _springen(ziel):
@@ -190,6 +189,14 @@ def ebenen_karte(p):
     return wurzel
 
 
+def _unter_stil(col):
+    """Karte, die in eine Sammelkarte wandert: eingerückt mit farbigem Streifen links."""
+    for e in col.descendants():
+        if isinstance(e, ui.expansion):
+            e.style(f"border-left:3px solid {INK}; background:#fafbfb")
+            break
+
+
 def seite(p, wechsel=None):
     ausg = p["ausgaben"]
     with ui.row().classes("w-full items-center gap-1 q-px-sm").style("max-width:960px; margin:0 auto"):
@@ -202,11 +209,28 @@ def seite(p, wechsel=None):
             with leer:
                 ui.label("Noch nichts gewählt").classes("text-subtitle1")
                 hinweis("Wähle auf der Startseite aus, was am Ende herauskommen soll – hier erscheinen dann die passenden Einstellungen.")
-            # Reihenfolge: erst alles, was nicht zu EINEM Export gehört, dann je gewähltem Export eine Kachel (wie in Schritt 1)
-            plaetze = {n: ui.column().classes("w-full gap-3") for n in
-                       ("allgemein", "ifc", "lageplan", "info", "laser", "druck", "schnitt", "hoehenlinien", "erweitert")}
-            with plaetze["allgemein"]:
+
+            # Reihenfolge: 1 Voreinstellungen · Kategorien: Daten & Formate · Modelleinstellungen · 2D Pläne · Modellbau · Erweitert
+            kats = {}
+            kat_regeln = []                                           # (Kopfspalte, Kinder)
+
+            def kategorie(schluessel, titel):
+                spalte = ui.column().classes("w-full gap-3")
+                with spalte:
+                    ui.label(titel).classes("text-subtitle1 text-weight-bold q-mt-md").style(f"color:{INK}") \
+                        .props(f"id=kat-{schluessel}")
+                    kats[schluessel] = ui.column().classes("w-full gap-3")
+                return spalte
+
+            vor = ui.column().classes("w-full gap-3")
+            with vor:
                 voreinstellungen.karte_zeigen(p, ui.navigate.reload)
+            k_daten = kategorie("daten", "Daten & Formate")
+            k_modell = kategorie("modell", "Modelleinstellungen")
+            k_2d = kategorie("2d", "2D Pläne")
+            k_bau = kategorie("modellbau", "Modellbau")
+            k_erw = kategorie("erweitert", "Erweitert")
+
             staging = ui.column().classes("w-full gap-3")
             with staging:
                 fk = formate_karte(p)
@@ -215,23 +239,50 @@ def seite(p, wechsel=None):
                 ek = ebenen_karte(p)
                 sk = schnitt_karte(p)
                 hk = hoehenlinien_karte(p)
-            ziel = [(fk, "allgemein"), (eu.teile.get("daten"), "allgemein"), (me.teile["modell_daten"], "allgemein"),
-                    (ek, "allgemein"), (eu.teile.get("allgemein"), "allgemein"), (eu.teile.get("zusatzplan"), "allgemein"),
-                    (me.teile["holz"], "allgemein"),
-                    (eu.teile.get("ifc"), "ifc"), (eu.teile.get("genauigkeit"), "ifc"),
-                    (eu.teile.get("lageplan"), "lageplan"), (eu.teile.get("lageplan_text"), "lageplan"),
-                    (eu.teile.get("info"), "info"),
-                    (me.teile["laser"], "laser"), (me.teile["druck"], "druck"), (sk, "schnitt"), (hk, "hoehenlinien"),
-                    (eu.teile.get("erweitert"), "erweitert"), (eu.teile.get("sonne"), "erweitert"), (eu.teile.get("weitere"), "erweitert")]
-            for el, name in ziel:
-                if el is not None:
-                    el.move(plaetze[name])
+            T, PL = eu.teile, eu.platz
+            zp = T.get("zusatzplan")
+            zuordnung = {
+                "daten": [fk, T.get("daten"), me.teile["modell_daten"]],
+                "modell": [T.get("ifc"), T.get("markant"), T.get("genauigkeit"), T.get("buergersteige")],
+                "2d": [T.get("lageplan"), T.get("schwarzplan"), T.get("info"), sk],
+                "modellbau": [me.teile["laser"], me.teile["druck"], me.teile["holz"]],
+                "erweitert": [T.get("koord"), T.get("sonne"), T.get("weitere")],
+            }
+            for name, kinder in zuordnung.items():
+                for el in kinder:
+                    if el is not None:
+                        el.move(kats[name])
+            # Ebenen, Höhenlinien und Zusatzpläne sitzen in der Informations-DWG-Karte, solange diese gewählt ist
+            _unter_stil(ek)
+            _unter_stil(hk)
+            if zp is not None:
+                _unter_stil(zp)
+            ort = {}
+
+            def platziere(el, name, innen, aussen):
+                ziel = innen if innen is not None else aussen
+                if ort.get(name) is not ziel:
+                    el.move(ziel)
+                    ort[name] = ziel
 
             def pruefen():
                 leer.set_visibility(not P.gewaehlt(p))
                 sk.set_visibility(bool(ausg.get("schnitt")))
                 hk.set_visibility(bool(ausg.get("hoehenlinien")))
                 ek.set_visibility(any(ausg.get(k) for k in ("ifc", "lageplan", "schwarzplan", "info_dwg")))
+                info = bool(ausg.get("info_dwg"))
+                plaene = bool(ausg.get("lageplan") or ausg.get("schwarzplan"))
+                platziere(ek, "ebenen", PL["ebenen"] if info else None, kats["2d"] if plaene else kats["modell"])
+                platziere(hk, "hoehen", PL["hoehenlinien"], PL["hoehenlinien"])
+                if zp is not None:
+                    platziere(zp, "zp", PL["zusatzplan"] if info else None, kats["2d"])
+                # Kopf einer Kategorie nur, wenn mindestens eine ihrer Karten sichtbar ist
+                for name, kinder in zuordnung.items():
+                    kats[name].parent_slot.parent.set_visibility(
+                        any(el is not None and el.visible for el in kinder) or
+                        (name == "modell" and ek.visible and ort.get("ebenen") is kats["modell"]) or
+                        (name == "2d" and zp is not None and zp.visible and ort.get("zp") is kats["2d"]) or
+                        (name == "2d" and ek.visible and ort.get("ebenen") is kats["2d"]))
             ui.timer(0.4, pruefen)
             pruefen()
     if wechsel:
