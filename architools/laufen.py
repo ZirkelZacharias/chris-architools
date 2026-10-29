@@ -37,22 +37,35 @@ def umgebung_laden(p, ausgaben, log=print, prog=None, test=False):
     return d
 
 
-def umgebung_vorschau(p, ausgaben, log=print, prog=None, ueberhoehung=1.0, test=False):
+def vorschau_aus_daten(d, p, log=print, prog=None, ueberhoehung=1.0, lageplaene=()):
+    """2D-Übersicht + 3D-Vorschau (GLB) aus bereits geladenen Umgebungsdaten; optional die fertigen Lagepläne (DXF) als Bild."""
     from . import vorschau as V
     prog = prog or (lambda *a, **k: None)
-    d = umgebung_laden(p, ausgaben, log, lambda x, t="": prog(x * 0.8, t), test)
     ordner = os.path.join(p["ordner"], "ausgabe", ".vorschau")
     os.makedirs(ordner, exist_ok=True)
-    prog(0.85, "2D-Übersicht …")
+    prog(0.2, "2D-Übersicht …")
     png = V.plan_bauen(d, os.path.join(ordner, "umgebung.png"), log)
-    prog(0.92, "3D-Vorschau …")
+    prog(0.5, "3D-Vorschau …")
     try:
         g = V.glb_bauen(d, os.path.join(ordner, "umgebung.glb"), ueberhoehung, log)
     except Exception as e:
         log(f"  3D-Vorschau nicht möglich: {e}")
         g = {}
+    bilder = []
+    for i, f in enumerate(lageplaene):
+        prog(0.7 + 0.25 * i / max(len(lageplaene), 1), "Lageplan als Bild …")
+        b = V.dxf_bild(f, os.path.join(ordner, f"lageplan_{i + 1}.png"), log)
+        if b:
+            bilder.append(b)
     prog(1.0, "Vorschau fertig")
-    return {"png": png, **g, "ordner": ordner, "daten": d}
+    return {"png": png, **g, "ordner": ordner, "lageplan_bilder": bilder}
+
+
+def umgebung_vorschau(p, ausgaben, log=print, prog=None, ueberhoehung=1.0, test=False):
+    prog = prog or (lambda *a, **k: None)
+    d = umgebung_laden(p, ausgaben, log, lambda x, t="": prog(x * 0.8, t), test)
+    r = vorschau_aus_daten(d, p, log, lambda x, t="": prog(0.8 + x * 0.2, t), ueberhoehung)
+    return {**r, "daten": d}
 
 
 def _ausgabe_zuordnen(dateien):

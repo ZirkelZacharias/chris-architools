@@ -56,8 +56,8 @@ def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
                 ui.label("3D-Vorschau").classes("text-subtitle2")
                 ui.html(f'<span style="display:inline-block;width:12px;height:12px;background:{fl};border:1px solid #999"></span> Lasercut ({stats.get("material", "")})'
                         f' &nbsp; <span style="display:inline-block;width:12px;height:12px;background:{FARBE_DRUCK}"></span> 3D-Druck')
-                hinweis("Maus: drehen · Rad: zoomen · rechte Taste: verschieben")
-            szene3d(teile, stats.get("modell_b", 400), stats.get("modell_h", 300))
+                hinweis("Maus: drehen · rechte Taste: verschieben · Zoom im Reiter „3D-Ansicht“ (hier blättert das Rad durch die Ergebnisse)")
+            szene3d(teile, stats.get("modell_b", 400), stats.get("modell_h", 300), zoom=False)
         an = [p for p in stats.get("ansichten") or [] if os.path.exists(p)]
         if an:
             ui.label("Draufsicht und Schnitte").classes("text-subtitle2 mt-2")
@@ -80,5 +80,5 @@ def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
                 for d in dp:
                     if d.get("datei") and os.path.exists(d["datei"]):
                         with ui.card().tight().classes("p-1"):
-                            szene3d([(d["datei"], FARBE_DRUCK)], d["format"][0], d["format"][1], hoehe=240, breite=320)
+                            szene3d([(d["datei"], FARBE_DRUCK)], d["format"][0], d["format"][1], hoehe=240, breite=320, zoom=False)
                             ui.label(f"{d['name']}: {len(d['teile'])} Teile").classes("text-caption")

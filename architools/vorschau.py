@@ -209,3 +209,31 @@ def plan_bauen(d, ziel, log=print):
     plt.close(fig)
     log(f"  2D-Übersicht: {n_geb} Gebäude")
     return ziel
+
+
+def dxf_bild(dxf, ziel, log=print, breite_px=1800):
+    """Fertige 2D-Zeichnung (DXF, z. B. der Lageplan) als PNG – so wie sie in CAD aussieht (Ebenenfarben, weißer Grund).
+    Fehler werden gemeldet, nicht geworfen: die Vorschau darf nie einen Export verhindern. -> Pfad oder None"""
+    try:
+        import ezdxf
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from ezdxf.addons.drawing import Frontend, RenderContext
+        from ezdxf.addons.drawing import config as dcfg
+        from ezdxf.addons.drawing.matplotlib import MatplotlibBackend
+        doc = ezdxf.readfile(dxf)
+        fig = plt.figure(figsize=(breite_px / 150, breite_px / 150), dpi=150)
+        ax = fig.add_axes([0, 0, 1, 1])
+        ctx = RenderContext(doc)
+        cfg = dcfg.Configuration(background_policy=dcfg.BackgroundPolicy.WHITE, color_policy=dcfg.ColorPolicy.COLOR)
+        Frontend(ctx, MatplotlibBackend(ax), config=cfg).draw_layout(doc.modelspace(), finalize=True)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        fig.savefig(ziel, facecolor="white", bbox_inches="tight", pad_inches=0.05)
+        plt.close(fig)
+        log(f"  2D-Vorschau: {os.path.basename(dxf)}")
+        return ziel
+    except Exception as e:
+        log(f"  2D-Vorschau von {os.path.basename(dxf)} nicht möglich: {str(e)[:100]}")
+        return None

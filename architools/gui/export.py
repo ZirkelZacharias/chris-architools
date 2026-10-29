@@ -239,6 +239,19 @@ def seite(p, speichern):
             if r.get("modell") and not r["modell"].get("fehler"):
                 d3["modell"] = r["modell"]
                 zeichne_3d()
+            u = r.get("umgebung") or {}
+            if u.get("d") is not None and not u.get("fehler"):             # auch ohne „Vorschau laden“: 3D-Ansicht und Lageplan-Bild aus den Exportdaten
+                from ..laufen import _ausgabe_zuordnen
+                lp = [f for f in _ausgabe_zuordnen(u.get("dateien", [])).get("lageplan", []) if f.lower().endswith(".dxf")]
+                lauf.anhaengen = True
+                rv = await lauf.starten(lambda p, d, ue, lp, log, prog: L.vorschau_aus_daten(d, p, log, prog, ue, lp), p, u["d"], d3["ue"], lp)
+                if rv:
+                    uebersicht.clear()
+                    with uebersicht:
+                        ui.label("Gebiet (gestrichelt: Nahbereich)").classes("text-subtitle2")
+                        ui.image(url(rv["png"])).classes("w-full bg-white")
+                    d3["umg"] = rv
+                    zeichne_3d()
             ergebnis.clear()
             with ergebnis:
                 zeigen(r)
@@ -275,8 +288,16 @@ def seite(p, speichern):
         # Reihenfolge: 3D-IFC, Lageplan, Modellbau, Schnitt/Höhenlinien, ganz am Ende die gewählten Zusatz-DWGs
         if u and (u.get("fehler") or zu.get("ifc")):
             datei_liste("Umgebung in 3D (IFC)", zu.get("ifc", []), u.get("fehler"))
+            vg = d3["umg"]
+            if vg and vg.get("glb"):
+                with ui.row().classes("items-center gap-3"):
+                    ui.label("3D-Vorschau der Umgebung (aus denselben Daten wie die IFC)").classes("text-subtitle2")
+                    hinweis("Maus: drehen · rechte Taste: verschieben · Zoom im Reiter „3D-Ansicht“ (hier blättert das Rad durch die Ergebnisse)")
+                szene3d([(vg["glb"], None)], vg["b"], vg["h"], hoehe=520, mitte=(0, 0), z_faktor=d3["ue"], zoom=False)
         if u and zu.get("lageplan"):
             datei_liste("Lageplan", zu["lageplan"])
+            for b_ in ((d3["umg"] or {}).get("lageplan_bilder") or []):
+                ui.image(url(b_)).classes("w-full bg-white")
         m = r.get("modell")
         if m:
             if m.get("fehler"):

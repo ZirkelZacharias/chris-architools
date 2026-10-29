@@ -271,6 +271,8 @@ class Lauf:
             self.spinner.set_visibility(False)
             if self.balken is not None:
                 self.balken.set_visibility(False)
+            if self.status is not None:
+                self.status.text = ""
             self._leeren()
             self.bericht_schreiben()
 
@@ -302,9 +304,10 @@ def vorschau_svgs(svgs, ordner):
     return out
 
 
-def szene3d(teile, b, h, hoehe=520, breite=None, mitte=None, z_faktor=1.0):
+def szene3d(teile, b, h, hoehe=520, breite=None, mitte=None, z_faktor=1.0, zoom=True):
     """3D-Ansicht. teile: [(Pfad, Farbe oder None)]: .stl mit Farbe, .glb/.gltf mit eigenen Farben.
-    Weite Sichtweite, Kamera passend zur Modellgröße."""
+    Weite Sichtweite, Kamera passend zur Modellgröße. zoom=False: das Mausrad zoomt nicht, sondern blättert die Seite weiter
+    (für Ansichten in langen Seiten wie dem Ergebnis, damit man durch alle Ergebnisse scrollen kann)."""
     L_ = max(b, h, 50.0)
     cam = ui.scene.perspective_camera(fov=45, near=max(0.05, L_ / 2000), far=L_ * 40)
     kw = {"width": breite} if breite else {}
@@ -320,6 +323,9 @@ def szene3d(teile, b, h, hoehe=520, breite=None, mitte=None, z_faktor=1.0):
                 o = sc.stl(url(pfad)).material(farbe or FARBE_LASER)
             if z_faktor and abs(z_faktor - 1.0) > 1e-6:               # Ansicht künstlich überhöhen (nur die Darstellung, nicht die Dateien)
                 o.scale(1, 1, float(z_faktor))
+    if not zoom:
+        ui.run_javascript("setTimeout(()=>{const e=document.getElementById('c%d'); if(e) e.addEventListener('wheel', "
+                          "ev=>ev.stopImmediatePropagation(), {capture:true, passive:true});}, 300)" % sc.id)
     cx, cy = mitte if mitte else (b / 2, h / 2)
     sc.move_camera(x=cx, y=cy - L_ * 0.95, z=L_ * 1.1, look_at_x=cx, look_at_y=cy, look_at_z=0, duration=0)
     return sc
