@@ -127,57 +127,36 @@ def _rgb(t):
     return tuple(c / 255.0 for c in t)
 
 
+def _pdfmodul():
+    from .. import projekt as _P
+    _P.kern()
+    import ifcmap_pdf
+    return ifcmap_pdf
+
+
 def pdf_schreiben(pfad, platten, titel=""):
     """PDF nach Werkstatt-Vorgabe (Seitengröße = Platte,
     RGB, Haarlinien, Rot schneiden, Blau ritzen, Schwarz gravieren (Fläche). Keine Rahmen, keine Texte."""
-    import pymupdf
+    PD = _pdfmodul()
     k = 72.0 / 25.4
     lw = WERKSTATT["linienstaerke_mm"] * k
     rot, blau, schwarz = (_rgb(WERKSTATT[c]) for c in ("farbe_schneiden", "farbe_ritzen", "farbe_gravieren"))
-    doc = pymupdf.open()
+    seiten = []
     for pl in platten:
         W, H = pl["format"]
-        page = doc.new_page(width=W * k, height=H * k)
+        s = PD.SeiteSchreiben(W * k, H * k)
 
-        def pt(x, y):
-            return pymupdf.Point(x * k, (H - y) * k)
-
-        sh = page.new_shape()
+        def ring(r):
+            return [(x * k, y * k) for x, y in r.coords]                 # PDF: Ursprung unten links, y nach oben – wie die Platte
         # 1) Gravieren (Flächen, ohne Kontur)
-        n = 0
-        for t in pl["teile"]:
-            for g in t.get("gravieren", []):
-                for ring in [g.exterior] + list(g.interiors):
-                    sh.draw_polyline([pt(x, y) for x, y in ring.coords])
-                n += 1
-        if n:
-            sh.finish(color=None, fill=schwarz, even_odd=True, closePath=False, width=0)
+        s.flaeche([ring(r) for t in pl["teile"] for g in t.get("gravieren", []) for r in [g.exterior] + list(g.interiors)], schwarz)
         # 2) Ritzen
-        n = 0
-        for t in pl["teile"]:
-            for l in t.get("ritzen", []):
-                sh.draw_polyline([pt(x, y) for x, y in l.coords])
-                n += 1
-        if n:
-            sh.finish(color=blau, fill=None, width=lw, closePath=False)
+        s.linien([ring(l) for t in pl["teile"] for l in t.get("ritzen", [])], blau, lw)
         # 3) Schneiden: erst Innen-, dann Außenkonturen
-        n = 0
-        for t in pl["teile"]:
-            for ring in t["poly"].interiors:
-                sh.draw_polyline([pt(x, y) for x, y in ring.coords])
-                n += 1
-        if n:
-            sh.finish(color=rot, fill=None, width=lw, closePath=False)
-        n = 0
-        for t in pl["teile"]:
-            sh.draw_polyline([pt(x, y) for x, y in t["poly"].exterior.coords])
-            n += 1
-        if n:
-            sh.finish(color=rot, fill=None, width=lw, closePath=False)
-        sh.commit()
-    doc.set_metadata({"title": titel, "creator": "", "producer": ""})
-    doc.save(pfad, garbage=3, deflate=True)
-    doc.close()
+        s.linien([ring(r) for t in pl["teile"] for r in t["poly"].interiors], rot, lw)
+        s.linien([ring(t["poly"].exterior) for t in pl["teile"]], rot, lw)
+        seiten.append(s)
+    PD.schreiben(pfad, seiten, titel)
 
 
 def laengen(platte):
@@ -292,10 +271,10 @@ def dxf_schreiben(pfad, platten):
 
 def pruefen(pfad_pdf, platten):
     """Liest das PDF zurück und prüft Seitenzahl, Seitengrößen, Farben. -> Liste von Meldungen."""
-    import pymupdf
+    PD = _pdfmodul()
     k = 72.0 / 25.4
     msg = []
-    doc = pymupdf.open(pfad_pdf)
+    doc = PD.open(pfad_pdf)
     if len(doc) != len(platten):
         msg.append(f"Seitenzahl {len(doc)} statt {len(platten)}")
     erlaubt = {_rgb(WERKSTATT[c]) for c in ("farbe_schneiden", "farbe_ritzen", "farbe_gravieren")}

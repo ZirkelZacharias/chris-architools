@@ -17,7 +17,7 @@ Jeder Export enthält eine `QUELLEN.txt` mit diesen Vermerken.
 
 ## Programme (requirements.txt)
 Überwiegend MIT/BSD/HPND (numpy, scipy, shapely, rasterio, pyogrio, matplotlib, trimesh, ezdxf, pandas, pyproj, Pillow, nicegui, manifold3d …).
-- **PyMuPDF: AGPL-3.0.** Wird im Programm importiert. Ein öffentliches Repository mit AGPL-Abhängigkeit braucht eine AGPL-kompatible Projektlizenz (z. B. `LICENSE` mit AGPL-3.0) **oder** den Ersatz von PyMuPDF (z. B. pypdf/pdfium + matplotlib für PDF-Ausgabe). Entscheidung offen.
+- **PyMuPDF (AGPL-3.0): ersetzt (29.10.2026).** PDFs werden jetzt mit pypdfium2 gelesen (Apache-2.0/BSD-3, enthält PDFium) und mit einem eigenen kleinen Schreiber (`ifcmap_pdf.py`) erzeugt. Damit entfällt die AGPL-Abhängigkeit; die Projektlizenz ist davon unabhängig frei wählbar.
 - **ifcopenshell: LGPL-3.0.** Unverändert als Bibliothek benutzt: erlaubt, Lizenzhinweis liegt den portablen Paketen bei (offen).
 - Die portablen Zip-Pakete enthalten Python und alle Bibliotheken; für sie gelten deren Lizenztexte.
 

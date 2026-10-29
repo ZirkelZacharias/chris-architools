@@ -96,7 +96,8 @@ def lies_dxf(pfad, log=print):
 
 def lies_pdf(pfad, log=print, seite=None):
     """PDF-Zeichnung (z. B. ArchiCAD-Export) -> Liste (art, geometrie) in mm."""
-    import pymupdf
+    from .blatt import _pdfmodul
+    pymupdf = _pdfmodul()
     k = 25.4 / 72.0
     doc = pymupdf.open(pfad)
     out = []
@@ -228,8 +229,8 @@ def layout(cfg_w, cfg, log=print):
         if low.endswith(".dxf"):
             el = lies_dxf(p, log)
         elif low.endswith(".pdf"):
-            import pymupdf
-            n_s = len(pymupdf.open(p))
+            from .blatt import _pdfmodul
+            n_s = len(_pdfmodul().open(p))
             faktor_d = 1.0 / float(cfg_w.get("massstab", 1) or 1)
             for si in range(n_s):
                 el = lies_pdf(p, log, seite=si)

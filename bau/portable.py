@@ -21,7 +21,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "dist")
 NAME = "ZachariasTools"
 PYVER = "3.12"
-PRUEF = ("import numpy, scipy, shapely, rasterio, pyogrio, contourpy, matplotlib, trimesh, ezdxf, ezdwg, pymupdf, pandas, pyproj, "
+PRUEF = ("import numpy, scipy, shapely, rasterio, pyogrio, contourpy, matplotlib, trimesh, ezdxf, ezdwg, pypdfium2, pandas, pyproj, "
          "PIL, ifcopenshell, nicegui, webview; print('Bibliotheken ok')")
 
 

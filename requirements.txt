@@ -9,7 +9,7 @@ trimesh
 mapbox-earcut
 ezdxf
 ezdwg>=0.17
-pymupdf
+pypdfium2
 pandas
 pyproj
 truststore

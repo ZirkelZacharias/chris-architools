@@ -149,7 +149,7 @@ async def dialog(p, plan=None, datei=None):
         ui.notify("Plan-Datei nicht gefunden", type="negative")
         return None
     if ZU.ist_pdf(datei) and not ZU.pdf_vorhanden():
-        ui.notify("PDF-Pläne brauchen das Paket PyMuPDF (pip install pymupdf). Bilder gehen auch ohne.", type="warning")
+        ui.notify("PDF-Pläne brauchen das Paket pypdfium2 (pip install pypdfium2). Bilder gehen auch ohne.", type="warning")
         return None
     plan.setdefault("punkte", [])
     plan.update(datei=datei)

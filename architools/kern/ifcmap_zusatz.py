@@ -26,15 +26,12 @@ MAX_TEXTE = 8000
 
 # ------------------------------------------------------------------ Dateien lesen
 def _pdf():
+    """PDF-Modul (pypdfium2 in ifcmap_pdf); None, wenn nicht installiert"""
     try:
-        import pymupdf
-        return pymupdf
+        import ifcmap_pdf
+        return ifcmap_pdf if ifcmap_pdf.verfuegbar() else None
     except ImportError:
-        try:
-            import fitz
-            return fitz
-        except ImportError:
-            return None
+        return None
 
 
 def ist_pdf(datei):
@@ -48,7 +45,7 @@ def pdf_vorhanden():
 def _pdf_oeffnen(datei):
     m = _pdf()
     if m is None:
-        raise RuntimeError("PDF-Plaene brauchen das Paket PyMuPDF (Windows: py -3.12 -m pip install pymupdf; Mac: python3 -m pip install pymupdf). "
+        raise RuntimeError("PDF-Plaene brauchen das Paket pypdfium2 (pip install pypdfium2). "
                            "Bilder (PNG, JPG) gehen auch ohne.")
     return m.open(datei)
 
@@ -112,8 +109,7 @@ def bild_laden(datei, seite=1, max_px=1600, weiss_transparent=False, tol=18):
             p = doc[max(0, seite - 1)]
             r = p.rect
             f = max_px / max(r.width, r.height)
-            pix = p.get_pixmap(matrix=_pdf().Matrix(f, f), alpha=False)
-            im = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+            im = p.render(f)
         faktor = im.width / float(r.width)
     else:
         with Image.open(datei) as o:
