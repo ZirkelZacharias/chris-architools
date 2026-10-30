@@ -43,7 +43,7 @@
   truedop_2023:   Ebene name='truedop_2023' titel='Digitale farbige TrueOrthophotos 2023 (DOP20RGBI)' blatt=True srs25833=True abstract='Bei den Daten handelt es sich um farbige digitale True-Orthophotomosaike (TrueDOP). Bei TrueDOP werden alle Objekte lage'
     GetMap truedop_2023/blattschnitt image/jpeg: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
     GetMap truedop_2023/blattschnitt image/png: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, häufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiß 100 %
-    GetMap truedop_2023/truedop_2023 image/jpeg: Fehler cannot identify image file <_io.BytesIO object at 0x10bc43ce0>
+    GetMap truedop_2023/truedop_2023 image/jpeg: (300, 300), Grau Mittel 123 Streuung 34.3 P2/P98 61/192, 204 Grauwerte, 24580 Farben, häufigste Farbe (np.int64(163), np.int64(169), np.int64(169)) = 0 %, weiß 0 %
     GetMap truedop_2023/truedop_2023 image/png: (300, 300), Grau Mittel 123 Streuung 34.1 P2/P98 62/191, 188 Grauwerte, 41991 Farben, häufigste Farbe (np.int64(163), np.int64(169), np.int64(168)) = 0 %, weiß 0 %
   truedop_2022: Ebene name=None titel='Digitale farbige TrueOrthophotos 2022 (DOP20RGBI)' blatt=False srs25833=True abstract='Digitale farbige True-Orthophotomosaike (TrueDOP). Bei TrueDOP werden alle Objekte lagetreu abgebildet, d. h. es gibt ke'
   truedop_2022:   Ebene name=None titel='Wärmeverbrauchsdichten' blatt=True srs25833=True abstract=''
