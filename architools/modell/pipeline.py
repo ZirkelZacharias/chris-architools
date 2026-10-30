@@ -336,6 +336,21 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
     # Projektgrundstück als Einsatz
     E_w = einsatz_polygon(cfg, szene, log)
     parts_e, blds_in, P_haupt, stuetzen = [], [], P, []
+    if E_w is not None and not E_w.is_empty:
+        # Einsatz muss im Modellrahmen liegen (häufig: eigene Fläche noch vom früheren Mittelpunkt gezeichnet)
+        E_m0 = to_model(E_w)
+        drin = E_m0.intersection(extent_m)
+        anteil = drin.area / E_m0.area if E_m0.area > 0 else 0.0
+        if drin.is_empty or drin.area < 1.0 or (P and P[0].intersection(drin).area < 1.0):
+            c = E_w.centroid
+            log(f"  HINWEIS: Der Einsatz ({E_w.area:.0f} m², Mitte Ost {c.x:.0f} / Nord {c.y:.0f}) liegt außerhalb des Modellrahmens "
+                f"(Mitte Ost {extent_w.centroid.x:.0f} / Nord {extent_w.centroid.y:.0f}) – ohne Einsatz weitergerechnet. Wurde die Fläche "
+                f"noch am alten Mittelpunkt gezeichnet? Auf der Seite Gebiet die Auswahl leeren und neu zeichnen.")
+            E_w = None
+        elif anteil < 0.98:
+            log(f"  HINWEIS: Nur {anteil * 100:.0f} % des Einsatzes liegen im Modellrahmen – der Rest wird abgeschnitten.")
+    elif E_w is not None:
+        E_w = None
     if E_w is not None:
         import copy as _copy
         ec = cfg["einsatz"]

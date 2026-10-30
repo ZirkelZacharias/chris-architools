@@ -113,6 +113,9 @@ def make_parts(P, buildings, features, cfg, log=print):
                 Q[j] = P[j].difference(shapely.union_all(cut))
     # 2) Hohlräume
     abst = float(g.get("rippen_abstand_mm", 80.0))
+    if not P or P[0].is_empty:                 # leere Grundschicht (z. B. Einsatz außerhalb des Rahmens): keine Teile
+        log("  HINWEIS: leere Grundschicht – keine Laserteile")
+        return [], list(P), [], []
     xmin, ymin, xmax, ymax = P[0].bounds
     if weise == "steckrippen":                 # Rippen auf Zellmitten, Passlöcher in Zellmitten versetzt
         gx = np.arange(xmin + abst / 2, xmax, abst)
