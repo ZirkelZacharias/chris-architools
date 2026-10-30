@@ -132,6 +132,12 @@ def anordnung(lc):
 def anordnen(teile, formate, cfg, log=print, filler=None, n_filler=0, fest=None):
     """Teile auf Platten verteilen. Rückgabe: Liste Platten dict(format, teile=[verschobene Teile])."""
     lc = cfg["laser"]
+    leer = [t for t in teile if t.get("poly") is None or t["poly"].is_empty or t["poly"].area < 0.05]
+    if leer:                                                  # z. B. ein sehr schmales Teil, das beim Bereinigen (Stege) verschwand
+        ids = [str(t.get("id", "?")) for t in leer]
+        log(f"  HINWEIS: {len(leer)} Teil(e) ohne Fläche weggelassen (zu schmal zum Lasern): {', '.join(ids[:12])}"
+            + (" …" if len(ids) > 12 else ""))
+        teile = [t for t in teile if not (t.get("poly") is None or t["poly"].is_empty or t["poly"].area < 0.05)]
     items = [N.Item(i, t["poly"], lc.get("drehungen", [0, 90, 180, 270])) for i, t in enumerate(teile)]
     res, tries = anordnung(lc)
     sheets, rest = N.nest(items, formate, float(lc.get("rand_mm", WERKSTATT["rand_mm"])),

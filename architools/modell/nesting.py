@@ -20,9 +20,14 @@ class Item:
         self.key = key
         self.geom = geom
         self.area = geom.area
-        mrr = geom.minimum_rotated_rectangle
-        xs, ys = mrr.exterior.coords.xy
-        a = np.degrees(np.arctan2(ys[1] - ys[0], xs[1] - xs[0]))
+        a = 0.0
+        try:                                                  # entartete Form (Linie, Punkt, leer): ohne Zusatzdrehung
+            mrr = geom.minimum_rotated_rectangle
+            if mrr.geom_type == "Polygon" and not mrr.is_empty:
+                xs, ys = mrr.exterior.coords.xy
+                a = float(np.degrees(np.arctan2(ys[1] - ys[0], xs[1] - xs[0])))
+        except Exception:
+            pass
         extra = [(-a) % 360, (90 - a) % 360]
         self.angles = sorted(set([round(x, 3) % 360 for x in list(angles) + extra]))
         self._k = {}
