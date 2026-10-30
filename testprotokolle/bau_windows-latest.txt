@@ -1,51 +1,51 @@
 + uv python install 3.12
 Downloading cpython-3.12.16-windows-x86_64-none (download) (21.0MiB)
  Downloaded cpython-3.12.16-windows-x86_64-none (download)
-Installed Python 3.12.16 in 6.39s
+Installed Python 3.12.16 in 7.53s
  + cpython-3.12.16-windows-x86_64-none (python3.12.exe)
 warning: `C:\Users\runneradmin\.local\bin` is not on your PATH. To use installed Python executables, run `$env:PATH = "C:\Users\runneradmin\.local\bin;$env:PATH"` or `uv python update-shell`.
 Python: C:\Users\runneradmin\AppData\Roaming\uv\python\cpython-3.12.16-windows-x86_64-none\python.exe -> C:\Users\runneradmin\AppData\Roaming\uv\python\cpython-3.12.16-windows-x86_64-none
 + uv pip install --python D:\a\zacharias-tools\zacharias-tools\dist\ZachariasTools\programm\python\python.exe --break-system-packages --no-progress -r D:\a\zacharias-tools\zacharias-tools\requirements.txt
 Using Python 3.12.16 environment at: dist\ZachariasTools\programm\python
-Resolved 86 packages in 260ms
-Downloading pygments (1.2MiB)
+Resolved 86 packages in 547ms
 Downloading networkx (2.0MiB)
-Downloading pypdfium2 (3.8MiB)
-Downloading ezdxf (2.9MiB)
-Downloading pydantic-core (2.1MiB)
-Downloading numpy (12.0MiB)
-Downloading shapely (1.7MiB)
-Downloading scipy (35.0MiB)
-Downloading pyogrio (22.7MiB)
-Downloading matplotlib (8.9MiB)
 Downloading pyproj (6.4MiB)
-Downloading pillow (6.9MiB)
-Downloading pandas (10.3MiB)
-Downloading nicegui (8.1MiB)
-Downloading ifcopenshell (40.8MiB)
-Downloading fonttools (2.4MiB)
+Downloading pygments (1.2MiB)
 Downloading rasterio (29.3MiB)
+Downloading scipy (35.0MiB)
+Downloading pillow (6.9MiB)
+Downloading pydantic-core (2.1MiB)
 Downloading ezdwg (1.5MiB)
- Downloaded shapely
+Downloading ezdxf (2.9MiB)
+Downloading nicegui (8.1MiB)
+Downloading pyogrio (22.7MiB)
+Downloading pandas (10.3MiB)
+Downloading ifcopenshell (40.8MiB)
+Downloading shapely (1.7MiB)
+Downloading fonttools (2.4MiB)
+Downloading numpy (12.0MiB)
+Downloading matplotlib (8.9MiB)
+Downloading pypdfium2 (3.8MiB)
  Downloaded ezdwg
  Downloaded pygments
  Downloaded pydantic-core
+ Downloaded shapely
+ Downloaded fonttools
  Downloaded pypdfium2
  Downloaded networkx
- Downloaded fonttools
  Downloaded ezdxf
  Downloaded pyproj
  Downloaded pillow
  Downloaded nicegui
  Downloaded matplotlib
  Downloaded numpy
- Downloaded pyogrio
  Downloaded pandas
+ Downloaded pyogrio
  Downloaded rasterio
  Downloaded scipy
  Downloaded ifcopenshell
-Prepared 86 packages in 1.97s
-Installed 86 packages in 995ms
+Prepared 86 packages in 1.80s
+Installed 86 packages in 853ms
  + affine==3.0.1
  + aiofiles==25.1.0
  + aiohappyeyeballs==2.7.1
@@ -129,11 +129,11 @@ Installed 86 packages in 995ms
  + uvicorn==0.54.0
  + watchfiles==1.3.0
  + webencodings==0.6.1
- + websockets==17.3
+ + websockets==17.4
  + wsproto==1.3.2
  + yarl==1.25.1
 Schlank gemacht: 739 MB -> 677 MB
-Paket gebaut in 13 s
+Paket gebaut in 14 s
 + D:\a\zacharias-tools\zacharias-tools\dist\ZachariasTools\programm\python\python.exe -c import numpy, scipy, shapely, rasterio, pyogrio, contourpy, matplotlib, trimesh, networkx, ezdxf, ezdwg, pypdfium2, pandas, pyproj, PIL, ifcopenshell, nicegui, webview; print('Bibliotheken ok')
 Bibliotheken ok
 pythonnet-Test: pythonnet (Programmfenster) ok
@@ -172,9 +172,10 @@ Baeume (Berliner WFS):
   Vegetationsraster: 0 Baeume bekamen die Rasterhoehe, 2 fehlende Baeume ergaenzt (nur Spitzen >= 4 m, ausserhalb von Gebaeuden)
   OpenStreetMap: 1 Baeume ergaenzt, die es in den amtlichen Quellen nicht gibt (kein amtlicher Baum im Umkreis von 3 m)
   Baeume im Nahbereich samt Uebergangszone: 4 (davon 2 mit Kronendurchmesser aus den Daten, Rest Standard 6 m)
-  OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 1.3 s (28 Objekte)
+  OpenStreetMap (Gleisachsen, Bruecken): overpass-api.de nicht erreichbar nach 1 s (HTTP Error 502: Bad Gateway) - wird in diesem Lauf nicht mehr versucht
+  OpenStreetMap (Gleisachsen, Bruecken): overpass.openstreetmap.fr antwortete nach 1.6 s (28 Objekte)
   Gleisachsen (OpenStreetMap): 6 Linien, 2049 m; Bruecken in OSM: 13
-    (16.6 s, im Hintergrund)
+    (12.4 s, im Hintergrund)
 Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - ungetestet:
   Quelle: amtlich (Berlin)
   radverkehrsnetz:radverkehrsnetz: 1 geladen, 1 im Rechteck (erstes Objekt bei Ost 393500 / Nord 5826520, Gebiet bei Ost 393600 / Nord 5826550)
@@ -183,7 +184,7 @@ Zusatzdaten Radverkehrsnetz Berlin (Radwege, Radfernwege, Gruene Hauptwege) - un
   Radfernwege: Attribute (Beispiel): {}
   radverkehrsnetz:stadtgruen: keine Objekte geliefert
   -> 2 Objekte uebernommen
-Zeiten: Gelaende lesen und ausduennen 4 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 12 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 17 s
+Zeiten: Gelaende lesen und ausduennen 3 s; Gebaeude (LoD2) lesen 0 s; Nutzung, Baeume, ALKIS (Netz, ueberlappt mit dem Lesen) 10 s; Zusatzdaten (Denkmal, OePNV ...) 0 s; Laden insgesamt 12 s
 Gelaende nach Nutzung aufteilen:
   12 Bruecke(n) ohne LoD2-Koerper: dort keine Fahrbahn/kein Gehweg (bleibt weg)
   Gelaende wird aufgeteilt nach: Weg_Platz
@@ -206,7 +207,8 @@ IFC schreiben:
   Gleis-/OEPNV-Achsen unter Bruecken: 19 Stuecke (254 m) liegen unter dem Brueckendeck und werden nicht gezeichnet (Layer 2D_Gleisachsen_unter_Bruecken, ausgeschaltet)
   Gebaeudekontur: 62 Linien (duenn, schwarz)
   HINWEIS: keine ALKIS-Flurstuecke geladen (Haken fuer die ALKIS-Zusatzdaten setzen, nur Berlin) - keine Flurstuecksnummern
-  OpenStreetMap: overpass.openstreetmap.fr antwortete nach 1.0 s (35 Objekte)
+  OpenStreetMap: overpass-api.de nicht erreichbar nach 0 s (HTTP Error 502: Bad Gateway) - wird in diesem Lauf nicht mehr versucht
+  OpenStreetMap: overpass.openstreetmap.fr antwortete nach 1.5 s (35 Objekte)
   Lageplan-Beschriftung: 0 Flurstuecksnummern, 9 Hausnummern, 4 Strassennamen, 27 Gebaeudehoehen (Hoehen: ueber Gelaende; Tr = Traufe, Fi = First)
   DXF-Pruefung (R2010): 29 Schraffuren, 134 Polylinien, 4 Kreise - keine Beanstandungen
   Lageplan: ifcmap_lageplan.dxf (0.1 MB)
@@ -219,10 +221,10 @@ Kartenbild Luftbild – aktuellstes verfügbares Orthofoto (Berlin):
   1200 x 1200 Pixel, 0.25 m je Pixel
   Zusatzplan Karte_Luftbild_aktuellstes_verfuegbares: Bild 1200x1200 Pixel, 0.25 m je Pixel, 300 x 300 m, gedreht um 0.0 Grad (PNG und World-File liegen neben der DXF)
   Zusatzplan: ifcmap_zusatz_Karte_Luftbild_aktuellstes_verfuegbares_.dxf (0.0 MB, Speichern 0 s)
-Zeiten der Ausgabe: IFC schreiben 1 s; Arbeits-DXF (ifcmap_2d.dxf) 0 s; Lageplan 16 s; Schwarzplan 0 s; Kartenbilder 0 s
+Zeiten der Ausgabe: IFC schreiben 1 s; Arbeits-DXF (ifcmap_2d.dxf) 0 s; Lageplan 12 s; Schwarzplan 0 s; Kartenbilder 0 s
 
 Lokaler Nullpunkt: E0 = 394000, N0 = 5827000, Z0 = 47 m  (lokal = Ost-E0 / Nord-N0 / Hoehe-Z0; EPSG:25833, NHN)
-Fertig in 19 s.
+Fertig in 14 s.
 Plausibilitätsprüfung: 2 Hinweis(e)
 [Plausibilität] Grundriss: 1 Gebäude mit weniger als 4 m² (z. B. DEBE_SCHUPPEN) – Splitter, kaum sichtbar im Modell.
 [Plausibilität] Gelände/Gebäude: DEBE_DAMM steht -4.0 m über bzw. unter dem Gelände (Sockel 51.9 m ü. NHN) – Hang, Einschnitt oder Höhenfehler?
@@ -242,17 +244,19 @@ Material: Graupappe 2 mm · Platte 800 × 500 mm
   Gebäude: 30 druckbar, 1 nur graviert (zu klein), 1 Platzhalter
   Bahnsteige: 1 als Blöcke
   Höhenlinien auf den Platten: Abstand 1 m, 2 Haupt- und 6 Nebenlinien
+  HINWEIS: Rastergravur eines Bildes ist angekreuzt, aber das Zusatzmodul dafür ist nicht installiert - übersprungen
   Hinweis: Mittelpunkt liegt in keinem Flurstück – nächstes Flurstück genommen
   Projektgrundstück: 10000 m²
 4a   Einsatz: 9 Schichten, 0 Gebäude darauf
   10 Laserteile auf 9 Schichten (inkl. Grundplatte), Bauweise: voll
 4/6  Laserteile
-  HINWEIS: Rastergravur eines Bildes ist angekreuzt, aber das Zusatzmodul dafür ist nicht installiert - übersprungen
   18 Laserteile auf 10 Schichten (inkl. Grundplatte), Bauweise: voll
   Rahmen mitgelasert: 4 stehende Wände aus demselben Material, 20.0 mm hoch (Modellhöhe), Dicke 2 mm
   7 Teile gekachelt (zu groß für die Platte oder lange dünne Ringe)
   Gebäude als Faltmodell: 62 Teile für 31 Gebäude
+  Vereinfacht (mittel): Wände 134 -> 124, Dachflächen 31 -> 31 (Einstellung „Gebäude vereinfachen“; „aus“ = jede LoD2-Fläche einzeln)
   Fenstermuster: gravierte Rechtecke an den Wänden - ein MUSTER nach Wandbreite und -höhe, KEINE Messung (LoD2 enthält keine Öffnungen)
+  3D-Vorschau: 31 Lasercut-Gebäude mit 155 Wand- und Dachflächen als Bild (116 mit Gravur; 0.0 MB)
   3D-Vorschau: Gravur und Ritzlinien als Bild auf 10 Schichten (1.3 MB)
 5/6  Laserplatten anordnen
   Restplatten: 1 angelegt, werden zuerst belegt
@@ -271,8 +275,8 @@ Material: Graupappe 2 mm · Platte 800 × 500 mm
   Einsatz-PDFs: 1
 6/6  Druckplatten und Montageplan
 6/6  Gebäude werden gelasert (falt) - keine Druck-STL
-  Holz: 10 Zuschnitte, Zuschnittliste und Zeichnung in C:\Users\RUNNER~1\AppData\Local\Temp\tmp9l3ceg09\ziel\MeinExport\modell\holz
-Fertig in 11 s: 7 Laserplatten, 0 Druckplatten. Ausgabe: C:\Users\RUNNER~1\AppData\Local\Temp\tmp9l3ceg09\ziel\MeinExport\modell
+  Holz: 10 Zuschnitte, Zuschnittliste und Zeichnung in C:\Users\RUNNER~1\AppData\Local\Temp\tmp2q9m9rf5\ziel\MeinExport\modell\holz
+Fertig in 9 s: 7 Laserplatten, 0 Druckplatten. Ausgabe: C:\Users\RUNNER~1\AppData\Local\Temp\tmp2q9m9rf5\ziel\MeinExport\modell
 === Geländeschnitt ===
 Geländeschnitt von (393450, 5826550) nach (393750, 5826550)
   DGM: 390 x 190 Zellen, Auflösung 1.00 m, Höhe 48.2 – 56.7 m
@@ -293,10 +297,10 @@ Höhenlinien für 300 × 300 m um (393600, 5826550)
   Bäume: 37 Objekte
   45 Höhenlinien, 8 Höhenstufen (1 m), Gelände 48.3–56.6 m ü. NHN
   Zeichnung: 45 Linien, 3 Höhenkoten, Nullpunkt E0=394000 N0=5827000
-Fertig in 50 s
-FERTIG 50 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gebaeude_laser'], 'schnitt': ['ordner', 'dateien', 'png', 'svg'], 'hoehenlinien': ['ordner', 'dateien', 'png']}
-{"ifc": "2026-10-30 13:43", "lageplan": "2026-10-30 13:43", "schwarzplan": "2026-10-30 13:43", "info_dwg": "2026-10-30 13:43", "laser": "2026-10-30 13:44", "druck": "2026-10-30 13:44", "schnitt": "2026-10-30 13:44", "hoehenlinien": "2026-10-30 13:44"}
-\E2E.architools.json 19395
+Fertig in 38 s
+FERTIG 38 {'umgebung': ['dateien', 'ordner', 'd'], 'modell': ['modell_b', 'modell_h', 'platten', 'teile_flaeche', 'voll_flaeche', 'ersparnis', 'n_druck', 'n_gebaeude_laser'], 'schnitt': ['ordner', 'dateien', 'png', 'svg'], 'hoehenlinien': ['ordner', 'dateien', 'png']}
+{"ifc": "2026-10-30 15:25", "lageplan": "2026-10-30 15:25", "schwarzplan": "2026-10-30 15:25", "info_dwg": "2026-10-30 15:25", "laser": "2026-10-30 15:25", "druck": "2026-10-30 15:25", "schnitt": "2026-10-30 15:25", "hoehenlinien": "2026-10-30 15:25"}
+\E2E.architools.json 19452
 Straßen-/Fassadenabwicklung: 3 Punkte, 268 m, Seite(n): links, rechts, Tiefe 60 m
   DGM: 460 x 290 Zellen, Auflösung 1.00 m, Höhe 48.2 – 56.7 m
   CityGML lod2.gml: 26 Gebäude im Ausschnitt
