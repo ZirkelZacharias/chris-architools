@@ -8,6 +8,9 @@
     dop_2022: nicht erreichbar (HTTP Error 404: Not Found)
     dop_2021, Ebene dop_2021_rgb: Luftbild erkannt (Streuung 33, Tonwerte 34-170, 58 Graustufen, h‰ufigste 6 %)
   -> luftbild: dop_2021 / dop_2021_rgb
+  truedop: True-Orthofoto ñ aktuellstes verf¸gbares (Berlin, Geb‰ude ohne Umkippen, 20 cm)
+    truedop_2026, Ebene truedop_2026: Luftbild erkannt (Streuung 36, Tonwerte 42-192, 59 Graustufen, h‰ufigste 5 %)
+  -> truedop: truedop_2026 / truedop_2026
   luftbild_1998: Luftbild 1998 (Schwarzweiﬂ)
     luftbild_1998_05, Ebene lb_1998_05_pan_bildmitten: kein Luftbild (Streuung 0, Tonwerte 255-255, 1 Graustufen, h‰ufigste 100 %) - n‰chste
     luftbild_1998_05, Ebene lb_1998_05_pan_gebietsabdeckung: kein Luftbild (Streuung 0, Tonwerte 255-255, 1 Graustufen, h‰ufigste 100 %) - n‰chste
@@ -20,6 +23,47 @@
   -> luftbild_1928: luftbild_1928_04 / c_luftbilder_1928_04_raster
 
 === WMS-Sonde Luftbilder (Betriebswerk Pankow, 300 x 300 m, 1 m/Pixel) ===
+  truedop_2026: Ebene name=None titel='Digitale farbige TrueOrthophotos 2026 (DOP20RGBI)' blatt=False srs25833=True abstract='Bei den Daten handelt es sich um farbige digitale True-Orthophotomosaike (TrueDOP). Dabei werden alle Objekte lagetreu a'
+  truedop_2026:   Ebene name=None titel='W‰rmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  truedop_2026:   Ebene name='truedop_2026' titel='Digitale farbige TrueOrthophotos 2026 (DOP20RGBI)' blatt=True srs25833=True abstract='Bei den Daten handelt es sich um farbige digitale True-Orthophotomosaike (TrueDOP). Dabei werden alle Objekte lagetreu a'
+    GetMap truedop_2026/truedop_2026 image/jpeg: (300, 300), Grau Mittel 102 Streuung 36.3 P2/P98 42/191, 236 Grauwerte, 21276 Farben, h‰ufigste Farbe (np.int64(74), np.int64(68), np.int64(70)) = 0 %, weiﬂ 0 %
+    GetMap truedop_2026/truedop_2026 image/png: (300, 300), Grau Mittel 102 Streuung 35.7 P2/P98 44/191, 215 Grauwerte, 32838 Farben, h‰ufigste Farbe (np.int64(105), np.int64(104), np.int64(109)) = 0 %, weiﬂ 0 %
+  truedop_2025: GetCapabilities Fehler HTTP Error 404: Not Found
+  truedop_2024: Ebene name=None titel='Digitale farbige TrueOrthophotos 2024 (DOP20RGBI)' blatt=False srs25833=True abstract='Digitale farbige True-Orthophotomosaike (TrueDOP). Dabei werden alle Objekte lagetreu abgebildet, d. h. es gibt keine Ve'
+  truedop_2024:   Ebene name=None titel='W‰rmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  truedop_2024:   Ebene name='blattschnitt' titel='Blattschnitt' blatt=True srs25833=True abstract='Blattschnitt'
+  truedop_2024:   Ebene name='truedop_2024' titel='Digitale farbige TrueOrthophotos 2024 (DOP20RGBI)' blatt=True srs25833=True abstract='Digitale farbige True-Orthophotomosaike (TrueDOP). Dabei werden alle Objekte lagetreu abgebildet, d. h. es gibt keine Ve'
+    GetMap truedop_2024/blattschnitt image/jpeg: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, h‰ufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiﬂ 100 %
+    GetMap truedop_2024/blattschnitt image/png: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, h‰ufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiﬂ 100 %
+    GetMap truedop_2024/truedop_2024 image/jpeg: (300, 300), Grau Mittel 128 Streuung 36.7 P2/P98 50/201, 229 Grauwerte, 26998 Farben, h‰ufigste Farbe (np.int64(131), np.int64(136), np.int64(129)) = 0 %, weiﬂ 0 %
+    GetMap truedop_2024/truedop_2024 image/png: (300, 300), Grau Mittel 128 Streuung 36.2 P2/P98 51/200, 212 Grauwerte, 41595 Farben, h‰ufigste Farbe (np.int64(178), np.int64(187), np.int64(182)) = 0 %, weiﬂ 0 %
+  truedop_2023: Ebene name=None titel='Digitale farbige TrueOrthophotos 2023 (DOP20RGBI)' blatt=False srs25833=True abstract='Bei den Daten handelt es sich um farbige digitale True-Orthophotomosaike (TrueDOP). Bei TrueDOP werden alle Objekte lage'
+  truedop_2023:   Ebene name=None titel='W‰rmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  truedop_2023:   Ebene name='blattschnitt' titel='Blattschnitt' blatt=True srs25833=True abstract='Blattschnitt'
+  truedop_2023:   Ebene name='truedop_2023' titel='Digitale farbige TrueOrthophotos 2023 (DOP20RGBI)' blatt=True srs25833=True abstract='Bei den Daten handelt es sich um farbige digitale True-Orthophotomosaike (TrueDOP). Bei TrueDOP werden alle Objekte lage'
+    GetMap truedop_2023/blattschnitt image/jpeg: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, h‰ufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiﬂ 100 %
+    GetMap truedop_2023/blattschnitt image/png: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, h‰ufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiﬂ 100 %
+    GetMap truedop_2023/truedop_2023 image/jpeg: (300, 300), Grau Mittel 123 Streuung 34.3 P2/P98 61/192, 204 Grauwerte, 24580 Farben, h‰ufigste Farbe (np.int64(163), np.int64(169), np.int64(169)) = 0 %, weiﬂ 0 %
+    GetMap truedop_2023/truedop_2023 image/png: (300, 300), Grau Mittel 123 Streuung 34.1 P2/P98 62/191, 188 Grauwerte, 41991 Farben, h‰ufigste Farbe (np.int64(163), np.int64(169), np.int64(168)) = 0 %, weiﬂ 0 %
+  truedop_2022: Ebene name=None titel='Digitale farbige TrueOrthophotos 2022 (DOP20RGBI)' blatt=False srs25833=True abstract='Digitale farbige True-Orthophotomosaike (TrueDOP). Bei TrueDOP werden alle Objekte lagetreu abgebildet, d. h. es gibt ke'
+  truedop_2022:   Ebene name=None titel='W‰rmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  truedop_2022:   Ebene name='blattschnitt' titel='Blattschnitte' blatt=True srs25833=True abstract='Blattschnitte'
+  truedop_2022:   Ebene name='truedop_2022' titel='Digitale farbige TrueOrthophotos 2022 (DOP20RGBI)' blatt=True srs25833=True abstract='Digitale farbige True-Orthophotomosaike (TrueDOP). Bei TrueDOP werden alle Objekte lagetreu abgebildet, d. h. es gibt ke'
+    GetMap truedop_2022/blattschnitt image/jpeg: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, h‰ufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiﬂ 100 %
+    GetMap truedop_2022/blattschnitt image/png: (300, 300), Grau Mittel 255 Streuung 0.0 P2/P98 255/255, 1 Grauwerte, 1 Farben, h‰ufigste Farbe (np.int64(255), np.int64(255), np.int64(255)) = 100 %, weiﬂ 100 %
+    GetMap truedop_2022/truedop_2022 image/jpeg: (300, 300), Grau Mittel 108 Streuung 36.1 P2/P98 44/185, 234 Grauwerte, 20105 Farben, h‰ufigste Farbe (np.int64(125), np.int64(125), np.int64(123)) = 0 %, weiﬂ 0 %
+    GetMap truedop_2022/truedop_2022 image/png: (300, 300), Grau Mittel 108 Streuung 35.9 P2/P98 45/184, 212 Grauwerte, 35151 Farben, h‰ufigste Farbe (np.int64(182), np.int64(187), np.int64(186)) = 0 %, weiﬂ 0 %
+  truedop_2021: GetCapabilities Fehler HTTP Error 404: Not Found
+  truedop_2020: GetCapabilities Fehler HTTP Error 404: Not Found
+  truedop_2019: GetCapabilities Fehler HTTP Error 404: Not Found
+  truedop_2020_sommer: Ebene name=None titel='Digitale farbige TrueOrthophotos 2020 (TrueDOP20RGBI)' blatt=False srs25833=True abstract='Digitale TrueOrthophotos f¸r das gesamte Berliner Stadtgebiet im Blattschnitt 2 km x 2 km. Bei den Daten handelt es sich'
+  truedop_2020_sommer:   Ebene name=None titel='W‰rmeverbrauchsdichten' blatt=True srs25833=True abstract=''
+  truedop_2020_sommer:   Ebene name='truedop_2020_sommer_cir' titel='Digitale Color-Infrarot-TrueOrthophotos 2020 (TrueDOP20CIR)' blatt=True srs25833=True abstract='Digitale TrueOrthophotos f¸r das gesamte Berliner Stadtgebiet im Blattschnitt 2 km x 2 km. Bei den Daten handelt es sich'
+  truedop_2020_sommer:   Ebene name='truedop_2020_sommer_rgb' titel='Digitale farbige TrueOrthophotos 2020 (TrueDOP20RGB)' blatt=True srs25833=True abstract='Digitale TrueOrthophotos f¸r das gesamte Berliner Stadtgebiet im Blattschnitt 2 km x 2 km. Bei den Daten handelt es sich'
+    GetMap truedop_2020_sommer/truedop_2020_sommer_cir image/jpeg: (300, 300), Grau Mittel 117 Streuung 43.9 P2/P98 37/207, 225 Grauwerte, 56641 Farben, h‰ufigste Farbe (np.int64(79), np.int64(109), np.int64(109)) = 0 %, weiﬂ 0 %
+    GetMap truedop_2020_sommer/truedop_2020_sommer_cir image/png: (300, 300), Grau Mittel 117 Streuung 43.7 P2/P98 38/207, 211 Grauwerte, 63309 Farben, h‰ufigste Farbe (np.int64(75), np.int64(105), np.int64(106)) = 0 %, weiﬂ 0 %
+    GetMap truedop_2020_sommer/truedop_2020_sommer_rgb image/jpeg: (300, 300), Grau Mittel 105 Streuung 44.9 P2/P98 38/209, 231 Grauwerte, 23295 Farben, h‰ufigste Farbe (np.int64(106), np.int64(106), np.int64(108)) = 0 %, weiﬂ 0 %
+    GetMap truedop_2020_sommer/truedop_2020_sommer_rgb image/png: (300, 300), Grau Mittel 105 Streuung 44.7 P2/P98 39/210, 213 Grauwerte, 40398 Farben, h‰ufigste Farbe (np.int64(105), np.int64(106), np.int64(109)) = 0 %, weiﬂ 0 %
   dop_2026: GetCapabilities Fehler HTTP Error 404: Not Found
   dop_2025: GetCapabilities Fehler HTTP Error 404: Not Found
   dop_2024: GetCapabilities Fehler HTTP Error 404: Not Found
