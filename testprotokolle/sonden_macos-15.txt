@@ -1,7 +1,7 @@
 
 === Luftbildsuche des Programms (live, Betriebswerk Pankow) ===
   luftbild: Luftbild – aktuellstes verfügbares Orthofoto (Berlin)
-    dop_2026: nicht erreichbar (<urlopen error timed out>)
+    dop_2026: nicht erreichbar (HTTP Error 404: Not Found)
     dop_2025: nicht erreichbar (HTTP Error 404: Not Found)
     dop_2024: nicht erreichbar (HTTP Error 404: Not Found)
     dop_2023: nicht erreichbar (HTTP Error 404: Not Found)
@@ -349,7 +349,12 @@
 
 === oepnv_ungestoert ===
   Feature-Typen: ['oepnv_ungestoert:a_busstopp', 'oepnv_ungestoert:b_tramstopp', 'oepnv_ungestoert:c_buslinien', 'oepnv_ungestoert:d_tramlinien']
-  oepnv_ungestoert:a_busstopp / ganz Berlin (bis 20000): Fehler The read operation timed out
+  oepnv_ungestoert:a_busstopp / ganz Berlin (bis 20000): 6456 Objekte
+    Geometrie: {'MultiPoint': 6456}
+    no: 6456 verschiedene Werte, z. B. ['101000001', '101000002', '101000003', '101000004']
+    hstname: 2903 verschiedene Werte, z. B. ['U Fehrbelliner Platz', 'U Blissestr.', 'Am Volkspark', 'Birger-Forell-Platz']
+    anzlinien: {'1': 3532, '2': 1790, '3': 662, '4': 261, '5': 107, '6': 56, '7': 21, '8': 14, '9': 5, '10': 4, '13': 1, '16': 1, '12': 1, '17': 1}
+    code: 6456 verschiedene Werte, z. B. ['UFBP01', 'UBLI03', 'AMVP01', 'BFPL01']
   oepnv_ungestoert:a_busstopp / Pankow: 6 Objekte
     Geometrie: {'MultiPoint': 6}
     no: {'101005249': 1, '101006331': 1, '101007013': 1, '101007022': 1, '101007328': 1, '101007330': 1}
@@ -380,7 +385,13 @@
     hstname: {'U Alexanderplatz': 2, 'S+U Alexanderplatz/Gontardstr.': 2, 'S+U Alexanderplatz/Memhardstr.': 2, 'Spandauer Str./Marienkirche': 1, 'Mollstr./Otto-Braun-Str., M4 -> Land': 1, 'Mollstr./Otto-Braun-Str., M5+M6 -> Land': 1, 'Mollstr./Otto-Braun-Str., M8 -> Land': 1, 'S+U Alexanderplatz/Dircksenstr. Gl.1 Durchfahrtsgleis': 1, 'S+U Alexanderplatz/Dircksenstr. Gl.2 Stumpfgleis': 1, 'S+U Alexanderplatz/Dircksenstr. Halt vor Stumpfgleis': 1, 'Mollstr./Prenzlauer Allee, M8 -> Stadt': 1, 'Mollstr./Prenzlauer Allee, M8 -> Land': 1, 'Mollstr./Prenzlauer Allee, M2 -> Land': 1, 'Mollstr./Prenzlauer Allee, M2 -> Stadt': 1}
     anzlinien: {'1': 10, '3': 5, '2': 1, '0': 1}
     code: {'UALX01': 1, 'ALXG01': 1, 'SPMK01': 1, 'ALXG02': 1, 'UALX02': 1, 'MOOB02': 1, 'MOOB03': 1, 'MOOB04': 1, 'ALXM01': 1, 'ALXD01': 1, 'ALXD02': 1, 'ALXM02': 1, 'ALXD03': 1, 'MOPA01': 1, 'MOPA02': 1, 'MOPA03': 1, 'MOPA04': 1}
-  oepnv_ungestoert:c_buslinien / ganz Berlin (bis 20000): Fehler The read operation timed out
+  oepnv_ungestoert:c_buslinien / ganz Berlin (bis 20000): 1466 Objekte
+    Geometrie: {'MultiLineString': 1466}
+    gisid: 1466 verschiedene Werte, z. B. ['1', '2', '3', '4']
+    linename: 203 verschiedene Werte, z. B. ['100-10-100', '101-10-101', '106-10-106', '107-10-107']
+    starthst: 366 verschiedene Werte, z. B. ['S+U Alexanderplatz/Memhardstr.', 'Memhardstr.', 'Hertzallee', 'Mansfelder Str./Barstr.']
+    endhst: 361 verschiedene Werte, z. B. ['Hertzallee', 'S+U Zoologischer Garten/Jebensstr.', 'Memhardstr.', 'S+U Alexanderplatz/Memhardstr.']
+    richtung: {'H': 737, 'R': 729}
   oepnv_ungestoert:c_buslinien / Pankow: 53 Objekte
     Geometrie: {'MultiLineString': 53}
     gisid: 53 verschiedene Werte, z. B. ['331', '332', '334', '335']
@@ -453,7 +464,10 @@
     Geometrie: {'MultiLineString': 1028}
     gisid: 1028 verschiedene Werte, z. B. ['1', '2', '3', '4']
     verlauf_stadtgruen: {'Ergänzungsnetz': 671, 'Radvorrangnetz': 357}
-  radverkehrsnetz:stadtgruen / Pankow: Fehler <urlopen error [Errno 60] Operation timed out>
+  radverkehrsnetz:stadtgruen / Pankow: 2 Objekte
+    Geometrie: {'MultiLineString': 2}
+    gisid: {'486': 1, '525': 1}
+    verlauf_stadtgruen: {'Ergänzungsnetz': 2}
   radverkehrsnetz:stadtgruen / Alexanderplatz: 0 Objekte
   radverkehrsnetz:untersuchungsbereiche / ganz Berlin (bis 20000): 11 Objekte
     Geometrie: {'MultiPolygon': 11}
