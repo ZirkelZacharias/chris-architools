@@ -7,7 +7,7 @@ from nicegui import ui
 from .. import einstellungen as ES
 from ..modell import bibliothek as BIB
 from .ergebnis import ergebnis_zeigen
-from .stil import (AKZENT, FARBE_DRUCK, GRAU, HOEHE, INK, LINIE, MASSSTAEBE, OCKER, SALBEI, SCHIEFER, Lauf, feld_pfad, hinweis,
+from .stil import (AKZENT, FARBE_DRUCK, GRAU, HOEHE, INK, LINIE, MASSSTAEBE, OCKER, SALBEI, SCHIEFER, TERRA, Lauf, feld_pfad, hinweis,
                    karte, mm_text, oeffnen, waehlen)
 
 WERKZEUG_STANDARD = {
@@ -15,6 +15,9 @@ WERKZEUG_STANDARD = {
                "ausgabe_ordner": "", "name": "layout"},
     "druck3d": {"dateien": [], "einheit": "m", "massstab": 500, "modus": "massiv", "zusammenfassen": False,
                 "min_wand_mm": 1.2, "ausgabe_ordner": "", "name": "druck"},
+    "cadlaser": {"dateien": [], "einheit": "m", "massstab": 200, "modus": "falt", "umwandlung": "massiv",
+                 "winkel": 3.0, "ebenheit_mm": 0.3, "min_flaeche_mm2": 20.0, "lasche_mm": 4.0, "beschriften": True,
+                 "anzahl": 1, "ausgabe_ordner": "", "name": "cad"},       # Standard: modell/cad_lasercut.STANDARD
 }
 
 
@@ -87,9 +90,127 @@ class Werkzeuge:
             w["ausgabe_ordner"] = os.path.join(os.path.dirname(w["dateien"][0]), "lasercut") if w["dateien"] else \
                 os.path.join(os.path.expanduser("~"), "ZachariasTools_Lasercut")
         cfg = copy.deepcopy(self.cfg)
-        r = await self.lauf_l.starten(lambda w, cfg, log: LY.layout(w, cfg, log), w, cfg)
+        r = await self.lauf_l.starten(lambda w, cfg, log, prog: LY.layout(w, cfg, log), w, cfg)
         if r:
             ergebnis_zeigen(self.erg_l, r, "Lasercut-Layout")
+
+    def seite_cad(self):
+        """CAD zu Lasercut: 3D-Entwurf in ebene Laserteile zerlegen, mit 3D-Vorschau und Kostenschätzung"""
+        w = self.cfg["werkzeuge"]["cadlaser"]
+        with ui.row().classes("w-full no-wrap gap-4").style(f"height:{HOEHE}"):
+            links = ui.scroll_area().classes("h-full").style("width:600px; min-width:520px")
+            rechts = ui.column().classes("grow h-full no-wrap").style("min-width:0")
+        with links:
+            with ui.column().classes("w-full gap-3 pr-3"):
+                with karte("3D-Entwurf", AKZENT):
+                    hinweis("Der Entwurf aus ArchiCAD oder einem anderen CAD-Programm als IFC, OBJ, STL, 3MF, PLY, GLB oder DXF "
+                            "(mit 3D-Flächen). Das Programm erkennt die ebenen Flächen selbst und macht Laserteile daraus.")
+                    feld_pfad("Dateien (mehrere mit ;)", w, "dateien", mehrere=True,
+                              typen=("3D (*.ifc;*.obj;*.stl;*.3mf;*.ply;*.glb;*.dxf)",))
+                    with ui.row().classes("gap-2"):
+                        ui.select(["m", "cm", "mm"], label="Einheit der Datei").bind_value(w, "einheit").classes("w-36") \
+                            .tooltip("IFC ist immer in Metern; OBJ, STL … haben keine feste Einheit")
+                        ui.select(MASSSTAEBE, label="Maßstab", new_value_mode="add-unique", with_input=True) \
+                            .bind_value(w, "massstab").classes("w-32")
+                        ui.number("Exemplare", min=1, step=1).bind_value(w, "anzahl").classes("w-28")
+                    ui.select({"massiv": "Außenform – Hülle mit Dach, ohne Innenräume (empfohlen für Massenmodelle)",
+                               "original": "Bauteile einzeln – jedes Bauteil für sich, auch innen"},
+                              label="Umwandlung").bind_value(w, "umwandlung").classes("w-full")
+                with karte("Zerlegung in Laserteile", TERRA):
+                    ui.select({"falt": "Faltmodell – Flächen mit Klebelaschen und Ritzlinien an den Kanten",
+                               "flaeche": "Klebeflächen – jede Fläche einzeln, ohne Laschen (auf Stoß kleben)",
+                               "stapel": "Schichten – waagerechte Scheiben in Materialstärke (Schichtenmodell)"},
+                              label="Bauweise").bind_value(w, "modus").classes("w-full")
+                    with ui.row().classes("gap-2"):
+                        ui.number("Winkel °", min=0.1, max=45, step=0.5).bind_value(w, "winkel").classes("w-28") \
+                            .tooltip("Flächen, die um höchstens so viel geknickt sind, gelten als eine ebene Fläche. "
+                                     "Größer = weniger, aber leicht verzogene Teile (Kuppeln, runde Gebäude).")
+                        ui.number("Ebenheit mm", min=0.05, step=0.05).bind_value(w, "ebenheit_mm").classes("w-32") \
+                            .tooltip("So weit darf eine Fläche (im Modell) von der Ebene abweichen")
+                        ui.number("Kleinste Fläche mm²", min=0, step=5).bind_value(w, "min_flaeche_mm2").classes("w-40") \
+                            .tooltip("Kleinere Flächen werden weggelassen (Details, die sich nicht kleben lassen)")
+                        ui.number("Lasche mm", min=1, step=0.5).bind_value(w, "lasche_mm").classes("w-28") \
+                            .tooltip("Breite der Klebelaschen (nur Faltmodell)")
+                    ui.checkbox("Teile mit ihrer Nummer beschriften (graviert)").bind_value(w, "beschriften")
+                    hinweis("Wände stehen auf der Platte aufrecht (oben = oben), Boden und Dach liegen mit x nach rechts. "
+                            "Die Plattenstärke wird bei den Kanten NICHT abgezogen – bei dünner Pappe unkritisch, bei 3 mm "
+                            "Holz oder Acryl die Teile mit Gehrung oder kleiner Zugabe nachbearbeiten.")
+                with karte("Material und Platte", OCKER):
+                    self.me.material_format(self.cfg["laser"])
+                with karte("Ausgabe", INK):
+                    with ui.row().classes("w-full gap-2 items-end no-wrap"):
+                        ui.input("Name").bind_value(w, "name").classes("w-40")
+                        feld_pfad("Ausgabeordner", w, "ausgabe_ordner", art="ordner")
+        with rechts:
+            logel = ui.log(max_lines=1000).classes("w-full log-bild").style("height: 160px; font-size: 12px")
+            with ui.scroll_area().classes("w-full").style("flex:1 1 auto"):
+                self.erg_c = ui.column().classes("w-full pr-3")
+            with ui.row().classes("items-center gap-2 pt-1"):
+                knopf = ui.button("Zerlegen und Kosten schätzen", icon="content_cut", on_click=lambda: self._cad_start()) \
+                    .props("unelevated size=lg").style(f"background:{AKZENT}!important")
+                fs = ui.spinner(size="lg")
+                fs.set_visibility(False)
+        self.lauf_c = Lauf(logel, [knopf], fs)
+
+    async def _cad_start(self):
+        from ..modell import cad_lasercut as C
+        w = copy.deepcopy(self.cfg["werkzeuge"]["cadlaser"])
+        if not w["dateien"]:
+            ui.notify("Bitte Dateien angeben", type="warning")
+            return
+        try:
+            w["massstab"] = float(str(w["massstab"]).replace("1:", "").replace(",", "."))
+        except ValueError:
+            ui.notify("Maßstab als Zahl angeben", type="warning")
+            return
+        if not w.get("ausgabe_ordner"):
+            w["ausgabe_ordner"] = os.path.join(os.path.dirname(w["dateien"][0]), "lasercut")
+        cfg = copy.deepcopy(self.cfg)
+        r = await self.lauf_c.starten(lambda w, cfg, log, prog: C.lasercut(w, cfg, log), w, cfg)
+        if r:
+            self._cad_ergebnis(r)
+
+    def _cad_ergebnis(self, r):
+        """Kostenschätzung, 3D-Ansicht (zusammengebaut / auseinandergezogen) und die üblichen Laser-Ergebnisse"""
+        from .stil import szene3d
+        bereich = self.erg_c
+        bereich.clear()
+        k = r.get("kosten") or {}
+        eur = lambda v: f"{v:,.0f} €".replace(",", ".")
+        with bereich:
+            ui.label("CAD zu Lasercut").classes("text-h6")
+            with ui.grid(columns=4).classes("w-full gap-1"):
+                for wert, txt in ((eur(k.get("brutto", 0)), "Gesamt (Schätzung, brutto)"), (eur(k.get("material", 0)), "Material"),
+                                  (eur(k.get("laser", 0)), f"Laser (ca. {r.get('laserzeit_min', 0):.0f} min)"),
+                                  (f"{r['teile']} Teile / {r['platten']} Platten", r.get("material", ""))):
+                    with ui.card().tight().classes("p-2"):
+                        ui.label(wert).classes("text-subtitle1 text-weight-medium")
+                        ui.label(txt).classes("text-caption").style(f"color:{GRAU}")
+            hinweis("Nur geschätzt: Richtwerte aus der Bibliothek, keine Kalkulation und kein Angebot (Einzelheiten in der Kostenliste unten).")
+            if r.get("vorschau_laser"):
+                b, h, z = r["modell_b"], r["modell_h"], r.get("modell_z", 0)
+                zeigen = {"zus": (r["vorschau_laser"], "Zusammengebaut"), "expl": (r.get("vorschau_explosion"), "Auseinandergezogen")}
+                halter = {}
+
+                def aufbauen(art):
+                    halter["s"].clear()
+                    pfad = zeigen[art][0]
+                    if pfad:
+                        with halter["s"]:
+                            L = max(b, h, z)
+                            szene3d([(pfad, r.get("material_farbe"))], L, L, hoehe=460, mitte=(b / 2, h / 2))
+                with ui.row().classes("items-center gap-3 mt-2"):
+                    ui.label("3D-Vorschau").classes("text-subtitle2")
+                    ui.toggle({"zus": "Zusammengebaut", "expl": "Auseinandergezogen"}, value="zus",
+                              on_change=lambda e: aufbauen(e.value)).props("dense no-caps")
+                    hinweis("Platten in echter Materialstärke. Maus: drehen · rechte Taste: verschieben · Rad: zoomen")
+                halter["s"] = ui.column().classes("w-full")
+                aufbauen("zus")
+            if r.get("dxf") and os.path.exists(r["dxf"]):
+                ui.button("DXF aller Platten", icon="draw", on_click=lambda: oeffnen(os.path.dirname(r["dxf"]))).props("outline dense")
+            unten = ui.column().classes("w-full")
+        rest = {kk: v for kk, v in r.items() if not kk.startswith("vorschau")}
+        ergebnis_zeigen(unten, rest, "Teile und Platten")
 
     def seite_druck(self):
         w = self.cfg["werkzeuge"]["druck3d"]
@@ -142,7 +263,7 @@ class Werkzeuge:
             ui.notify("Maßstab als Zahl angeben", type="warning")
             return
         cfg = copy.deepcopy(self.cfg)
-        r = await self.lauf_d.starten(lambda w, cfg, log: D.druckbar(w, cfg, log), w, cfg)
+        r = await self.lauf_d.starten(lambda w, cfg, log, prog: D.druckbar(w, cfg, log), w, cfg)
         if r:
             r = dict(r, druck_plaene=r["platten"])
             r.pop("platten")

@@ -187,3 +187,16 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
   Ebenen gruppenweise zusammen (Vergleich mit der Gruppenebene, sonst wandert die Gruppe um ein rundes Dach), auf den neuen
   Grundriss zugeschnitten, Splitter in den Nachbarn mit längster gemeinsamer Kante. Prismen aus denselben Ebenen -> Wandoberkante
   = Dachrand. Faltmodell-Kantenvergleich auf 3D-Abstand korrigiert (np.hypot mit drei Werten brach ab).
+
+## CAD zu Lasercut und Minispiel (Build 10, 30.10.2026)
+- **Neues Werkzeug „CAD zu Lasercut“** (linke Leiste, `modell/cad_lasercut.py`, Seite `Werkzeuge.seite_cad`): ein 3D-Entwurf (IFC, OBJ, STL, 3MF, PLY, GLB, DXF mit 3DFACE/MESH) wird automatisch in ebene Laserteile zerlegt, auf Platten gelegt (vorhandenes `blatt.anordnen`) und mit Kostenschätzung (`kosten.py`) und 3D-Vorschau ausgegeben.
+  - Flächenerkennung: Dreiecke wachsen zu Gebieten, wenn ihre Normale höchstens `winkel` (3°) von der des Ausgangsdreiecks abweicht und alle Ecken höchstens `ebenheit_mm` (0,3 mm im Modell) von dessen Ebene entfernt sind – so wächst eine Krümmung nicht unbemerkt weiter. Gekrümmte Flächen (Zylinder) zerfallen deshalb in Streifen; der Winkel ist einstellbar.
+  - Bauweisen: Klebeflächen (ohne Laschen), Faltmodell (Klebelasche + Ritzlinie an Kanten zu Nachbarflächen, Lasche immer an der Fläche mit der kleineren Nummer; `gebaeude_laser._lasche` wiederverwendet), Schichten (waagerechte Scheiben in Materialstärke).
+  - Umwandlung „Außenform“ nutzt `druck._massiv` (Hülle ohne Innenräume), „Bauteile einzeln“ zerlegt jedes IFC-Bauteil für sich.
+  - Wände stehen auf der Platte aufrecht; die Plattenstärke wird an den Kanten NICHT abgezogen (steht als Hinweis auf der Seite).
+  - 3D-Vorschau: Platten in echter Stärke, zusammengebaut und auseinandergezogen (STL im Material). Über 4000 Teile entfällt sie.
+  - Kosten: `kosten.text(..., summe=dict)` liefert zusätzlich netto/brutto/Material/Laser für die Karten der Seite. Alles nur geschätzt (Richtwerte der Bibliothek).
+  - Messung (Stadtviertel-IFC, 429 Bauteile, 1:500): 2310 Teile, 6 Platten, 127 s, fast alles davon Anordnen. Ab 500 Teilen steht ein Hinweis im Protokoll.
+  - Getestet mit nachgebauten Entwürfen und einer Stadtviertel-IFC (OBJ/STL/IFC); DXF-3D und echte ArchiCAD-IFC mit Innenausbau ungetestet.
+- **Fehler behoben (bestand seit dem Fortschrittsbalken):** „Platten anordnen“ (Lasercut-Layout) und „Druckbar machen“ (3D-Druck-Layout) brachen sofort mit TypeError ab, weil `Lauf.starten` die Funktion mit `(…, log, prog)` aufruft, die Lambdas aber nur `log` annahmen. Der Smoke-Test prüft das jetzt.
+- **Minispiel „Abgabe-Lauf“** (`gui/minispiel.py`, Knopf mit Gamepad in der Kopfzeile): läuft komplett im Browser (Canvas + JavaScript), belastet den Export nicht. Zirkel Zacharias (springt hoch) oder Rosi Radiergummi (schwebt länger) laufen über Tintenklekse, Kaffeetassen und Papierstapel und sammeln Bleistifte; die/der andere läuft hinterher. Leertaste/Pfeil/Antippen, 1/2 Figurwahl, P Pause. Rekord im Browser (localStorage). Die Figuren sind die vorhandenen schlecht gerenderten 3D-Figuren (`figuren.sprite`, durchsichtig zugeschnitten).

@@ -115,7 +115,7 @@ def rufe(hook, *a, log=print, **k):
 def werkzeuge():
     """Seiten der Zusatzmodule für die linke Werkzeugleiste -> [dict(schluessel, titel, icon, seite, modul)].
     Ungültige Einträge werden still übergangen; Schlüssel der eingebauten Werkzeuge sind gesperrt."""
-    vergeben = {"start", "gebiet", "einst", "export", "layout", "druck3d", "bib", "prog", "quellen"}
+    vergeben = {"start", "gebiet", "einst", "export", "layout", "cadlaser", "druck3d", "bib", "prog", "quellen"}
     out = []
     for n, m in module().items():
         for w in (getattr(m, "WERKZEUGE", None) or []):

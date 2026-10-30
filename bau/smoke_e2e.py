@@ -175,3 +175,30 @@ assert {"/datei", "/bild/abschluss.jpg", "/bild/maskottchen.gif"} <= _routen, _r
 _t = os.path.join(TMP, "route_test.txt"); open(_t, "w").write("x")
 assert _stil.url(_t).startswith("/datei?p="), "url()"
 print("OBERFLAECHEN-ROUTEN OK")
+
+# CAD zu Lasercut (Build 10): Probe-Entwurf (Haus mit Satteldach, Anbau, runder Turm) in allen drei Bauweisen zerlegen
+import numpy as _np
+import trimesh as _tm
+from architools.modell import cad_lasercut as _CAD
+from architools.modell.config import default_config as _dc
+_v = _np.array([[0, 0, 0], [12, 0, 0], [12, 8, 0], [0, 8, 0], [0, 0, 6], [12, 0, 6], [12, 8, 6], [0, 8, 6], [0, 4, 9], [12, 4, 9]], float)
+_f = [[0, 2, 1], [0, 3, 2], [0, 1, 5], [0, 5, 4], [1, 2, 6], [1, 6, 5], [2, 3, 7], [2, 7, 6], [3, 0, 4], [3, 4, 7],
+      [4, 5, 9], [4, 9, 8], [7, 8, 9], [7, 9, 6], [4, 8, 7], [5, 6, 9]]
+_haus = _tm.Trimesh(_v, _f); _haus.fix_normals()
+_turm = _tm.creation.cylinder(radius=2, height=9, sections=24); _turm.apply_translation([-4, 4, 4.5])
+_cad_datei = os.path.join(TMP, "cad_entwurf.obj")
+_tm.util.concatenate([_haus, _turm]).export(_cad_datei)
+for _modus in ("flaeche", "falt", "stapel"):
+    _w = dict(_CAD.STANDARD, dateien=[_cad_datei], modus=_modus, massstab=200, ausgabe_ordner=os.path.join(TMP, "cad_" + _modus), name="t")
+    _r = _CAD.lasercut(_w, _dc(), lambda *a: None)
+    assert _r["teile"] > 10 and _r["platten"] >= 1, (_modus, _r["teile"], _r["platten"])
+    assert _r["kosten"]["brutto"] > 0 and os.path.exists(_r["kostenliste"]), "Kostenschätzung fehlt"
+    assert os.path.exists(_r["vorschau_laser"]) and os.path.exists(_r["vorschau_explosion"]), "3D-Vorschau fehlt"
+    assert all(os.path.exists(x) for x in _r["laser_pdfs"]), "Platten-PDFs fehlen"
+print("CAD ZU LASERCUT OK (flaeche, falt, stapel)")
+
+# Die Knöpfe der Werkzeug-Seiten rufen ihre Funktion mit (…, log, prog) auf (Lauf.starten) – ein Argument zu wenig brach sie ab
+import re as _re
+_wz = open(os.path.join(os.path.dirname(_stil.__file__), "werkzeuge.py"), encoding="utf-8").read()
+assert not _re.search(r"starten\(lambda w, cfg, log:", _wz), "Lauf.starten ruft mit log UND prog auf"
+print("WERKZEUG-AUFRUFE OK")

@@ -33,8 +33,8 @@ def _modus_name(m):
             "falt": "Faltmodell"}.get(m, str(m))
 
 
-def text(cfg, stats, platten, platten_e, drucke, platten_g=()):
-    """-> Text der Liste"""
+def text(cfg, stats, platten, platten_e, drucke, platten_g=(), summe=None):
+    """-> Text der Liste. summe: dict, das (wenn angegeben) netto, brutto, material, laser (Schätzungen in €) bekommt"""
     pr = BIB.preise()
     L = []
     add = L.append
@@ -45,6 +45,7 @@ def text(cfg, stats, platten, platten_e, drucke, platten_g=()):
     add(HINWEIS)
     add("")
     summe_netto = 0.0
+    mat_eur = 0.0
     alle_pl = list(platten) + list(platten_e)
     if alle_pl:
         sorte, st, _ = BIB.material(cfg)
@@ -77,6 +78,7 @@ def text(cfg, stats, platten, platten_e, drucke, platten_g=()):
         preis_m2 = pr["material_eur_m2_je_mm"].get(sorte)
         if preis_m2 is not None:
             mat_brutto = fl_kauf * preis_m2 * st
+            mat_eur = mat_brutto
             add(f"Materialkosten (Schätzung): ca. {_eur(mat_brutto)} brutto  ({_z(preis_m2, 1)} €/m² je mm × {_z(st, 1)} mm × {_z(fl_kauf)} m²)")
             summe_netto += mat_brutto / (1 + BIB.WERKSTATT["mwst"])
         else:
@@ -142,13 +144,17 @@ def text(cfg, stats, platten, platten_e, drucke, platten_g=()):
     add("-" * 60)
     mw = BIB.WERKSTATT["mwst"]
     add(f"ca. {_eur(summe_netto)} netto, {_eur(summe_netto * (1 + mw))} brutto ({mw * 100:.0f} % MwSt.)")
+    if summe is not None:
+        lz_ = stats.get("laser")
+        summe.update(netto=summe_netto, brutto=summe_netto * (1 + mw), material=mat_eur,
+                     laser=(lz_["netto"] * (1 + lz_["mwst"]) if lz_ else 0.0))
     add("")
     add(HINWEIS)
     return "\n".join(L) + "\n"
 
 
-def schreiben(pfad, cfg, stats, platten, platten_e, drucke, platten_g=()):
-    t = text(cfg, stats, platten, platten_e, drucke, platten_g)
+def schreiben(pfad, cfg, stats, platten, platten_e, drucke, platten_g=(), summe=None):
+    t = text(cfg, stats, platten, platten_e, drucke, platten_g, summe)
     with open(pfad, "w", encoding="utf-8") as f:
         f.write(t)
     return t

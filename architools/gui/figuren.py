@@ -273,6 +273,24 @@ def icon(ziel=os.path.join(ORDNER, "zacharias_icon.webp")):
     return ziel
 
 
+def sprite(art):
+    """Erstes Bild der 3D-Figur ('3d' = Zirkel Zacharias, 'rosi' = Rosi Radiergummi) zugeschnitten, mit durchsichtigem Hintergrund (PNG) –
+    für das Minispiel. -> Pfad"""
+    ziel = os.path.join(ORDNER, f"sprite_{art}.png")
+    if os.path.exists(ziel):
+        return ziel
+    import numpy as np
+    from PIL import Image
+    q = Image.open(pfad(art))
+    q.seek(0)
+    a = np.array(q.convert("RGBA"))
+    maske = np.abs(a[:, :, :3].astype(int) - np.array(PAPIER)).sum(2) > 24
+    ys, xs = np.where(maske)
+    a[~maske, 3] = 0
+    Image.fromarray(a).crop((max(xs.min() - 2, 0), max(ys.min() - 2, 0), xs.max() + 3, ys.max() + 3)).save(ziel)
+    return ziel
+
+
 def pfad(art):
     """art: 'gerda' | '3d' | 'duo' | 'rosi' | 'duo3d' -> GIF-Pfad (wird bei Bedarf gezeichnet)"""
     f = {"3d": ("zacharias_3d.gif", zacharias_3d), 

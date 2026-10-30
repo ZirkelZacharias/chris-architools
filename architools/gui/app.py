@@ -4,7 +4,7 @@ import os
 from nicegui import ui
 
 from .. import VERSION
-from . import assistent, eier, einst, export, quellen_seite, start as start_seite, stil, zustand as Z
+from . import assistent, eier, einst, export, minispiel, quellen_seite, start as start_seite, stil, zustand as Z
 from .einst_modell import ModellEinst
 from .gebiet import Gebiet
 from .stil import AKZENT, BG, CSS, GRAU, INK, LINIE, NATIVE, OCKER, SCHIEFER, TERRA, TEXT, WASSERZEICHEN
@@ -12,7 +12,8 @@ from .werkzeuge import Werkzeuge
 
 ABLAUF = [("start", "1 · Start", "flag"), ("gebiet", "2 · Gebiet", "map"),
           ("einst", "3 · Einstellungen", "tune"), ("export", "4 · Vorschau & Export", "view_in_ar")]
-WERKZEUGE = [("layout", "Lasercut-Layout", "grid_view"), ("druck3d", "3D-Druck-Layout", "view_in_ar"),
+WERKZEUGE = [("layout", "Lasercut-Layout", "grid_view"), ("cadlaser", "CAD zu Lasercut", "content_cut"),
+             ("druck3d", "3D-Druck-Layout", "view_in_ar"),
              ("bib", "Materialbibliothek", "inventory_2"), ("prog", "Einstellungen", "settings"),
              ("quellen", "Quellen", "menu_book")]
 
@@ -105,6 +106,8 @@ def seite():
                               on_click=lambda: ui.navigate.to(info["url"], new_tab=True)).props("unelevated no-caps color=primary")
             upd_btn.on_click(dlg.open)
         ui.timer(3.0, update_pruefen, once=True)
+        ui.button(icon="sports_esports", on_click=lambda: minispiel.oeffnen()).props("flat round color=white dense") \
+            .tooltip("Minispiel für lange Wartezeiten (Zirkel Zacharias und Rosi)")
         ui.button(icon="save", on_click=lambda: sp()).props("flat round color=white dense").tooltip("Speichern (geschieht auch automatisch)")
 
         def beenden():
@@ -181,6 +184,8 @@ def seite():
             export.seite(p, speichern)
         with ui.tab_panel("layout").classes("py-2"):
             wz.seite_layout()
+        with ui.tab_panel("cadlaser").classes("py-2"):
+            wz.seite_cad()
         with ui.tab_panel("druck3d").classes("py-2"):
             wz.seite_druck()
         with ui.tab_panel("bib").classes("py-2"):
