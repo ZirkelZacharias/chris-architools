@@ -367,7 +367,8 @@ def _lasche(a, bb, breite, innen_pg, fase=0.7):
 
 
 def _kante_gleich(p, q, r, s, tol=0.35):
-    return (np.hypot(*(p - r)) < tol and np.hypot(*(q - s)) < tol) or (np.hypot(*(p - s)) < tol and np.hypot(*(q - r)) < tol)
+    d = lambda a, b: float(np.linalg.norm(np.asarray(a, float) - np.asarray(b, float)))      # 3D-Punkte (np.hypot nimmt nur zwei Werte)
+    return (d(p, r) < tol and d(q, s) < tol) or (d(p, s) < tol and d(q, r) < tol)
 
 
 def falt_teile(b, breite, max_laenge, beschriften=True, massstab=None):
@@ -485,9 +486,21 @@ def teile_fuer(buildings, cfg, t_mm, formate, rand_mm, log=print):
     massstab = float(cfg["massstab"]) if gc.get("fenstermuster") else None       # Fenstermuster: nur bei Flaechen/Faltmodell
     alle = []
     n_geb = 0
+    stufe = gc.get("vereinfachen", "mittel") if modus in ("flaeche", "falt") else "aus"
+    vorher, nachher = [0, 0], [0, 0]
+    from . import vereinfachen as VE
     for b in buildings:
         if b["status"] != "druck" or b.get("footprint") is None or b["footprint"].is_empty:
             continue
+        if stufe and stufe != "aus":
+            try:
+                v = VE.zaehlen(b)
+                b = VE.gebaeude(b, stufe)
+                n = VE.zaehlen(b)
+                vorher = [vorher[0] + v[0], vorher[1] + v[1]]
+                nachher = [nachher[0] + n[0], nachher[1] + n[1]]
+            except Exception as e:
+                log(f"  HINWEIS: Gebäude {b.get('nr')}: Vereinfachung nicht möglich ({str(e)[:80]}) - unverändert")
         try:
             if modus == "stapel":
                 ts = stapel_teile(b, t_mm, beschr)
@@ -507,6 +520,9 @@ def teile_fuer(buildings, cfg, t_mm, formate, rand_mm, log=print):
             alle += ts
     names = {"stapel": "Stapelmodell", "flaeche": "Klebeflächen ohne Laschen", "falt": "Faltmodell"}
     log(f"  Gebäude als {names.get(modus, modus)}: {len(alle)} Teile für {n_geb} Gebäude")
+    if stufe and stufe != "aus" and vorher[0]:
+        log(f"  Vereinfacht ({stufe}): Wände {vorher[0]} -> {nachher[0]}, Dachflächen {vorher[1]} -> {nachher[1]} "
+            f"(Einstellung „Gebäude vereinfachen“; „aus“ = jede LoD2-Fläche einzeln)")
     if massstab and modus in ("flaeche", "falt"):
         log("  Fenstermuster: gravierte Rechtecke an den Wänden - ein MUSTER nach Wandbreite und -höhe, KEINE Messung (LoD2 enthält keine Öffnungen)")
     return alle

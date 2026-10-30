@@ -186,6 +186,13 @@ class ModellEinst:
                         .classes("w-56").props("clearable")
                     ui.number("Laschenbreite mm", min=1, max=10, step=0.5).bind_value(g, "lasche_mm").classes("w-40") \
                         .bind_visibility_from(g, "modus", value="falt")
+                from ..modell.vereinfachen import STUFEN_TEXT
+                g.setdefault("vereinfachen", "mittel")
+                ui.select(STUFEN_TEXT, label="Gebäude vereinfachen (damit sich die Teile kleben lassen)").bind_value(g, "vereinfachen") \
+                    .classes("w-full").bind_visibility_from(g, "modus", backward=lambda m: m in ("flaeche", "falt")) \
+                    .tooltip("Kurze Wandstücke, Vor- und Rücksprünge, Knicke und kleine Dachflächen (Gauben, Aufbauten) werden zusammengelegt. "
+                             "Wandhöhen und Dachränder passen weiter zueinander. Maße im Modell: „mittel“ = keine Wand unter 4 mm, "
+                             "keine Dachfläche unter 20 mm².")
                 ui.checkbox("Teile-Nummern auf die Teile gravieren").bind_value(g, "teile_beschriften")
                 ui.checkbox("Fenstermuster gravieren (nur Flächen und Faltmodell; MUSTER, nicht gemessen)").bind_value(g, "fenstermuster") \
                     .tooltip("LoD2 enthält keine Fenster und Türen. Das Muster richtet sich nur nach Wandbreite und -höhe (Achse ca. 3 m, "

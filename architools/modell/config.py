@@ -148,6 +148,7 @@ DEFAULTS = {
         "material": "",                    # Laser-Material der Gebäudeteile; leer = wie das Gelände
         "staerke_mm": None,                # Stärke dazu; None = wie das Gelände (bei anderem Material Pflicht)
         "lasche_mm": 3.0,                  # Breite der Klebelaschen (nur Faltmodell)
+        "vereinfachen": "mittel",          # Klebeflächen/Faltmodell: "aus" | "leicht" | "mittel" | "stark" (siehe modell/vereinfachen.py)
         "stifte": False,                   # 3D-Druck: Löcher für Steckstifte unter den Gebäuden und im Gelände
         "stift_d_mm": 2.0,                 # Ø des Stifts (Draht, Rundholz, Zahnstocher)
         "stift_laenge_mm": 4.0,            # so tief stecken die Stifte (je Seite die Hälfte, mind. 2 mm)

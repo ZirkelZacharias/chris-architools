@@ -181,3 +181,9 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
   Dächer auf ihrem Grundriss; senkrechte Projektion auf LoD2-Dächer ist damit ohne Mesh möglich. Dienstnamen gegen den echten
   Dienst noch nicht geprüft – die Probe (`bau/sonden.py`) enthält sie.
 - **Haken** `modell_dach` (Dachflächen im Modellbau, mit `dach_2d_nach_xy` zurück in den Grundriss) und `gelaende_bild`.
+- **Gebäude vereinfachen (Klebeflächen/Faltmodell, `gebaeude.vereinfachen`, Standard „mittel“):** eigene Kopie je Gebäude
+  (`modell/vereinfachen.py`): Pufferung mit spitzen Ecken (schmale Vor-/Rücksprünge), Knicke reihum jede zweite Ecke (runde
+  Gebäude bleiben regelmäßig; Douglas-Peucker mit großer Toleranz machte sie schief), kurze Wände per Flächenänderung; Dach:
+  Ebenen gruppenweise zusammen (Vergleich mit der Gruppenebene, sonst wandert die Gruppe um ein rundes Dach), auf den neuen
+  Grundriss zugeschnitten, Splitter in den Nachbarn mit längster gemeinsamer Kante. Prismen aus denselben Ebenen -> Wandoberkante
+  = Dachrand. Faltmodell-Kantenvergleich auf 3D-Abstand korrigiert (np.hypot mit drei Werten brach ab).
