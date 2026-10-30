@@ -46,5 +46,6 @@ def pruefen(lat, lon):
     if land:
         return "ungetestet", ("%s: Die amtlichen Daten (Gelände, Gebäude, Nutzung) sind im Programm neu eingebaut und noch nicht gegen die Live-Dienste "
                               "geprüft. Fehlt etwas, springt OpenStreetMap ein – oder du gibst eigene Dateien an." % name)
-    return "fremd", ("Hier gibt es noch keine amtlichen Daten im Programm – nur Berlin ist erprobt. Es bleibt OpenStreetMap "
-                     "(Gebäude ohne Höhen, kein Gelände) oder du gibst eigene Dateien an.")
+    return "fremd", ("Hier gibt es noch keine amtlichen Daten im Programm – nur Berlin ist erprobt. Gebäude kommen aus OpenStreetMap "
+                     "(Höhen nur, wo dort eingetragen), das Gelände grob aus Copernicus (30 m, mit Gebäuden und Bäumen darin). "
+                     "Das Koordinatensystem stellt sich selbst auf die passende UTM-Zone. Bessere Daten kannst du als eigene Dateien angeben.")

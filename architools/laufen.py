@@ -200,6 +200,12 @@ def alles(p, ausgaben, log=print, prog=None, speichern=True, test=False):
     def log(s=""):                                   # jede Zeile auch für bericht.txt / protokoll.txt merken
         zeilen.append(str(s))
         log0(s)
+    try:                                             # Koordinatensystem passend zum Ort, bevor irgendetwas gerechnet wird
+        from . import kbs
+        if kbs.angleichen(p, log):
+            kbs.setzen(p["umgebung"]["epsg"])
+    except Exception as ex:
+        log("Hinweis: Koordinatensystem nicht geprüft (%s)" % ex)
     gruppen = []
     if any(P.AUSGABEN[a][4] == "umgebung" for a in ausgaben):
         gruppen.append("umgebung")

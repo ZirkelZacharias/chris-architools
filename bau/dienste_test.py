@@ -61,8 +61,29 @@ try:
                 print("ÖPNV-Ebenen:", {k: v for k, v in zaehl.items() if "OEPNV" in k.upper() or "OPNV" in k.upper()})
 except Exception:
     print("ABBRUCH ÖPNV-Test:\n" + traceback.format_exc())
+# Ausland (neu): Zürich (swissALTI3D per STAC, Gebäude aus OSM), Amsterdam (AHN per WCS, 3DBAG), Paris (UTM 31 + Copernicus)
+for name, lat, lon in (("Zuerich", 47.3717, 8.5423), ("Amsterdam", 52.3731, 4.8922), ("Paris", 48.8530, 2.3499)):
+    try:
+        print("\n=== Ausland-Test %s ===" % name)
+        from pyproj import Transformer
+        p3 = P.neues_projekt(name, os.path.join(TMP, name))
+        p3["gebiet"]["mitte_en"] = list(Transformer.from_crs("EPSG:4326", "EPSG:25833", always_xy=True).transform(lon, lat))
+        p3["umgebung"].update(breite=300.0, hoehe=300.0, nah_breite=200.0, nah_hoehe=200.0, buergersteige="keine", lod2_luecken=True,
+                              markant=False)
+        p3["gebiet"].update(breite_cm=30.0, hoehe_cm=30.0)
+        p3["modell"]["massstab"] = 1000
+        p3["formate"] = {"zweid": ["dxf"], "dreid": ["ifc"]}
+        p3["ausgaben"].update(ifc=True, lageplan=True, laser=True)
+        t3 = time.time()
+        erg3 = L.alles(p3, ["ifc", "lageplan", "laser"], log, lambda x, t="": None)
+        print("FERTIG", name, round(time.time() - t3), "s, KBS EPSG:%s" % p3["umgebung"]["epsg"])
+        for k, v in erg3.items():
+            print(" ", k, "->", (v.get("fehler") or "ok") if isinstance(v, dict) else v)
+    except Exception:
+        print("ABBRUCH Ausland-Test %s:\n%s" % (name, traceback.format_exc()))
 # Kurzfassung der Auffälligkeiten
 print("\n=== AUFFÄLLIGKEITEN ===")
 for z in zeilen:
-    if any(w in z for w in ("FEHLER", "nicht erreichbar", "fehlgeschlagen", "keine Objekte", "0 Objekte", "Vorrangnetz", "Attribute (Beispiel)")):
+    if any(w in z for w in ("FEHLER", "nicht erreichbar", "fehlgeschlagen", "keine Objekte", "0 Objekte", "Vorrangnetz", "Attribute (Beispiel)",
+                            "STAC", "WCS", "3DBAG", "Koordinatensystem", "Copernicus", "umgerechnet")):
         print(z[:300])

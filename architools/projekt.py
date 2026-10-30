@@ -161,6 +161,11 @@ def laden(pfad):
     with open(pfad, encoding="utf-8") as f:
         p = json.load(f)
     p = verbinden(p)
+    try:                                                    # Koordinatensystem passend zum Ort (ältere Projekte: immer UTM 33)
+        from . import kbs
+        kbs.angleichen(p)
+    except Exception:
+        pass
     p["_pfad"] = os.path.abspath(pfad)
     p["ordner"] = os.path.dirname(p["_pfad"])               # Projekt zieht mit dem Ordner um
     return p

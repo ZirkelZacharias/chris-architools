@@ -84,11 +84,20 @@ html, body {{ overflow: hidden; }}
 
 # ------------------------------------------------------------------ Koordinaten
 def _trans():
+    """Umrechnung Karte <-> Ost/Nord im Koordinatensystem des Projekts (architools.kbs; Berlin: UTM 33)."""
     from pyproj import Transformer
-    if not hasattr(_trans, "t"):
-        _trans.t = (Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True),
-                    Transformer.from_crs("EPSG:4326", "EPSG:25833", always_xy=True))
+    from .. import kbs
+    ep = kbs.aktuell()
+    if getattr(_trans, "ep", None) != ep:
+        _trans.t = (Transformer.from_crs("EPSG:%d" % ep, "EPSG:4326", always_xy=True),
+                    Transformer.from_crs("EPSG:4326", "EPSG:%d" % ep, always_xy=True))
+        _trans.ep = ep
     return _trans.t
+
+
+def kbs_neu():
+    """Nach einem Wechsel des Koordinatensystems: Umrechnung neu aufbauen (geschieht beim nächsten Aufruf)."""
+    _trans.ep = None
 
 
 def en_zu_ll(e, n):

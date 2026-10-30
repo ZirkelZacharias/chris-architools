@@ -133,11 +133,27 @@ class Gebiet:
             ui.notify("Nichts gefunden – Adresse oder „Breite, Länge“ eintippen.", type="warning")
             return
         self.cfg["gebiet"]["mitte_en"] = [round(v, 2) for v in ll_zu_en(*r)]
+        self._kbs_pruefen()
         self.marker.move(*r)
         self.karte.set_center(tuple(r))
         self.karte.set_zoom(max(self._zoom(), 16))
         self._mitte_text()
         self._rahmen()
+
+    def _kbs_pruefen(self):
+        """Neuer Mittelpunkt: Koordinatensystem passend zum Ort (Landesprofil, sonst UTM-Zone) - mit Umrechnung der Schnittlinie."""
+        from .. import kbs
+        try:
+            r = kbs.angleichen(self.p)
+        except Exception:
+            r = None
+        if r:
+            kbs.setzen(r[1])
+            ui.notify("Koordinatensystem passend zum Ort: EPSG:%d" % r[1], type="info")
+            try:
+                self._schnitt_zeichnen()
+            except Exception:
+                pass
 
     def _mitte_text(self):
         e, n = self.cfg["gebiet"]["mitte_en"]
@@ -171,7 +187,8 @@ class Gebiet:
         if en is None:
             en = ll_zu_en(*latlon)
         self.cfg["gebiet"]["mitte_en"] = list(en)
-        lat, lon = en_zu_ll(*en)
+        self._kbs_pruefen()
+        lat, lon = en_zu_ll(*self.cfg["gebiet"]["mitte_en"])
         if hasattr(self, "marker"):
             self.marker.move(lat, lon)
             self.karte.set_center((lat, lon))
@@ -193,6 +210,7 @@ class Gebiet:
             self._schnitt_punkt(en)
         else:
             self.cfg["gebiet"]["mitte_en"] = list(en)
+            self._kbs_pruefen()
             self.marker.move(ll["lat"], ll["lng"])
             self._mitte_text()
             self._rahmen()
@@ -703,7 +721,8 @@ class Gebiet:
                               lambda s: None)
             if not obj:
                 raise ValueError("ALKIS-Flurstücke nicht erreichbar (Netz/SSL prüfen)")
-            return [g for g, _ in K.geojson_features(obj, "", 25833) if "Polygon" in g.geom_type]
+            from .. import kbs
+            return [g for g, _ in K.geojson_features(obj, "", kbs.aktuell()) if "Polygon" in g.geom_type]
         try:
             fl = await run.io_bound(laden)
         except Exception as ex:

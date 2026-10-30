@@ -18,7 +18,8 @@ QUELLEN = {"Automatisch (amtlich, sonst OpenStreetMap)": "auto", "Nur OpenStreet
            "Nur eigene Dateien (GeoJSON)": "dateien"}
 LAENDER = {"Automatisch (nach dem Mittelpunkt)": "auto", "Berlin": "berlin", "Brandenburg (neu)": "brandenburg",
            "Nordrhein-Westfalen (neu, ungetestet)": "nrw", "Bayern (neu, ungetestet)": "bayern",
-           "Hamburg (neu, ungetestet)": "hamburg", "Anderes Land: nur eigene Dateien": "keins"}
+           "Hamburg (neu, ungetestet)": "hamburg", "Schweiz (neu, ungetestet)": "schweiz",
+           "Niederlande (neu, ungetestet)": "niederlande", "Anderes Land: nur eigene Dateien": "keins"}
 FERN = {"Blöcke bis Traufe (LoD1, spart Speicher)": "bloecke", "wie Nahbereich (LoD2, sehr groß)": "lod2",
         "weglassen": "keine"}
 
@@ -174,7 +175,7 @@ def szene_aus_koordinaten(cfg, rahmen, log=print):
     K = kern(cfg)
     (e, n), b, h = rahmen
     nz = cfg.get("netz", {})
-    kc = K.Config(mitte_en=(e, n), epsg=25833, breite=b, hoehe=h, nah_breite=b, nah_hoehe=h,
+    kc = K.Config(mitte_en=(e, n), epsg=int(cfg.get("kbs") or 25833), breite=b, hoehe=h, nah_breite=b, nah_hoehe=h,
                   online_dgm=True, online_lod2=True, land="auto", quelle="auto", fern_gebaeude="lod2",
                   lod2_luecken=True, markant=False, extra=list(cfg["ifcmap"].get("zusatz") or []),
                   alkis_zusatz=True, dxf_plaene=["schwarzplan"],
@@ -194,7 +195,7 @@ def dgm_aus_koordinaten(cfg, rahmen, log=print):
     K = kern(cfg)
     (e, n), b, h = rahmen
     nz = cfg.get("netz", {})
-    kc = K.Config(mitte_en=(e, n), epsg=25833, breite=b, hoehe=h, nah_breite=b, nah_hoehe=h,
+    kc = K.Config(mitte_en=(e, n), epsg=int(cfg.get("kbs") or 25833), breite=b, hoehe=h, nah_breite=b, nah_hoehe=h,
                   online_dgm=True, online_lod2=False, land="auto", quelle="auto", fern_gebaeude="keine",
                   lod2_luecken=False, markant=False, extra=[], alkis_zusatz=False, dxf_plaene=[],
                   ifc=False, dxf2d=False, mit_gelaende=True, baeume_nur_nah=False,
@@ -227,12 +228,33 @@ def dgm_aus_koordinaten(cfg, rahmen, log=print):
         except Exception as ex:
             log(f"  DGM {os.path.basename(p)}: {ex}")
     if not teile:
+        teile = _copernicus_notfall(K, kc, xmin, xmax, ymin, ymax, log)
+    if not teile:
         raise RuntimeError("Keine Gelaendedaten fuer das Gebiet (DGM-Kacheln fehlen)")
     sz = {"quelle": "IFCmap", "extent": shapely.geometry.box(xmin, ymin, xmax, ymax),
           "dgm": _punkte_zu_raster(np.vstack(teile)), "gebaeude": [], "baeume": [], "bloecke": [], "ebenen": []}
     z = sz["dgm"]["z"]
     log(f"  DGM: {z.shape[1]} x {z.shape[0]} Zellen, Hoehe {np.nanmin(z):.1f} - {np.nanmax(z):.1f} m")
     return sz
+
+
+def _copernicus_notfall(K, kc, xmin, xmax, ymin, ymax, log):
+    """Kein Geländemodell (Ausland ohne Profil): Copernicus GLO-30 wie in der Umgebungs-IFC. -> [Nx3] oder []"""
+    if not getattr(kc, "dgm_notfall", True):
+        return []
+
+    class _D:
+        pass
+    dd = _D()
+    dd.xmin, dd.xmax, dd.ymin, dd.ymax = xmin, xmax, ymin, ymax
+    log("  Kein Geländemodell für dieses Gebiet – Notbehelf Copernicus GLO-30 (30 m, Oberflächenmodell: Gebäude und Bäume "
+        "stecken im Gelände, Höhen auf wenige Meter genau). Für ein Modell nur als grobe Orientierung.")
+    try:
+        r = K.copernicus_gelaende(kc, dd, log)
+    except Exception as e:
+        log(f"  Copernicus GLO-30 fehlgeschlagen: {e}")
+        r = None
+    return [np.column_stack(r)] if r is not None else []
 
 
 def _szene(K, kc, cfg, log):
@@ -263,6 +285,8 @@ def _szene(K, kc, cfg, log):
                 teile.append(a)
         except Exception as e:
             log(f"  DGM {os.path.basename(p)}: {e}")
+    if not teile:
+        teile = _copernicus_notfall(K, kc, d.xmin, d.xmax, d.ymin, d.ymax, log)
     if not teile:
         raise RuntimeError("Keine Geländedaten für das Gebiet (DGM-Kacheln fehlen – Download in IFCmap prüfen)")
     sz["dgm"] = _punkte_zu_raster(np.vstack(teile))

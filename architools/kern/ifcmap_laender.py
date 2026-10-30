@@ -90,6 +90,12 @@ _DOM_LETZTE = []                                     # DOM-Dateien des letzten k
 REIHENFOLGE = ["berlin", "hamburg", "brandenburg", "nrw", "bayern"]
 BERLIN_BOX = (13.08, 52.33, 13.77, 52.68)
 NAMEN = {"berlin": "Berlin", "hamburg": "Hamburg", "brandenburg": "Brandenburg", "nrw": "Nordrhein-Westfalen", "bayern": "Bayern"}
+try:                                                 # Ausland (Schweiz, Niederlande) und UTM-Zone nach dem Mittelpunkt
+    import ifcmap_ausland as A
+except ImportError:                                  # beim Import als Paket (architools.kern.ifcmap_laender)
+    from . import ifcmap_ausland as A
+PROFILE.update(A.PROFILE)
+NAMEN.update(A.NAMEN)
 
 
 def _json_orte():
@@ -150,9 +156,18 @@ def land_bestimmen(cfg, K, prof=None):
 
 
 def land_am_punkt(lo, la, prof):
-    """Bundesland zu Laenge/Breite. Berlin und Hamburg (Stadtstaaten in groesseren Land-Rechtecken) haben Vorrang; sonst gewinnt bei
+    """Bundesland zu Laenge/Breite. Laender mit Umriss (Ausland: Schweiz, Niederlande) werden zuerst geprueft und nur ueber den Umriss
+    erkannt. Berlin und Hamburg (Stadtstaaten in groesseren Land-Rechtecken) haben Vorrang; sonst gewinnt bei
     ueberlappenden Rechtecken das Land, dessen Mitte (auf die Rechteckgroesse bezogen) am naechsten liegt. An Landesgrenzen bleibt das
     eine Naeherung - dort das Land in den Einstellungen von Hand waehlen."""
+    for land, p in prof.items():
+        um = p.get("umriss")
+        if um and len(um) >= 3:
+            try:
+                if A.im_umriss(lo, la, [tuple(q) for q in um]):
+                    return land
+            except Exception:
+                pass
     for land in ("berlin", "hamburg"):
         box = BERLIN_BOX if land == "berlin" else tuple((prof.get(land) or {}).get("box") or ())
         if len(box) == 4 and box[0] <= lo <= box[2] and box[1] <= la <= box[3]:
@@ -160,7 +175,7 @@ def land_am_punkt(lo, la, prof):
     beste, bw = None, None
     for land, p in prof.items():
         box = tuple(p.get("box") or ())
-        if land in ("berlin", "hamburg") or len(box) != 4 or not (box[0] <= lo <= box[2] and box[1] <= la <= box[3]):
+        if land in ("berlin", "hamburg") or p.get("umriss") or len(box) != 4 or not (box[0] <= lo <= box[2] and box[1] <= la <= box[3]):
             continue
         w = max(abs(lo - (box[0] + box[2]) / 2) / ((box[2] - box[0]) / 2), abs(la - (box[1] + box[3]) / 2) / ((box[3] - box[1]) / 2))
         if bw is None or w < bw:
@@ -168,15 +183,51 @@ def land_am_punkt(lo, la, prof):
     return beste
 
 
+def _mitte_ll(cfg, K):
+    try:
+        from pyproj import Transformer
+        ce, cn = K.mitte_bestimmen(cfg)
+        return Transformer.from_crs("EPSG:%d" % cfg.epsg, "EPSG:4326", always_xy=True).transform(ce, cn)
+    except Exception:
+        return None
+
+
+def _utm_passend(cfg, K, log):
+    """Kein Land erkannt (Ausland ohne Profil): Koordinatensystem auf die UTM-Zone am Mittelpunkt stellen, wenn das eingestellte
+    nicht passt - sonst ist alles um rund 1 % (je Zone Abstand mehr) verzerrt."""
+    ll = _mitte_ll(cfg, K)
+    if not ll:
+        return cfg
+    ep = A.utm_epsg(*ll)
+    if ep == cfg.epsg:
+        return cfg
+    try:
+        from pyproj import Transformer
+        mitte = cfg.mitte_en
+        if mitte:
+            mitte = Transformer.from_crs("EPSG:%d" % cfg.epsg, "EPSG:%d" % ep, always_xy=True).transform(*mitte)
+        log("Ort ausserhalb der hinterlegten Laender (%.3f / %.3f): Koordinatensystem von EPSG:%d auf EPSG:%d (UTM-Zone %d) umgestellt%s"
+            % (ll[1], ll[0], cfg.epsg, ep, ep % 100, "; E0/N0 neu bestimmt" if cfg.e0n0 else ""))
+        return replace(cfg, epsg=ep, mitte_en=mitte, e0n0=None)
+    except Exception as e:
+        log("  HINWEIS: UTM-Zone %d passt besser, Umstellen fehlgeschlagen: %s" % (ep % 100, e))
+        return cfg
+
+
 def vorbereiten(cfg, K, log):
     """Land bestimmen und das Koordinatensystem passend setzen. -> (cfg, land)"""
     prof = profile(log)
     land = land_bestimmen(cfg, K, prof)
     if land is None:
+        if (getattr(cfg, "land", "auto") or "auto") == "auto":
+            cfg = _utm_passend(cfg, K, log)
         return cfg, None
     log("Bundesland: %s%s" % (NAMEN.get(land) or prof.get(land, {}).get("name", land),
                               " (automatisch nach dem Mittelpunkt erkannt)" if (getattr(cfg, "land", "auto") or "auto") == "auto" else ""))
     ep = 25833 if land == "berlin" else prof.get(land, {}).get("epsg")
+    if ep == "utm":                                         # Ausland: UTM-Zone nach dem Mittelpunkt
+        ll = _mitte_ll(cfg, K)
+        ep = A.utm_epsg(*ll) if ll else None
     if ep and ep != cfg.epsg:
         try:
             from pyproj import Transformer
@@ -321,7 +372,7 @@ def kacheln_holen(cfg, land, bbox, log, K, dgm=True, lod2=True, dom=False):
         return [], [], []
     ctx = K.ssl_kontext(cfg.cafile, cfg.unsicher)
     cache = K.cache_ordner()
-    epsg = int(prof.get("epsg") or cfg.epsg)
+    epsg = cfg.epsg if prof.get("epsg") in (None, "", "utm") else int(prof.get("epsg"))
     dgm_out, lod_out, fehlt = [], [], []
     listen = {}
     for art, an in (("dgm", dgm), ("lod2", lod2), ("dom", dom)):
@@ -331,7 +382,7 @@ def kacheln_holen(cfg, land, bbox, log, K, dgm=True, lod2=True, dom=False):
         tilename = {"dgm": "Gelaende (DGM)", "lod2": "Gebaeude (LoD2)", "dom": "Oberflaechenmodell (DOM)"}[art]
         log("%s %s - Status: %s" % (prof.get("name", land), tilename, teil.get("status", "?")))
         kach = kachel_liste(bbox, teil.get("kachel", 1000))
-        if teil.get("art") == "manuell" or not (teil.get("url") or teil.get("basis")):
+        if teil.get("art") not in A.EIGENE_ARTEN and (teil.get("art") == "manuell" or not (teil.get("url") or teil.get("basis"))):
             fehlt.append("%s %s: kein automatischer Download. Benoetigte Kacheln (%d x %d m, linke untere Ecke %s): %s. Portal: %s"
                          % (prof.get("name", land), tilename, teil.get("kachel", 1000), teil.get("kachel", 1000), "Ost/Nord in m",
                             ", ".join("%d/%d" % k for k in kach), prof.get("portal", "")))
@@ -342,6 +393,20 @@ def kacheln_holen(cfg, land, bbox, log, K, dgm=True, lod2=True, dom=False):
                 log("  " + fehlt[-1])
             continue
         log("  %d Kachel(n) noetig" % len(kach))
+        if teil.get("art") in A.EIGENE_ARTEN:                 # Ausland: eigene Wege, Ergebnis schon im UTM-System
+            try:
+                dat = A.teil_holen(land, prof, art, teil, kach, epsg, ctx, cache, log, K, fehlt)
+            except Exception as ex:
+                log("  FEHLER: %s" % str(ex)[:300])
+                fehlt.append("%s %s: %s" % (prof.get("name", land), tilename, str(ex)[:150]))
+                dat = []
+            if art == "dgm":
+                dgm_out += dat
+            elif art == "dom":
+                _DOM_LETZTE.extend(dat)
+            else:
+                lod_out += dat
+            continue
         for e, n in kach:
             v = _vars(e, n, epsg)
             ext = teil.get("ext", "gml" if art == "lod2" else "zip")

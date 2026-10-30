@@ -8,10 +8,12 @@ QUELLEN = {"auto": "Automatisch (amtlich, sonst OpenStreetMap)", "osm": "Nur Ope
            "dateien": "Nur eigene Dateien (GeoJSON)"}
 LAENDER = {"auto": "Automatisch (nach dem Mittelpunkt)", "berlin": "Berlin", "brandenburg": "Brandenburg (neu)",
            "nrw": "Nordrhein-Westfalen (neu, ungetestet)", "bayern": "Bayern (neu, ungetestet)",
-           "hamburg": "Hamburg (neu, ungetestet)", "keins": "Anderes Land: nur eigene Dateien"}
+           "hamburg": "Hamburg (neu, ungetestet)", "schweiz": "Schweiz (neu, ungetestet)",
+           "niederlande": "Niederlande (neu, ungetestet)", "keins": "Anderes Land: nur eigene Dateien"}
 KBS = {25833: "ETRS89 / UTM 33N (EPSG:25833) – Berlin, Brandenburg, Sachsen, MV",
        25832: "ETRS89 / UTM 32N (EPSG:25832) – Westen und Süden",
        25831: "ETRS89 / UTM 31N (EPSG:25831)", 25834: "ETRS89 / UTM 34N (EPSG:25834)"}
+# Hinweis: Liegt der Mittelpunkt in keinem hinterlegten Land, stellt der Rechenkern die UTM-Zone selbst passend ein.
 AUFTEILUNG = {"strassen": "nur Straßen und Wege", "verkehr_wasser": "Straßen, Wege, Bahn und Gewässer",
               "alle": "allen Nutzungsarten", "keine": "nicht aufteilen"}
 FERN = {"bloecke": "Blöcke bis Traufe (LoD1, spart Speicher)", "lod2": "wie Nahbereich (LoD2, sehr groß)", "keine": "weglassen"}
@@ -101,9 +103,32 @@ def seiten(p):
         # -------------------------------------------------- Gebiet und Daten (immer, wenn Umgebung gewählt)
         with abschnitt(_wenn_aus(p, "ifc", "obj_archicad", "lageplan", "schwarzplan", "info_dwg"), "koord"):
             with karte("Koordinatensystem", AKZENT, offen=False):
-                hinweis("Wird automatisch passend zum Bundesland gewählt (nach dem Mittelpunkt) – nur ändern, wenn es nötig ist. "
+                hinweis("Wird automatisch passend zum Ort gewählt (Bundesland bzw. Land, sonst die UTM-Zone am Mittelpunkt). "
+                        "Von Hand ändern geht nur bei „Anderes Land: nur eigene Dateien“ – dann bestimmen deine Dateien das System. "
                         "Größe von Gebiet, Nah- und Mittelbereich stellst du auf der Seite „Gebiet“ ein (dort siehst du sie in der Karte).")
-                _wahl("Koordinatensystem", KBS, u, "epsg")
+                kbs_liste = dict(KBS)
+                if u.get("epsg") and int(u["epsg"]) not in kbs_liste:      # automatisch gesetzte Zone ausserhalb der Liste
+                    kbs_liste[int(u["epsg"])] = "UTM-Zone %d (EPSG:%d) – automatisch nach dem Ort" % (int(u["epsg"]) % 100, int(u["epsg"]))
+                sel_kbs = ui.select(kbs_liste, label="Koordinatensystem", value=u.get("epsg") or 25833).classes("w-full")
+                if (u.get("land") or "auto") != "keins":
+                    sel_kbs.disable()
+
+                def _kbs_gewaehlt(e, u=u):
+                    """Von Hand gewechselt: gespeicherte Koordinaten (Mittelpunkt, Schnittlinie) mitnehmen."""
+                    from .. import kbs
+                    from pyproj import Transformer
+                    alt, neu = int(u.get("epsg") or 25833), int(e.value or 25833)
+                    if alt == neu:
+                        return
+                    t = Transformer.from_crs("EPSG:%d" % alt, "EPSG:%d" % neu, always_xy=True)
+                    g = p["gebiet"]
+                    g["mitte_en"] = list(kbs._umrechnen(t, g["mitte_en"]))
+                    if (p.get("schnitt") or {}).get("linie_en"):
+                        p["schnitt"]["linie_en"] = [kbs._umrechnen(t, q) for q in p["schnitt"]["linie_en"]]
+                    u["epsg"] = neu
+                    p["modell"]["kbs"] = neu
+                    kbs.setzen(neu)
+                sel_kbs.on_value_change(_kbs_gewaehlt)
         with abschnitt(_wenn_aus(p, "ifc", "obj_archicad", "lageplan", "schwarzplan", "info_dwg"), "daten"):
             with karte("Daten", SCHIEFER, offen=False):
                 _wahl("Bundesland", _laender_liste(), u, "land")

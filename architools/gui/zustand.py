@@ -2,6 +2,7 @@
 import os
 
 from .. import projekt as P
+from .. import kbs as KBS
 
 Z = {"p": None}
 
@@ -18,16 +19,19 @@ def projekt():
                 continue
         if Z["p"] is None:
             Z["p"] = P.neues_projekt("Neues Projekt")
+        KBS.setzen(Z["p"]["umgebung"].get("epsg"))
     return Z["p"]
 
 
 def neu(name="Neues Projekt"):
     Z["p"] = P.neues_projekt(name)
+    KBS.setzen(Z["p"]["umgebung"].get("epsg"))
     return Z["p"]
 
 
 def oeffnen(pfad):
     Z["p"] = P.laden(pfad)
+    KBS.setzen(Z["p"]["umgebung"].get("epsg"))
     return Z["p"]
 
 

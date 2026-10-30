@@ -29,6 +29,11 @@ ANDERE BUNDESLÄNDER (nur bei den optionalen Länder-Modulen; Vermerke aus den v
   Brandenburg: "© GeoBasis-DE/LGB, dl-de/by-2-0"          Hamburg: "Freie und Hansestadt Hamburg, Landesbetrieb Geoinformation und Vermessung, dl-de/by-2-0"
   Nordrhein-Westfalen: "Geobasis NRW, dl-de/zero-2-0"        Bayern: "Bayerische Vermessungsverwaltung, www.geodaten.bayern.de, CC BY 4.0"
 
+AUSLAND (neu, ungetestet; Vermerke aus den veröffentlichten Bedingungen, nicht einzeln geprüft)
+  Schweiz (Gelände swissALTI3D): "Quelle: Bundesamt für Landestopografie swisstopo" (freie Nutzung mit Quellenangabe)
+  Niederlande (Gelände AHN): "Actueel Hoogtebestand Nederland (AHN), Rijkswaterstaat", CC0 1.0
+  Niederlande (Gebäude 3DBAG): "3DBAG by tudelft3d and 3DGI", CC BY 4.0 – Namensnennung Pflicht
+
 Eigene Dateien (Zusatzpläne, eigene Geodaten) unterliegen den Rechten der jeweiligen Urheber.
 """
 
@@ -66,6 +71,14 @@ LISTE = [
         ("Nordrhein-Westfalen", "Gelände, Gebäude", "opengeodata.nrw.de", "Geobasis NRW, dl-de/zero-2-0", "https://www.opengeodata.nrw.de"),
         ("Bayern", "Gelände, Gebäude", "download1.bayernwolke.de", "Bayerische Vermessungsverwaltung, www.geodaten.bayern.de, CC BY 4.0",
          "https://geodaten.bayern.de"),
+    ]),
+    ("Ausland (neu, ungetestet; Vermerke nicht einzeln geprüft)", [
+        ("Schweiz – swissALTI3D", "Gelände (umgerechnet von LV95 nach UTM)", "data.geo.admin.ch (STAC)",
+         "Quelle: Bundesamt für Landestopografie swisstopo", "https://www.geo.admin.ch/de/allgemeine-nutzungsbedingungen-geoadminch"),
+        ("Niederlande – AHN (Actueel Hoogtebestand Nederland)", "Gelände (umgerechnet von RD New nach UTM)", "service.pdok.nl (WCS)",
+         "Rijkswaterstaat, CC0 1.0", "https://www.ahn.nl"),
+        ("Niederlande – 3DBAG", "Gebäude LoD2.2 (umgerechnet nach UTM)", "api.3dbag.nl", "3DBAG by tudelft3d and 3DGI, CC BY 4.0 – Namensnennung Pflicht",
+         "https://docs.3dbag.nl/en/copyright/"),
     ]),
     ("Programm selbst", [
         ("GitHub", "Prüfung auf Programm-Updates", "api.github.com", "es werden keine Projektdaten übertragen", "https://github.com/ZirkelZacharias"),
