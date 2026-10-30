@@ -99,12 +99,12 @@ def seiten(p):
 
     with ui.column().classes("w-full gap-3") as wurzel:
         # -------------------------------------------------- Gebiet und Daten (immer, wenn Umgebung gewählt)
-        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "koord"):
+        with abschnitt(_wenn_aus(p, "ifc", "obj_archicad", "lageplan", "schwarzplan", "info_dwg"), "koord"):
             with karte("Koordinatensystem", AKZENT, offen=False):
                 hinweis("Wird automatisch passend zum Bundesland gewählt (nach dem Mittelpunkt) – nur ändern, wenn es nötig ist. "
                         "Größe von Gebiet, Nah- und Mittelbereich stellst du auf der Seite „Gebiet“ ein (dort siehst du sie in der Karte).")
                 _wahl("Koordinatensystem", KBS, u, "epsg")
-        with abschnitt(_wenn_aus(p, "ifc", "lageplan", "schwarzplan", "info_dwg"), "daten"):
+        with abschnitt(_wenn_aus(p, "ifc", "obj_archicad", "lageplan", "schwarzplan", "info_dwg"), "daten"):
             with karte("Daten", SCHIEFER, offen=False):
                 _wahl("Bundesland", _laender_liste(), u, "land")
                 _wahl("Quelle für Nutzung und Bäume", QUELLEN, u, "quelle")
@@ -129,7 +129,7 @@ def seiten(p):
                     feld_pfad("Bäume (GeoJSON)", u, "baum_dateien", mehrere=True, typen=("GeoJSON (*.geojson;*.json)",))
 
         # -------------------------------------------------- IFC
-        a_ifc = abschnitt(_wenn_aus(p, "ifc"), "ifc")
+        a_ifc = abschnitt(_wenn_aus(p, "ifc", "obj_archicad"), "ifc")
         with a_ifc:
             with karte("Archicad-IFC – 3D-Modell", AKZENT):
                 _wahl("Gelände teilen nach", AUFTEILUNG, u, "aufteilung")

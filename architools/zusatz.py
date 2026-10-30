@@ -6,8 +6,12 @@ Suchorte (in dieser Reihenfolge): Umgebungsvariable ZACHARIAS_ZUSATZ, Ordner `zu
     NAME, VERSION, BESCHREIBUNG           Anzeigename, Version, ein Satz (erscheint unter Einstellungen -> Zusatzmodule)
     gui_umgebung(ui, u)                   zusätzliche Einstellungen im Reiter Umgebung (u = Einstellungen, Schlüssel "zusatz")
     gui_modell(ui, g)                     zusätzliche Einstellungen im Reiter Modellbau (g = Einstellungen der Gebäude)
-    ifc_ende(ctx)                         nach dem Schreiben der IFC-Elemente (ctx: dict, siehe ifcmap_kern.schreibe_ifc)
+    ifc_ende(ctx)                         nach dem Schreiben der IFC-Elemente (ctx: dict, siehe ifcmap_kern.schreibe_ifc; ab 9.2 mit
+                                          einheit_m = Meter je IFC-Einheit und archicad_obj = Liste für die OBJ mit Texturen)
     modell_wand(b, ri, i, prof, L, cfg)   Gravurflächen (shapely, Wandkoordinaten s/z in mm) für eine Wand des Modellbaus
+    modell_dach(b, j, pg, xyz, cfg)       Gravurflächen für eine Dachfläche des Modellbaus (Klebeflächen und Faltmodell); Koordinaten wie
+                                          pg (Dachebene in wahrer Grösse, mm); gebaeude_laser.dach_2d_nach_xy(xyz, p) -> Grundriss-xy
+    gelaende_bild(d, cfg, log)            Bild fürs Gelände (IFC-Textur, 3D-Vorschau) vor dem Luftbild-Dienst -> (PIL-Bild, (x0, y0, x1, y1)) oder None
     modell_ende(ctx)                      nach dem Modellbau-Lauf (ctx: cfg, buildings, ausgabe, log)
     gui_laser(ui, cfg, h)                 zusätzliche Karte bei den Gelände-Lasercut-Einstellungen (cfg = Modell-Einstellungen,
                                           h = Hilfen der Oberfläche: karte, hinweis, feld_pfad, ausgrauen, TERRA ...)

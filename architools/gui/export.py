@@ -110,7 +110,7 @@ def seite(p, speichern):
         for k, (z, st) in zeilen.items():
             z.set_visibility(bool(ausg.get(k)))
             st.text = P.stand_text(p, k)
-        b_vor.set_visibility(any(ausg.get(k) for k in ("ifc", "lageplan", "schwarzplan", "info_dwg", "laser", "druck")))
+        b_vor.set_visibility(any(ausg.get(k) for k in ("ifc", "obj_archicad", "lageplan", "schwarzplan", "info_dwg", "laser", "druck")))
     ui.timer(1.0, aktualisieren)
     aktualisieren()
 
@@ -311,6 +311,10 @@ def seite(p, speichern):
                     ui.label("3D-Vorschau der Umgebung (aus denselben Daten wie die IFC)").classes("text-subtitle2")
                     hinweis("Maus: drehen · rechte Taste: verschieben · Zoom im Reiter „3D-Ansicht“ (hier blättert das Rad durch die Ergebnisse)")
                 szene3d([(vg["glb"], None)], vg["b"], vg["h"], hoehe=520, mitte=(0, 0), z_faktor=d3["ue"], zoom=False)
+        if u and zu.get("obj_archicad"):
+            datei_liste("Texturen für Archicad (OBJ)", zu["obj_archicad"])
+            hinweis("In Archicad 29: Ablage › Bibliotheken und Objekte › Importieren (OBJ als GDL-Objekt), am Projektnullpunkt "
+                    "platzieren – sie liegt deckungsgleich über der IFC. Die .mtl und die Bilder müssen neben der OBJ liegen bleiben.")
         if u and zu.get("lageplan"):
             datei_liste("Lageplan", zu["lageplan"])
             for b_ in ((d3["umg"] or {}).get("lageplan_bilder") or []):

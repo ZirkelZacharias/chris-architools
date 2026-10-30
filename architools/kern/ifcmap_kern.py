@@ -211,6 +211,9 @@ class Config:
     wms_eigene: str = ""                                  # weitere WMS-Dienste, je Zeile: Name | Adresse | Ebene1,Ebene2
     gelaende_luftbild: bool = False                       # Gelaende mit Luftbild als Textur (IFC, 3D-Vorschau); Berlin-Dienst, braucht Internet
     luftbild_aufloesung: float = 0.5                      # Meter je Pixel des Luftbilds fuer die Textur
+    obj_archicad: bool = False                            # texturierte Flaechen zusaetzlich als OBJ (Archicad zeigt IFC-Texturen nicht an)
+    obj_breite: float = 0.0                               # Bereich der OBJ: Rechteck um den Mittelpunkt (Ost-West, m); 0 = ganzes Gebiet
+    obj_hoehe: float = 0.0                                # (Nord-Sued, m)
     wms_aufloesung: float = 0.25                          # Meter je Pixel (hoechstens 4096 Pixel Kantenlaenge)
     # --- Lageplan / Schwarzplan
     buergersteige: str = "fgn"            # Lageplan: "fgn" = Fussgaengernetz (Berlin), "naeherung" = aus der Strassenbreite (ueberall), "keine"
@@ -2923,6 +2926,87 @@ def _gegenlaeufig(a, b):
 EBEN_TOL = 0.001                       # m: groesste Abweichung eines n-Ecks von seiner Ebene (nach dem Runden)
 
 
+def _poly_schneiden(P, UV, achse, wert, innen_groesser):
+    """Ein konvexes Polygon (Punkte Nx3, UV Nx2) an der Ebene x/y = wert abschneiden (Sutherland-Hodgman), UV mitgefuehrt"""
+    n = len(P)
+    outP, outU = [], []
+    for i in range(n):
+        a, b = P[i], P[(i + 1) % n]
+        ua, ub = UV[i], UV[(i + 1) % n]
+        ia = (a[achse] >= wert) if innen_groesser else (a[achse] <= wert)
+        ib = (b[achse] >= wert) if innen_groesser else (b[achse] <= wert)
+        if ia:
+            outP.append(a)
+            outU.append(ua)
+        if ia != ib:
+            t = (wert - a[achse]) / (b[achse] - a[achse])
+            outP.append(a + (b - a) * t)
+            outU.append(ua + (ub - ua) * t)
+    return outP, outU
+
+
+def obj_zuschneiden(teile, rect):
+    """Texturierte Flaechen auf das Rechteck rect=(x0, y0, x1, y1) (lokal, Meter) zuschneiden; Dreiecke am Rand werden sauber
+    geschnitten (Textur laeuft mit). Senkrechte Flaechen (Fassaden) werden ebenfalls in x/y geschnitten."""
+    x0, y0, x1, y1 = rect
+    out = []
+    for V, T, UV, b in teile:
+        V, T, UV = np.asarray(V, float), np.asarray(T, int), np.asarray(UV, float)
+        if not len(T):
+            continue
+        tx, ty = V[T][:, :, 0], V[T][:, :, 1]
+        ganz = (tx.min(1) >= x0) & (tx.max(1) <= x1) & (ty.min(1) >= y0) & (ty.max(1) <= y1)
+        aussen = (tx.max(1) < x0) | (tx.min(1) > x1) | (ty.max(1) < y0) | (ty.min(1) > y1)
+        nV, nU, nT = [V], [UV], [T[ganz]]
+        k = len(V)
+        for t in T[~ganz & ~aussen]:
+            P, U = list(V[t]), list(UV[t])
+            for achse, wert, gr in ((0, x0, True), (0, x1, False), (1, y0, True), (1, y1, False)):
+                if len(P) < 3:
+                    break
+                P, U = _poly_schneiden(P, U, achse, wert, gr)
+            if len(P) < 3:
+                continue
+            nV.append(np.asarray(P))
+            nU.append(np.asarray(U))
+            nT.append(np.array([[k, k + i, k + i + 1] for i in range(1, len(P) - 1)], int))
+            k += len(P)
+        T2 = np.vstack([t for t in nT if len(t)]) if any(len(t) for t in nT) else np.zeros((0, 3), int)
+        if not len(T2):
+            continue
+        V2, U2 = np.vstack(nV), np.vstack(nU)
+        benutzt = np.unique(T2)                             # nicht benutzte Punkte weglassen
+        neu = -np.ones(len(V2), int)
+        neu[benutzt] = np.arange(len(benutzt))
+        out.append((V2[benutzt], neu[T2], U2[benutzt], b))
+    return out
+
+
+def archicad_obj_schreiben(pfad_ifc, teile):
+    """Texturierte Flächen (Gelände-Luftbild, Fassaden, Dächer) als OBJ + MTL neben der IFC, für Archicad (liest IFC-Texturen nicht).
+    teile: [(Punkte Nx3 in Metern, lokal wie die IFC, Dreiecke Mx3 0-basiert, UV Nx2, Bilddatei relativ zur IFC)].
+    Koordinaten wie die IFC (lokal, Meter), Z nach oben. -> Pfad der OBJ"""
+    basis = os.path.splitext(pfad_ifc)[0] + "_Texturen_Archicad"
+    obj, mtl = basis + ".obj", basis + ".mtl"
+    bilder = {}
+    for _, _, _, b in teile:
+        bilder.setdefault(b, "m%d" % len(bilder))
+    with open(mtl, "w", encoding="utf-8") as fh:
+        for b, m in bilder.items():
+            fh.write("newmtl %s\nKa 1 1 1\nKd 1 1 1\nKs 0 0 0\nd 1\nillum 1\nmap_Kd %s\n\n" % (m, b.replace("\\", "/")))
+    with open(obj, "w", encoding="utf-8") as fh:
+        fh.write("# Zacharias Tools - texturierte Flaechen, Koordinaten lokal wie die IFC (Meter, Z oben)\nmtllib %s\n" % os.path.basename(mtl))
+        nv = 0
+        for k, (V, T, UV, b) in enumerate(teile):
+            V, T, UV = np.asarray(V, float), np.asarray(T, int), np.asarray(UV, float)
+            fh.write("g Flaeche_%d\nusemtl %s\n" % (k + 1, bilder[b]))
+            fh.write("".join("v %.3f %.3f %.3f\n" % tuple(v) for v in V))
+            fh.write("".join("vt %.5f %.5f\n" % tuple(t) for t in UV))
+            fh.write("".join("f %d/%d %d/%d %d/%d\n" % (a + 1 + nv, a + 1 + nv, b_ + 1 + nv, b_ + 1 + nv, c + 1 + nv, c + 1 + nv) for a, b_, c in T))
+            nv += len(V)
+    return obj
+
+
 def _mesh(faces, shift, nd=3, innen=False, stat=None):
     """Flaechenliste -> (Punkte, Polygone) mit verschweissten Punkten (Raster 10^-nd m). innen=True: Flaechen, die
     doppelt vorkommen und gegeneinander zeigen (Wand zwischen zwei Gebaeudeteilen), werden gestrichen.
@@ -3072,6 +3156,9 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
     f = ifcopenshell.api.project.create_file(version="IFC4")
     proj = ifcopenshell.api.root.create_entity(f, ifc_class="IfcProject", name="IFCmap")
     ifcopenshell.api.unit.assign_unit(f)
+    import ifcopenshell.util.unit
+    einheit_m = float(ifcopenshell.util.unit.calculate_unit_scale(f))      # Meter je Projekteinheit (0,001 bei Millimetern)
+    textur_obj = []                                                        # texturierte Flächen auch als OBJ für Archicad (liest IFC-Texturen nicht)
     ctx = ifcopenshell.api.context.add_context(f, context_type="Model")
     body = ifcopenshell.api.context.add_context(f, context_type="Model", context_identifier="Body",
                                                 target_view="MODEL_VIEW", parent=ctx)
@@ -3183,10 +3270,12 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         for pl in polys:
             for i in range(1, len(pl) - 1):
                 tri.append((int(pl[0]) + 1, int(pl[i]) + 1, int(pl[i + 1]) + 1))
-        pts = f.createIfcCartesianPointList3D([tuple(float(c) for c in v) for v in verts])
+        # Die IFC rechnet in Projekteinheiten (Millimeter): Meter umrechnen (bis Build 9 fehlte das -> Gelände 1000-fach zu klein)
+        pts = f.createIfcCartesianPointList3D([tuple(float(c) / einheit_m for c in v) for v in verts])
         fs = f.createIfcTriangulatedFaceSet(pts, None, None, tri, None)
         bw, bh = max(rect[2] - rect[0], 1e-6), max(rect[3] - rect[1], 1e-6)
         uv = [(min(1.0, max(0.0, (v[0] + shift[0] - rect[0]) / bw)), min(1.0, max(0.0, (v[1] + shift[1] - rect[1]) / bh))) for v in verts]
+        textur_obj.append((np.asarray(verts, float), np.asarray(tri, int) - 1, np.asarray(uv, float), bildname))
         img = f.createIfcImageTexture(False, False, "DIFFUSE", None, None, bildname)
         weiss = f.createIfcColourRgb(None, 1.0, 1.0, 1.0)
         rs = f.createIfcSurfaceStyleRendering(weiss, 0.0, weiss, None, None, None, None, None, "NOTDEFINED")
@@ -3320,7 +3409,8 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
         except ImportError:
             import zusatz as _ZU
         _ZU.rufe("ifc_ende", dict(f=f, d=d, sto=sto, body=body, shift=shift, platzierung=platzierung, gebaeude=zusatz_geb, interp=interp,
-                                  pfad=pfad, log=log, einstellungen=d.cfg.zusatz, ifcopenshell=ifcopenshell), log=log)
+                                  pfad=pfad, log=log, einstellungen=d.cfg.zusatz, ifcopenshell=ifcopenshell, einheit_m=einheit_m,
+                                  archicad_obj=textur_obj if getattr(d.cfg, "obj_archicad", False) else None), log=log)
     if fm_an:
         log("  Fenstermuster: %d Fenster und %d Tueren an %d Gebaeuden - ein MUSTER nach Wandbreite und -hoehe, KEINE Messung (LoD2 enthaelt keine Oeffnungen)"
             % (n_fmf, n_fmt, n_fm))
@@ -3356,6 +3446,24 @@ def schreibe_ifc(pfad, d, faces_gel, interp, gelaende_typ, log=print):
             ok = element("IfcGeographicElement", lay, fl, lay, site, predefined="TERRAIN", props=props,
                          farbe=IFC_FARBEN.get(kat, kat_info(kat)[1]), textur=tex if kat != "Bordstein" else None)
         n_gel += 1 if ok else 0
+
+    if getattr(d.cfg, "obj_archicad", False):
+        ob, oh = float(getattr(d.cfg, "obj_breite", 0) or 0), float(getattr(d.cfg, "obj_hoehe", 0) or 0)
+        rect = None
+        if ob > 0 and oh > 0:                                  # eigener Bereich um den Mittelpunkt (lokale Koordinaten wie die IFC)
+            rect = (d.ce - ob / 2 - shift[0], d.cn - oh / 2 - shift[1], d.ce + ob / 2 - shift[0], d.cn + oh / 2 - shift[1])
+        teile = obj_zuschneiden(textur_obj, rect) if rect else textur_obj
+        if not teile:
+            log("  Texturen fuer Archicad: keine texturierten Flaechen%s - keine OBJ (Gelaende-Luftbild an? Fassaden-/Dachfotos im Zusatzmodul an?)"
+                % (" im gewaehlten Bereich" if rect else ""))
+        else:
+            try:
+                ziel = archicad_obj_schreiben(pfad, teile)
+                log("  Texturen fuer Archicad: %s (%d texturierte Flaechen, %s) - Archicad zeigt IFC-Texturen nicht an; diese OBJ "
+                    "ueber Ablage > Bibliotheken und Objekte als GDL-Objekt importieren (Archicad 29+), sie liegt deckungsgleich ueber der IFC"
+                    % (os.path.basename(ziel), len(teile), "Bereich %.0f x %.0f m" % (ob, oh) if rect else "ganzes Gebiet"))
+            except Exception as e:
+                log("  HINWEIS: OBJ mit Texturen nicht geschrieben (%s)" % str(e)[:100])
 
     # Baeume
     for i, (x, y, kr, ho, st, aus_daten) in enumerate(d.baeume if ebene_an(d.cfg, "ifc", "Baeume") else []):
@@ -4846,6 +4954,9 @@ def exportiere(d, log=print, prog=_noop, protokoll=None):
                 g, gl, b = schreibe_ifc(pfad, d, faces_gel, interp, typ, log)
                 log("  %s: Gebaeude %d, Gelaendeflaechen %d, Baeume %d  (%.1f MB)" % (name, g, gl, b, os.path.getsize(pfad) / 1e6))
                 erzeugt.append(pfad)
+                obj = os.path.splitext(pfad)[0] + "_Texturen_Archicad.obj"
+                if os.path.exists(obj):
+                    erzeugt.append(obj)
             ZE.append(("IFC schreiben", time.time() - t_ifc))
     if cfg.dxf2d:
         t_2d = time.time()

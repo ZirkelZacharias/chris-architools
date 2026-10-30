@@ -23,6 +23,9 @@ STANDARD_MITTE = (393676.0, 5826540.0)          # Betriebswerk Pankow (EPSG:2583
 AUSGABEN = {
     "ifc": ("Archicad-Umgebungs-IFC", "domain", "#1f6f78",
             "Gelände, Gebäude, Straßen, Bäume – als IFC für Archicad.", "umgebung", "umgebung"),
+    "obj_archicad": ("Texturen für Archicad (OBJ)", "texture", "#4f8a8b",
+                     "Gelände-Luftbild, Fassaden- und Dachfotos als texturierte OBJ – Archicad zeigt IFC-Texturen nicht an. "
+                     "Eigener Bereich auf der Karte.", "umgebung", "umgebung"),
     "lageplan": ("Lageplan (DXF/DWG)", "map", "#3d6a9e",
                  "Fertiger 2D-Lageplan mit Gehwegen, Bäumen, Schatten.", "umgebung", "umgebung"),
     "schwarzplan": ("Schwarzplan (DXF/DWG)", "location_city", "#18232e",
@@ -41,7 +44,7 @@ AUSGABEN = {
 GRUPPEN = {"umgebung": "Umgebung (IFCmap-Kern)", "modell": "Modellbau", "sonstige": "Weitere Werkzeuge"}
 
 # Felder der Umgebungs-Konfiguration, die NICHT in der Oberfläche/Projektdatei stehen, sondern aus dem Projekt abgeleitet werden
-_ABGELEITET = {"latlon", "mitte_en", "ausgabe", "ifc", "dxf2d", "dxf_plaene", "test", "test_groesse", "e0n0", "z0",
+_ABGELEITET = {"latlon", "mitte_en", "ausgabe", "ifc", "obj_archicad", "dxf2d", "dxf_plaene", "test", "test_groesse", "e0n0", "z0",
                "mit_gelaende", "xyz"}
 
 SCHNITT_STANDARD = {
@@ -256,16 +259,19 @@ def umgebung_config(p, ausgaben=None, test=False):
     u = dict(p["umgebung"])
     felder = {f.name for f in dataclasses.fields(K.Config)}
     kw = {k: v for k, v in u.items() if k in felder and k not in _ABGELEITET}
-    for k in ("breite", "hoehe", "nah_breite", "nah_hoehe", "mittel_breite", "mittel_hoehe"):
+    for k in ("breite", "hoehe", "nah_breite", "nah_hoehe", "mittel_breite", "mittel_hoehe", "obj_breite", "obj_hoehe"):
         kw[k] = float(u.get(k) or 0)
     e, n = p["gebiet"]["mitte_en"]
     plaene = [a for a in ("lageplan", "schwarzplan") if a in ausgaben]
-    kw.update(mitte_en=(float(e), float(n)), latlon=None, ifc="ifc" in ausgaben, dxf2d="info_dwg" in ausgaben,
+    obj = "obj_archicad" in ausgaben                  # die OBJ entsteht beim Schreiben der IFC (die IFC wird danach entfernt, wenn nicht gewählt)
+    kw.update(mitte_en=(float(e), float(n)), latlon=None, ifc=("ifc" in ausgaben or obj), obj_archicad=obj, dxf2d="info_dwg" in ausgaben,
               dxf_plaene=plaene, test=bool(test), xyz=False,
               # Gelände nur laden, wenn IFC oder Informations-DWG es brauchen (Pläne kommen ohne aus - schneller)
-              mit_gelaende=("ifc" in ausgaben or "info_dwg" in ausgaben),
+              mit_gelaende=("ifc" in ausgaben or obj or "info_dwg" in ausgaben),
               ausgabe=os.path.join(ausgabe_basis(p), "umgebung"))
     kw["sonne"] = bool(u.get("sonne"))
+    if obj:
+        kw["gelaende_luftbild"] = True                # die OBJ ist für die Texturen da: Gelände immer mit Luftbild
     return K.Config(**kw)
 
 

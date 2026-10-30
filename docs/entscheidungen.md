@@ -167,3 +167,17 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
 - Ritzen und Gravur (auch Rastergravur) erscheinen in der Modell-Vorschau als Bild auf der Oberseite jeder Schicht (`{name}_vorschau_gravur.glb`, je Schicht eine Textur in Materialfarbe, fein gezeichnet und auf ≤ 2048 px verkleinert → Raster als Halbton). Bisher: einzelne Körper, abgeschnitten nach 4000 Teilen. Ersatz bei Fehler: altes STL.
 - glTF-Material ausdrücklich: Farbfaktor 1, nicht metallisch, matt, Eigenleuchten 0,6 (trimesh setzt sonst 0,4 und glTF-Standard metallisch → schwarz in three.js).
 - Bild liegt max(0,15 mm, Modellbreite/2500) über der Platte; vordere Kameraebene der 3D-Ansicht L/400 statt L/2000 (sonst Tiefenpuffer-Flimmern).
+
+## 9.2 (Zwischenstand): Texturen für Archicad, True-Orthofoto, Dächer im Modellbau
+- **Einheitenfehler behoben:** Die IFC rechnet in Millimetern (`assign_unit`), texturierte Flächen wurden mit rohem
+  `createIfcCartesianPointList3D` in Metern geschrieben – 1000-fach zu klein. Jetzt durch `calculate_unit_scale` geteilt
+  (Kern und Zusatzmodule; der Haken `ifc_ende` bekommt `einheit_m`).
+- **OBJ für Archicad:** Archicad zeigt IFC-Texturen nicht an, importiert aber ab 29 OBJ als GDL-Objekt. Eigene Ausgabe
+  `obj_archicad` mit eigenem Rechteck um den Mittelpunkt (`obj_breite`/`obj_hoehe`, 0 = ganzes Gebiet). Die OBJ entsteht beim
+  Schreiben der IFC (gleiche lokale Koordinaten); ist nur die OBJ gewählt, wird die IFC danach gelöscht. Am Rechteck werden
+  Dreiecke mit Sutherland-Hodgman geschnitten, UV linear mitgeführt (geprüft: Fläche exakt, UV-Fehler 1e-16).
+  Mit OBJ ist das Gelände-Luftbild immer an – ohne Texturen hätte die OBJ keinen Zweck. In Archicad ungetestet.
+- **True-Orthofoto zuerst:** `truedop_<Jahr>` vor `dop_<Jahr>` (Gelände-Textur, Rastergravur, Dächer). Im True-Orthofoto liegen
+  Dächer auf ihrem Grundriss; senkrechte Projektion auf LoD2-Dächer ist damit ohne Mesh möglich. Dienstnamen gegen den echten
+  Dienst noch nicht geprüft – die Probe (`bau/sonden.py`) enthält sie.
+- **Haken** `modell_dach` (Dachflächen im Modellbau, mit `dach_2d_nach_xy` zurück in den Grundriss) und `gelaende_bild`.

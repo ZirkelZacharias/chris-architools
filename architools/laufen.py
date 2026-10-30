@@ -68,7 +68,9 @@ def _ausgabe_zuordnen(dateien):
     z = {}
     for f in dateien:
         n = os.path.basename(f).lower()
-        if n.endswith((".ifc", ".glb", ".obj", ".mtl", ".stl", ".ply")):
+        if "_texturen_archicad" in n:
+            z.setdefault("obj_archicad", []).append(f)
+        elif n.endswith((".ifc", ".glb", ".obj", ".mtl", ".stl", ".ply")):
             z.setdefault("ifc", []).append(f)
         elif "lageplan" in n:
             z.setdefault("lageplan", []).append(f)
@@ -80,7 +82,8 @@ def _ausgabe_zuordnen(dateien):
 
 
 _NAMEN = {"ifcmap.ifc": "Umgebung.ifc", "ifcmap_2d.dxf": "Informations-DWG.dxf", "ifcmap_lageplan.dxf": "Lageplan.dxf",
-          "ifcmap_schwarzplan.dxf": "Schwarzplan.dxf"}
+          "ifcmap_schwarzplan.dxf": "Schwarzplan.dxf",
+          "ifcmap_Texturen_Archicad.obj": "Umgebung_Texturen_Archicad.obj"}   # MTL und Bilder behalten ihren Namen (Verweise in IFC/OBJ)
 
 
 def _umbenennen(dateien, name):
@@ -112,6 +115,13 @@ def umgebung_export(p, ausgaben, log=print, prog=None, test=False):
     fm = p.get("formate") or {}
     oda = ES.laden().get("oda_pfad", "")
     neu = []
+    if "ifc" not in ausgaben:                         # nur die OBJ gewählt: die IFC war nur Zwischenschritt
+        for f in [f for f in erzeugt if f.lower().endswith(".ifc")]:
+            try:
+                os.remove(f)
+            except OSError:
+                pass
+        erzeugt = [f for f in erzeugt if not f.lower().endswith(".ifc")]
     for f in erzeugt:
         if f.lower().endswith(".dxf"):
             neu += FM.zweid_umwandeln([f], fm.get("zweid"), oda, log)

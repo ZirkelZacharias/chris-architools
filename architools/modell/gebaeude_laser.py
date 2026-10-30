@@ -154,6 +154,41 @@ def _flach_2d(xyz):
     return np.c_[(xyz - c) @ u, (xyz - c) @ v]
 
 
+def dach_2d_nach_xy(xyz, p2):
+    """Umkehrung von _flach_2d: Punkte in der Dachebene (wahre Grösse, mm) -> Grundriss-xy des Modells (mm). Für Zusatzmodule,
+    die ein Luftbild senkrecht auf die Dachfläche legen."""
+    xyz = np.asarray(xyz, float)
+    p2 = np.asarray(p2, float).reshape(-1, 2)
+    c = xyz.mean(axis=0)
+    n = np.zeros(3)
+    for i in range(len(xyz)):
+        n += np.cross(xyz[i], xyz[(i + 1) % len(xyz)])
+    ln = np.linalg.norm(n)
+    if ln < 1e-9:
+        return p2
+    n /= ln
+    if abs(n[2]) > 0.9999:
+        return p2
+    u = np.cross([0, 0, 1.0], n)
+    u /= np.linalg.norm(u)
+    v = np.cross(n, u)
+    return c[:2] + p2[:, :1] * u[:2] + p2[:, 1:2] * v[:2]
+
+
+def zusatz_dach(b, j, pg, xyz):
+    """Gravurflächen optionaler Zusatzmodule für eine Dachfläche (Koordinaten wie pg: Dachebene in wahrer Grösse, mm)"""
+    if not _CTX.get("zusatz"):
+        return []
+    try:
+        from .. import zusatz as ZU
+        out = []
+        for r in ZU.rufe("modell_dach", b, j, pg, xyz, _CTX["cfg"]):
+            out += list(r or [])
+        return out
+    except Exception:
+        return []
+
+
 def dach_flaechen(b):
     """[(Polygon in wahrer Grösse, xyz-Ring)] aller Dachflächen; Blöcke: ein flaches Dach über dem Grundriss"""
     out = []
@@ -275,7 +310,9 @@ def flaechen_teile(b, beschriften=True, massstab=None):
         t["gravieren"] += zusatz_gravur(b, ri, i, prof, L)
         teile.append(t)
     for j, (pg, xyz) in enumerate(dach_flaechen(b), 1):
-        teile.append(_teil(f"{b['nr']}-D{j:02d}", pg, b, "Dach"))
+        t = _teil(f"{b['nr']}-D{j:02d}", pg, b, "Dach")
+        t["gravieren"] += zusatz_dach(b, j, pg, xyz)
+        teile.append(t)
     if beschriften:
         for t in teile:
             _beschriften(t)
@@ -394,7 +431,9 @@ def falt_teile(b, breite, max_laenge, beschriften=True, massstab=None):
             gesamt = gesamt.union(lash)
             ritz.append(LineString([a2, b2]))
         gesamt = shapely.union_all(polys(gesamt))
-        teile.append(_teil(f"{b['nr']}-D{j + 1:02d}", gesamt, b, "Dach", ritz))
+        t = _teil(f"{b['nr']}-D{j + 1:02d}", gesamt, b, "Dach", ritz)
+        t["gravieren"] += zusatz_dach(b, j + 1, pg, xyz)
+        teile.append(t)
     if beschriften:
         for t in teile:
             _beschriften(t)

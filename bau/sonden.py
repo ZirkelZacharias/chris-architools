@@ -69,7 +69,7 @@ def wms_sonde():
         return
     wbasis = "https://gdi.berlin.de/services/wms/"
     bb = (393550, 5826450, 393850, 5826750)             # 300 x 300 m um den Ringlokschuppen
-    dienste = ["dop_%d" % j for j in range(2026, 2017, -1)] + ["luftbild_1998_05", "luftbild_1953_22", "luftbild_1928_04"]
+    dienste = ["truedop_%d" % j for j in range(2026, 2018, -1)] + ["truedop_2020_sommer"] + ["dop_%d" % j for j in range(2026, 2017, -1)] + ["luftbild_1998_05", "luftbild_1953_22", "luftbild_1928_04"]
     print("\n=== WMS-Sonde Luftbilder (Betriebswerk Pankow, 300 x 300 m, 1 m/Pixel) ===")
     for d in dienste:
         try:

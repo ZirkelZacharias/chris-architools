@@ -23,6 +23,8 @@ MAX_PX = 4096               # laengste Seite des fertigen Bildes (wie bei den Zu
 # Schluessel: (Anzeigename, Dienste (der Reihe nach probieren), welche Ebenen, Foto?)
 WMS_KATALOG = {
     "luftbild": ("Luftbild – aktuellstes verfügbares Orthofoto (Berlin)", ["dop_%d" % j for j in range(2026, 2013, -1)], "erste", True),
+    "truedop": ("True-Orthofoto – aktuellstes verfügbares (Berlin, Gebäude ohne Umkippen, 20 cm)",
+                ["truedop_%d" % j for j in range(2026, 2020, -1)] + ["truedop_2020_sommer", "truedop_2020", "truedop_2019"], "erste", True),
     "luftbild_1998": ("Luftbild 1998 (Schwarzweiß)", ["luftbild_1998_05"], "erste", True),
     "luftbild_1953": ("Luftbild 1953", ["luftbild_1953_22"], "erste", True),
     "luftbild_1928": ("Luftbild 1928", ["luftbild_1928_04"], "erste", True),
@@ -189,22 +191,49 @@ def bild_holen(basis, ebenen, rect, aufloesung, foto, ctx, log=print):
     return gross, W, Hp, aufl
 
 
+def _zusatz():
+    try:                                  # wie im Kern: NICHT "import zusatz" (Plugin-Ordner neben dem Programm)
+        from architools import zusatz as Z
+    except ImportError:
+        try:
+            import zusatz as Z
+        except ImportError:
+            return None
+    return Z
+
+
 def luftbild_fuer_gelaende(d, cfg, log=print):
-    """Luftbild (aktuellstes Orthofoto, Berlin) fuer das ganze Gebiet als PIL-Bild; -> (Bild, rect) oder None.
-    Wird als Textur auf das Gelaende gelegt (IFC, 3D-Vorschau). Bei Fehlern: None und eine Zeile im Protokoll."""
+    """Luftbild fuer das ganze Gebiet als PIL-Bild; -> (Bild, rect) oder None. Wird als Textur auf das Gelaende gelegt (IFC, 3D-Vorschau)
+    und von Zusatzmodulen fuer die Dächer genommen. Reihenfolge: Zusatzmodul (Haken gelaende_bild, z. B. Draufsicht aus einem 3D-Mesh),
+    True-Orthofoto (Gebäude ohne Umkippen, Dächer liegen auf ihrem Grundriss), normales Orthofoto. Bei Fehlern: None und eine Zeile im Protokoll.
+    Das Ergebnis wird an d gemerkt (d.luftbild), damit IFC, Vorschau und Zusatzmodule dasselbe Bild nehmen."""
+    if getattr(d, "luftbild", None) is not None:
+        return d.luftbild or None
+    Z = _zusatz()
+    if Z is not None and getattr(cfg, "zusatz", None):
+        try:
+            erg = Z.erstes("gelaende_bild", d, cfg, log, log=log)
+        except TypeError:
+            erg = None
+        if erg:
+            d.luftbild = erg
+            return erg
     import ifcmap_kern as K
-    from PIL import Image
     ctx = K.ssl_kontext(cfg.cafile, cfg.unsicher)
     rect = (d.xmin, d.ymin, d.xmax, d.ymax)
-    name, dienste, wahl, foto = WMS_KATALOG["luftbild"]
-    log("  Luftbild suchen (neuester Jahrgang, der für das Gebiet ein echtes Orthofoto liefert):")
-    basis, ebene = luftbild_suchen([WMS_BASIS + s for s in dienste], rect, ctx, log)
+    dienste = []
+    for k in ("truedop", "luftbild"):
+        dienste += [WMS_BASIS + s for s in WMS_KATALOG[k][1]]
+    log("  Luftbild suchen (erst True-Orthofoto, dann Orthofoto; neuester Jahrgang, der für das Gebiet ein echtes Foto liefert):")
+    basis, ebene = luftbild_suchen(dienste, rect, ctx, log)
     if basis:
         try:
             im, W, H, px = bild_holen(basis, [ebene], rect, float(getattr(cfg, "luftbild_aufloesung", 0.5) or 0.5), True, ctx, log)
             if max(W, H) > 4096:
                 im = im.resize((min(W, 4096), min(H, 4096)))
             log("  Luftbild (%s, Ebene %s): %d x %d Pixel, %.2f m je Pixel" % (basis.rsplit("/", 1)[-1], ebene, im.size[0], im.size[1], px))
+            d.luftbild = (im, rect)
+            d.luftbild_quelle = basis.rsplit("/", 1)[-1]
             return im, rect
         except Exception as e:
             log("  HINWEIS: Luftbild-Abruf fehlgeschlagen (%s)" % str(e)[:80])

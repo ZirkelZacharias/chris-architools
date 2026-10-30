@@ -278,7 +278,7 @@ class Gebiet:
         if hasattr(self, "lbl_info"):
             u = self.p["umgebung"]
             teile = []
-            if any(self.p["ausgaben"].get(k) for k in ("ifc", "lageplan", "schwarzplan", "info_dwg")):
+            if any(self.p["ausgaben"].get(k) for k in ("ifc", "obj_archicad", "lageplan", "schwarzplan", "info_dwg")):
                 teile.append(f"Umgebung {float(u.get('breite') or 0):.0f} × {float(u.get('hoehe') or 0):.0f} m")
             if modell_an:
                 teile.append(f"Modell 1:{float(self.cfg['massstab']):g} · {b:.0f} × {h:.0f} m")
@@ -527,16 +527,19 @@ class Gebiet:
                 self.karte.remove_layer(lay)
         self.umg_layer = []
         u = self.p["umgebung"]
-        if not any(self.p["ausgaben"].get(k) for k in ("ifc", "lageplan", "schwarzplan", "info_dwg", "hoehenlinien")):
+        if not any(self.p["ausgaben"].get(k) for k in ("ifc", "obj_archicad", "lageplan", "schwarzplan", "info_dwg", "hoehenlinien")):
             return
         e, n = self.cfg["gebiet"]["mitte_en"]
-        for b, h, farbe, w, fo in ((float(u.get("breite") or 0), float(u.get("hoehe") or 0), AKZENT, 2, 0.04),
-                                   (float(u.get("nah_breite") or 0), float(u.get("nah_hoehe") or 0), SCHIEFER, 1, 0.0)):
+        rahmen = [(float(u.get("breite") or 0), float(u.get("hoehe") or 0), AKZENT, 2, 0.04, None),
+                  (float(u.get("nah_breite") or 0), float(u.get("nah_hoehe") or 0), SCHIEFER, 1, 0.0, "6 4")]
+        if self.p["ausgaben"].get("obj_archicad"):              # eigener Bereich der OBJ für Archicad (0 = ganzes Gebiet: nicht gezeichnet)
+            rahmen.append((float(u.get("obj_breite") or 0), float(u.get("obj_hoehe") or 0), OCKER, 2, 0.06, "2 6"))
+        for b, h, farbe, w, fo, strich in rahmen:
             if b > 0 and h > 0:
                 ecken = [list(en_zu_ll(x, y)) for x, y in ((e - b / 2, n - h / 2), (e + b / 2, n - h / 2),
                                                            (e + b / 2, n + h / 2), (e - b / 2, n + h / 2))]
                 self.umg_layer.append(self.karte.generic_layer(
-                    name="polygon", args=[ecken, {"color": farbe, "weight": w, "fillOpacity": fo, "dashArray": "6 4" if w == 1 else None}]))
+                    name="polygon", args=[ecken, {"color": farbe, "weight": w, "fillOpacity": fo, "dashArray": strich}]))
 
     def _karte_mitte(self):
         with karte("Mittelpunkt", AKZENT):
@@ -569,6 +572,18 @@ class Gebiet:
                 ui.label("Mittelbereich (m)").classes("w-24 text-caption")
                 ui.number("Ost–West", min=0, step=50).bind_value(u, "mittel_breite").classes("w-28")
                 ui.number("Nord–Süd", min=0, step=50).bind_value(u, "mittel_hoehe").classes("w-28")
+            u.setdefault("obj_breite", 0.0)
+            u.setdefault("obj_hoehe", 0.0)
+            with ui.row().classes("gap-2 items-end") as obj_zeile:
+                ui.label("Archicad-OBJ (m)").classes("w-24 text-caption").style(f"color:{OCKER}")
+                ui.number("Ost–West", min=0, step=50).bind_value(u, "obj_breite").classes("w-28") \
+                    .on_value_change(lambda e: self._rahmen())
+                ui.number("Nord–Süd", min=0, step=50).bind_value(u, "obj_hoehe").classes("w-28") \
+                    .on_value_change(lambda e: self._rahmen())
+            obj_hinweis = hinweis("Ocker gepunktet = Bereich der OBJ mit Texturen für Archicad (0 = ganzes Gebiet). Flächen am Rand "
+                                  "werden sauber abgeschnitten.")
+            ui.timer(1.0, lambda: (obj_zeile.set_visibility(bool(self.p["ausgaben"].get("obj_archicad"))),
+                                   obj_hinweis.set_visibility(bool(self.p["ausgaben"].get("obj_archicad")))))
             hinweis_info("Durchgezogen = Gebiet, gestrichelt = Nahbereich.",
                          "Nahbereich: feines Gelände, Dachformen, Bäume. Mittelbereich (0 = aus): optionaler dritter Bereich dazwischen. "
                          "Die Rechtecke liegen im UTM-Gitter (so wie in Archicad mit Koordinaten); die Karte ist nach wahrem Norden "
@@ -607,7 +622,7 @@ class Gebiet:
                         .props("unelevated no-caps color=primary")
 
                 def sichtbar():
-                    umg.set_visibility(any(ausg.get(k) for k in ("ifc", "lageplan", "schwarzplan", "info_dwg", "hoehenlinien")))
+                    umg.set_visibility(any(ausg.get(k) for k in ("ifc", "obj_archicad", "lageplan", "schwarzplan", "info_dwg", "hoehenlinien")))
                     mod.set_visibility(bool(ausg.get("laser") or ausg.get("druck")))
                     sch.set_visibility(bool(ausg.get("schnitt")))
                     self._rahmen()
