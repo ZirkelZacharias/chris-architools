@@ -175,6 +175,24 @@ def dach_2d_nach_xy(xyz, p2):
     return c[:2] + p2[:, :1] * u[:2] + p2[:, 1:2] * v[:2]
 
 
+def dach_2d_nach_xyz(xyz, p2):
+    """Punkte in der Dachebene (wie _flach_2d, mm) -> 3D-Punkte (Modell-mm, z ab Gebäudeunterkante)"""
+    xyz = np.asarray(xyz, float)
+    p2 = np.asarray(p2, float).reshape(-1, 2)
+    c = xyz.mean(axis=0)
+    n = np.zeros(3)
+    for i in range(len(xyz)):
+        n += np.cross(xyz[i], xyz[(i + 1) % len(xyz)])
+    ln = np.linalg.norm(n)
+    if ln < 1e-9 or abs(n[2] / ln) > 0.9999:
+        return np.c_[p2, np.full(len(p2), float(xyz[:, 2].mean()))]
+    n /= ln
+    u = np.cross([0, 0, 1.0], n)
+    u /= np.linalg.norm(u)
+    v = np.cross(n, u)
+    return c + p2[:, :1] * u + p2[:, 1:2] * v
+
+
 def zusatz_dach(b, j, pg, xyz):
     """Gravurflächen optionaler Zusatzmodule für eine Dachfläche (Koordinaten wie pg: Dachebene in wahrer Grösse, mm)"""
     if not _CTX.get("zusatz"):
@@ -268,6 +286,7 @@ def fenster_muster(profil, L, massstab, x0=0.0):
 
 
 _CTX = {"cfg": None}
+VORSCHAU = []          # für die 3D-Vorschau: je Wand/Dach (art, b, Lage, Fläche 2D, Gravur 2D) - siehe vorschau_merken
 
 
 def zusatz_gravur(b, ri, i, prof, L, x0=0.0):
@@ -283,6 +302,12 @@ def zusatz_gravur(b, ri, i, prof, L, x0=0.0):
         return out
     except Exception:
         return []
+
+
+def vorschau_merken(art, b, lage, pg, gravur):
+    """Wand ('wand', lage = (ri, i)) oder Dach ('dach', lage = xyz) mit ihrer Gravur in Teil-Koordinaten (Wand: s/z, Dach: Dachebene)
+    für die 3D-Vorschau merken - die Teile selbst werden später auf den Platten verschoben und gedreht."""
+    VORSCHAU.append({"art": art, "b": b, "lage": lage, "pg": pg, "gravur": [g for g in (gravur or []) if g is not None and not g.is_empty]})
 
 
 def _teil(tid, poly, b, art, ritzen=None):
@@ -308,10 +333,12 @@ def flaechen_teile(b, beschriften=True, massstab=None):
         if massstab:
             t["gravieren"] += fenster_muster(prof, L, massstab)
         t["gravieren"] += zusatz_gravur(b, ri, i, prof, L)
+        vorschau_merken("wand", b, (ri, i), pg, t["gravieren"])
         teile.append(t)
     for j, (pg, xyz) in enumerate(dach_flaechen(b), 1):
         t = _teil(f"{b['nr']}-D{j:02d}", pg, b, "Dach")
         t["gravieren"] += zusatz_dach(b, j, pg, xyz)
+        vorschau_merken("dach", b, xyz, pg, t["gravieren"])
         teile.append(t)
     if beschriften:
         for t in teile:
@@ -367,9 +394,9 @@ def falt_teile(b, breite, max_laenge, beschriften=True, massstab=None):
             x = 0.0
             oben, falten, fenster = [], [], []
             for prof, L, i_ in gr:
-                if massstab:
-                    fenster += fenster_muster(prof, L, massstab, x)
-                fenster += zusatz_gravur(b, ri, i_, prof, L, x)
+                eigene = (fenster_muster(prof, L, massstab) if massstab else []) + zusatz_gravur(b, ri, i_, prof, L)
+                vorschau_merken("wand", b, (ri, i_), wand_polygon(prof, L), eigene)
+                fenster += [shapely.affinity.translate(g, xoff=x) for g in eigene] if x else eigene
                 for s, z in prof:
                     oben.append((x + s, z))
                 falten.append(x)
@@ -433,6 +460,7 @@ def falt_teile(b, breite, max_laenge, beschriften=True, massstab=None):
         gesamt = shapely.union_all(polys(gesamt))
         t = _teil(f"{b['nr']}-D{j + 1:02d}", gesamt, b, "Dach", ritz)
         t["gravieren"] += zusatz_dach(b, j + 1, pg, xyz)
+        vorschau_merken("dach", b, xyz, pg, t["gravieren"])
         teile.append(t)
     if beschriften:
         for t in teile:

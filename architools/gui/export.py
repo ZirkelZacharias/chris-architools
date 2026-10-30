@@ -167,7 +167,7 @@ def seite(p, speichern):
             else:
                 s = d3["modell"]
                 fl = (s or {}).get("material_farbe") or FARBE_LASER
-                teile = [(s.get("vorschau_laser"), fl), (s.get("vorschau_gravur"), FARBE_GRAVUR), (s.get("vorschau_druck"), FARBE_DRUCK)] if s else []
+                teile = [(s.get("vorschau_laser"), fl), (s.get("vorschau_gravur"), FARBE_GRAVUR), (s.get("vorschau_druck"), FARBE_DRUCK), (s.get("vorschau_gebaeude"), None)] if s else []
                 if not any(pf and os.path.exists(pf) for pf, _ in teile):
                     hinweis("Das Modell (Lasercut-Schichten und 3D-Druck-Gebäude) erscheint nach „Vorschau laden“.")
                     ui.button("Modell-Vorschau berechnen", icon="view_in_ar", on_click=lambda: modell_vorschau()).props("outline")

@@ -84,6 +84,10 @@ class Gebiet:
                     ui.number("Spiel mm", step=0.1).bind_value(ec, "spiel_mm").classes("w-28")
                     ui.select({"drucken": "mitdrucken", "umriss": "nur Umriss ritzen (für Entwürfe)"},
                               label="Gebäude darauf").bind_value(ec, "gebaeude").classes("w-60")
+                ec.setdefault("rastergravur", False)
+                ui.checkbox("Rastergravur (Luftbild/Bild) auch auf dem Einsatz").bind_value(ec, "rastergravur") \
+                    .tooltip("Nur wenn bei den Lasercut-Einstellungen „Rastergravur eines Bildes“ an ist (Zusatzmodul). "
+                             "Gleiches Bild in gleicher Lage wie auf dem Gelände – das Bild läuft über die Fuge durch.")
             ausgrauen(inhalt, cb)
         self._auswahl_text()
 

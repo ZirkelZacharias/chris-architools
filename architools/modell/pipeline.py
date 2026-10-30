@@ -5,6 +5,7 @@ Ablauf in zwei Stufen:
   2. aus der Szene das physische Modell bauen
 """
 import csv
+import math
 import os
 import re
 import time
@@ -243,6 +244,7 @@ def _gebaeude_teile(cfg, blds, blds_in, sorte, t, formate, log, getrennt=False):
         log(f"  HINWEIS: Faltmodell mit {mm(t_g)} mm Material - zum Falten ist dünner Karton (bis ca. 0,5 mm) besser; "
             "bei dickerer Pappe sind die Ritzlinien nur eine Knick-Hilfe")
     lc = cfg["laser"]
+    GL.VORSCHAU.clear()
     pg = GL.teile_fuer(blds, cfg, t_g, formate, lc["rand_mm"], log)
     pe = GL.teile_fuer(blds_in, cfg, t_g, formate, lc["rand_mm"], log) if blds_in else []
     return pg, pe, sorte_g, t_g, eigen
@@ -260,6 +262,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
     for d in (d_laser, d_druck, d_einzel):
         os.makedirs(d, exist_ok=True)
     name = _safe(cfg["projekt_name"])
+    GL.VORSCHAU.clear()                                    # Flächen für die Gebäude-Vorschau stammen nur aus diesem Lauf
     t = schichtdicke(cfg)
     cfg["gelaende"]["schichtdicke_mm"] = t
     formate = BIB.plattenformate(cfg)
@@ -333,6 +336,21 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         except Exception as e:
             log(f"  HINWEIS: Höhenlinien auf den Platten nicht erzeugt ({str(e)[:120]})")
 
+    # Rastergravur eines Bildes (Zusatzmodul): vor dem Einsatz laden - der Einsatz kann sie wahlweise auch bekommen
+    raster_fn, raster_test = None, []
+    if laser and (cfg.get("raster_bild") or {}).get("aktiv"):
+        from .. import zusatz
+        cfg["_dgm"] = szene.get("dgm")                     # für Quellen, die aus dem Geländemodell berechnet werden (Schummerung u. a.)
+        try:
+            rr = zusatz.erstes("modell_raster_bild", cfg, extent_w.bounds, extent_m, tw_xy, log, log=log)
+        finally:
+            cfg.pop("_dgm", None)
+        if rr:
+            raster_fn = rr.get("region")
+            raster_test = rr.get("teststreifen") or []
+        else:
+            log("  HINWEIS: Rastergravur eines Bildes ist angekreuzt, aber das Zusatzmodul dafür ist nicht installiert - übersprungen")
+
     # Projektgrundstück als Einsatz
     E_w = einsatz_polygon(cfg, szene, log)
     parts_e, blds_in, P_haupt, stuetzen = [], [], P, []
@@ -368,7 +386,11 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         cfg_e = _copy.deepcopy(cfg)
         cfg_e["gelaende"]["bauweise"] = ec.get("bauweise") or L.bauweise(cfg)
         cfg_e["gelaende"]["passloecher"] = False
-        log(f"4a   Einsatz: {len(P_e)} Schichten, {len(blds_in)} Gebäude darauf")
+        if ec.get("rastergravur") and raster_fn is not None:
+            cfg_e["_rasterbild"] = raster_fn                   # gleiches Bild, gleiche Lage: läuft über die Fuge zum Gelände durch
+        log(f"4a   Einsatz: {len(P_e)} Schichten, {len(blds_in)} Gebäude darauf"
+            + (", mit Rastergravur" if cfg_e.get("_rasterbild") else
+               (" (Rastergravur auf dem Einsatz aus)" if raster_fn is not None else "")))
         if laser:
             parts_e, _, st_e, rip_e = L.make_parts(P_e, blds_in, feats, cfg_e, log)
             for r in rip_e:
@@ -385,20 +407,9 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         log("4/6  Laserteile")
         lc = cfg["laser"]
         stuetzen_e = stuetzen if E_w is not None else []
-        teststreifen = []
-        if (cfg.get("raster_bild") or {}).get("aktiv"):
-            # Rastergravur eines Bildes: gehört zum Zusatzmodul (Plugin); ohne Modul wird sie übersprungen
-            from .. import zusatz
-            cfg["_dgm"] = szene.get("dgm")                     # für Quellen, die aus dem Geländemodell berechnet werden (Schummerung u. a.)
-            try:
-                rr = zusatz.erstes("modell_raster_bild", cfg, extent_w.bounds, extent_m, tw_xy, log, log=log)
-            finally:
-                cfg.pop("_dgm", None)
-            if rr:
-                cfg["_rasterbild"] = rr.get("region")
-                teststreifen = rr.get("teststreifen") or []
-            else:
-                log("  HINWEIS: Rastergravur eines Bildes ist angekreuzt, aber das Zusatzmodul dafür ist nicht installiert - übersprungen")
+        teststreifen = raster_test
+        if raster_fn is not None:
+            cfg["_rasterbild"] = raster_fn
         parts, Q, stuetzen, rippen = L.make_parts(P_haupt, blds, feats, cfg, log)
         cfg.pop("_rasterbild", None)
         rippen_3d = [r["lage"] for r in rippen if r.get("lage") is not None]
@@ -433,7 +444,8 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         if len(meldungen) > 20:
             log(f"  … {len(meldungen) - 20} weitere Korrekturen")
 
-        _vorschau_3d(out, name, parts + parts_e, stuetzen, blds + blds_in, t, log, rippen_3d, BIB.farbe(sorte))
+        _vorschau_3d(out, name, parts + parts_e, stuetzen, blds + blds_in, t, log, rippen_3d, BIB.farbe(sorte),
+                     farbe_g=BIB.farbe(cfg["gebaeude"].get("material") or sorte))
 
         log("5/6  Laserplatten anordnen")
         filler = stuetzen[0]["poly"] if stuetzen else None
@@ -589,6 +601,7 @@ def run(cfg, log=print, szene=None, laser=True, druck=True):
         "n_einsatzplatten": len(platten_e),
         "vorschau_laser": os.path.join(out, f"{name}_vorschau_laser.stl"),
         "vorschau_druck": os.path.join(out, f"{name}_vorschau_druck.stl"),
+        "vorschau_gebaeude": os.path.join(out, f"{name}_vorschau_gebaeude.glb"),
         "vorschau_gravur": next((x for x in (os.path.join(out, f"{name}_vorschau_gravur.glb"), os.path.join(out, f"{name}_vorschau_gravur.stl"))
                                  if os.path.exists(x)), os.path.join(out, f"{name}_vorschau_gravur.stl")),
         "montageplan": os.path.join(out, f"{name}_montageplan.pdf"),
@@ -696,8 +709,111 @@ def _vorschau_gravur_glb(out, name, parts, t, farbe, log, px_mm=4.0, max_px=2048
     return ziel
 
 
-def _vorschau_3d(out, name, parts, stuetzen, blds, t, log, rippen_3d=(), farbe=None):
+def _vorschau_gebaeude_glb(out, name, t, farbe, log, px_mm=4.0, max_face_px=640, atlas_px=4096):
+    """Lasercut-Gebäude (Klebeflächen, Faltmodell) in der 3D-Vorschau: jede Wand und jedes Dach an seiner Stelle, als Bild in
+    Materialfarbe mit der Gravur (Fenstermuster, Fassaden- und Dachraster). Alle Flächen in einem Bildatlas. -> (Pfad, {Gebäude-Nr}) oder (None, set())"""
+    ziel = os.path.join(out, f"{name}_vorschau_gebaeude.glb")
+    if os.path.exists(ziel):
+        os.remove(ziel)
+    eintr = [e for e in GL.VORSCHAU if e["pg"] is not None and not e["pg"].is_empty]
+    if not eintr:
+        return None, set()
+    try:
+        import trimesh
+        from PIL import Image, ImageDraw
+    except Exception:
+        return None, set()
+    farbe = (farbe or "#f2efe8").lstrip("#")
+    grund = tuple(int(farbe[i:i + 2], 16) for i in (0, 2, 4))
+    brand, kante = (70, 52, 40), (150, 140, 128)
+    # Bildgrößen und Atlas (Zeilen); passt er nicht, alles feiner verkleinern
+    f = px_mm
+    for _ in range(8):
+        lage, x, y, zeile = [], 0, 0, 0
+        for e in eintr:
+            x0, y0, x1, y1 = e["pg"].bounds
+            ff = min(f, max_face_px / max(x1 - x0, y1 - y0, 1e-6))
+            w, h = max(2, int(math.ceil((x1 - x0) * ff)) + 2), max(2, int(math.ceil((y1 - y0) * ff)) + 2)
+            if x + w > atlas_px:
+                x, y, zeile = 0, y + zeile, 0
+            lage.append((x, y, w, h, ff))
+            x += w
+            zeile = max(zeile, h)
+        AH = y + zeile
+        if AH <= atlas_px:
+            break
+        f *= 0.7
+        max_face_px = int(max_face_px * 0.7)
+    AW = atlas_px
+    AH = max(2, min(AH, atlas_px))
+    im = Image.new("RGB", (AW, AH), grund)
+    dr = ImageDraw.Draw(im)
+    V_all, F_all, UV_all, nrs, nv = [], [], [], set(), 0
+    eps = 0.05                                               # knapp vor der Fläche (kein Flimmern mit anderen Körpern)
+    for e, (ax, ay, w, h, ff) in zip(eintr, lage):
+        x0, y0, x1, y1 = e["pg"].bounds
+
+        def pix(cs, ax=ax, ay=ay, ff=ff, x0=x0, y1=y1):
+            return [(ax + 1 + (cx - x0) * ff, ay + 1 + (y1 - cy) * ff) for cx, cy in cs]
+        for g in e["gravur"]:
+            for c in polys(g):
+                if len(c.exterior.coords) >= 3:
+                    dr.polygon(pix(c.exterior.coords), fill=brand)
+                    for r in c.interiors:
+                        dr.polygon(pix(r.coords), fill=grund)
+        for c in polys(e["pg"]):
+            dr.line(pix(c.exterior.coords), fill=kante, width=1)
+        b = e["b"]
+        basis = (b.get("layer", 0) + 1) * t
+        for c in polys(e["pg"]):
+            try:
+                v2, f2 = trimesh.creation.triangulate_polygon(c)
+            except Exception:
+                continue
+            if not len(f2):
+                continue
+            if e["art"] == "wand":
+                ri, i = e["lage"]
+                ring = GL._ring_kanten(b["footprint"])[ri]
+                pa, pb = np.asarray(ring[i], float), np.asarray(ring[(i + 1) % len(ring)], float)
+                L = float(np.hypot(*(pb - pa)))
+                if L < 1e-6:
+                    continue
+                d = (pb - pa) / L
+                nrm = np.array([d[1], -d[0]])                    # außen = rechts der Laufrichtung (innen liegt links)
+                xy = pa + np.outer(v2[:, 0], d) + nrm * eps
+                V3 = np.c_[xy, v2[:, 1] + basis]
+            else:
+                V3 = GL.dach_2d_nach_xyz(e["lage"], v2) + [0.0, 0.0, basis + eps]
+            u = (ax + 1 + (v2[:, 0] - x0) * ff) / AW
+            v = 1.0 - (ay + 1 + (y1 - v2[:, 1]) * ff) / AH
+            V_all.append(V3)
+            UV_all.append(np.c_[u, v])
+            F_all.append(f2 + nv)
+            nv += len(V3)
+            nrs.add(b["nr"])
+    if not V_all:
+        return None, set()
+    mat = trimesh.visual.material.PBRMaterial(baseColorTexture=im, baseColorFactor=[255, 255, 255, 255], metallicFactor=0.0,
+                                              roughnessFactor=1.0, emissiveTexture=im, emissiveFactor=[0.6, 0.6, 0.6], doubleSided=True)
+    m = trimesh.Trimesh(np.vstack(V_all), np.vstack(F_all), process=False,
+                        visual=trimesh.visual.TextureVisuals(uv=np.vstack(UV_all), material=mat))
+    sz = trimesh.Scene()
+    sz.add_geometry(m, node_name="Gebaeude_Lasercut")
+    sz.export(ziel)
+    n_grav = sum(1 for e in eintr if e["gravur"])
+    log(f"  3D-Vorschau: {len(nrs)} Lasercut-Gebäude mit {len(eintr)} Wand- und Dachflächen als Bild ({n_grav} mit Gravur; "
+        f"{os.path.getsize(ziel) / 1e6:.1f} MB)")
+    return ziel, nrs
+
+
+def _vorschau_3d(out, name, parts, stuetzen, blds, t, log, rippen_3d=(), farbe=None, farbe_g=None):
     """Das fertige Modell zusammengesetzt, getrennt nach Laser- und Druckteilen (eigene Farben in der Vorschau)."""
+    try:
+        geb_glb, geb_nrs = _vorschau_gebaeude_glb(out, name, t, farbe_g or farbe, log)
+    except Exception as e:
+        geb_glb, geb_nrs = None, set()
+        log(f"  Hinweis: Lasercut-Gebäude in der 3D-Vorschau nicht erzeugt ({str(e)[:100]})")
     try:
         import trimesh
         laser, druck = [], []
@@ -714,7 +830,7 @@ def _vorschau_3d(out, name, parts, stuetzen, blds, t, log, rippen_3d=(), farbe=N
             m.apply_translation([st["pos"][0], st["pos"][1], st["layer"] * t])
             laser.append(m)
         for b in blds:
-            if b["mesh"] is not None and b["status"] == "druck":
+            if b["mesh"] is not None and b["status"] == "druck" and b["nr"] not in geb_nrs:   # Lasercut-Gebäude: als Bild-Flächen (oben)
                 m = b["mesh"].copy()
                 m.apply_translation([0, 0, (b["layer"] + 1) * t])
                 druck.append(m)

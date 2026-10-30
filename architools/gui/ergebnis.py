@@ -50,7 +50,7 @@ def ergebnis_zeigen(bereich, stats, titel="Ergebnis"):
                 ui.html("<pre style='white-space:pre-wrap; font-size:12px; margin:0'>"
                         + stats["kosten_text"].replace("&", "&amp;").replace("<", "&lt;") + "</pre>")
         fl = stats.get("material_farbe") or FARBE_LASER                      # Vorschau in der Farbe des Lasercut-Materials
-        teile = [(stats.get("vorschau_laser"), fl), (stats.get("vorschau_gravur"), FARBE_GRAVUR), (stats.get("vorschau_druck"), FARBE_DRUCK)]
+        teile = [(stats.get("vorschau_laser"), fl), (stats.get("vorschau_gravur"), FARBE_GRAVUR), (stats.get("vorschau_druck"), FARBE_DRUCK), (stats.get("vorschau_gebaeude"), None)]
         if any(p and os.path.exists(p) for p, _ in teile):
             with ui.row().classes("items-center gap-3 mt-2"):
                 ui.label("3D-Vorschau").classes("text-subtitle2")

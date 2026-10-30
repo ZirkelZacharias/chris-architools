@@ -38,6 +38,7 @@ DEFAULTS = {
         "bauweise": "",                    # leer = wie das Gelände; sonst "voll" | "steckrippen" | "stuetzkloetze"
         "auswahl": "mitte",                # "mitte" = Flurstück unter dem Mittelpunkt, "eigen" = gewählte Flurstücke/Polygon
         "polygone_en": [],                 # eigene Auswahl: Liste von Ringen [[Ost, Nord], ...] (EPSG:25833)
+        "rastergravur": False,             # Rastergravur eines Bildes (Zusatzmodul) auch auf dem Einsatz
     },
 
     "gelaende": {
