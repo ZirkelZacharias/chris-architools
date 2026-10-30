@@ -628,6 +628,9 @@ def _svg_vorschau(pfad, platte, sorte, titel):
     return ziel
 
 
+RASTER_GLAETTEN_MM = 0.9          # Vorschau: Rastergravur auf diese Breite (Gauß) glätten, bevor das Bild verkleinert wird
+
+
 def _vorschau_gravur_glb(out, name, parts, t, farbe, log, px_mm=4.0, max_px=2048):
     """Ritzen und Gravur (auch Rastergravur mit Zehntausenden Streifen) als Bild auf der Oberseite jeder Schicht -> .glb oder None.
     Je Schicht ein Bild in Materialfarbe: fein gezeichnet (px_mm), dann auf höchstens max_px verkleinert – das Raster erscheint so als
@@ -666,17 +669,26 @@ def _vorschau_gravur_glb(out, name, parts, t, farbe, log, px_mm=4.0, max_px=2048
         im = Image.new("RGB", (iw, ih), grund)
         dr = ImageDraw.Draw(im)
         pix = lambda cs: [((x - x0) * f, (y1 - y) * f) for x, y in cs]
+        n_grav = 0
         for p in ps:
             for g in p.get("gravieren") or []:
                 for c in polys(g):
                     if len(c.exterior.coords) >= 3:
                         dr.polygon(pix(c.exterior.coords), fill=brand)
+                        n_grav += 1
                         for r in c.interiors:
                             dr.polygon(pix(r.coords), fill=grund)
+        sk = min(1.0, max_px / float(max(iw, ih)))                       # ... dann verkleinern: Raster wird Halbton
+        if n_grav > 2000:
+            # Raster (Punkte/Linien im Abstand von 0,5-3 mm) vorher auf Halbton glätten: sonst überlagert sich das Raster mit dem
+            # Pixelraster des verkleinerten Bildes und der Anzeige -> Moiré-Streifen, die es auf dem Modell nicht gibt
+            from PIL import ImageFilter
+            im = im.filter(ImageFilter.GaussianBlur(radius=max(1.0, RASTER_GLAETTEN_MM * f)))
+            dr = ImageDraw.Draw(im)
+        for p in ps:                                                     # Ritzlinien erst danach: bleiben scharf
             for l in p.get("ritzen") or []:
                 for ln in lines(l):
-                    dr.line(pix(ln.coords), fill=ritz, width=max(1, int(round(0.3 * f))))
-        sk = min(1.0, max_px / float(max(iw, ih)))                       # ... dann verkleinern: Raster wird Halbton
+                    dr.line(pix(ln.coords), fill=ritz, width=max(1, int(round(0.3 * f)), int(round(1.0 / max(sk, 1e-6)))))
         if sk < 1.0:
             im = im.resize((max(2, int(iw * sk)), max(2, int(ih * sk))), Image.LANCZOS)
         V, F = [], []
