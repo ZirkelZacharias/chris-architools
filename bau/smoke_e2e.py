@@ -202,3 +202,30 @@ import re as _re
 _wz = open(os.path.join(os.path.dirname(_stil.__file__), "werkzeuge.py"), encoding="utf-8").read()
 assert not _re.search(r"starten\(lambda w, cfg, log:", _wz), "Lauf.starten ruft mit log UND prog auf"
 print("WERKZEUG-AUFRUFE OK")
+
+# CAD zu Lasercut, Bauweise „Bauteile aus IFC“: Test-Haus (Wände mit Öffnungen, Decken, Satteldach, Gelände- und Weg-Mesh)
+try:
+    import ifcopenshell  # noqa: F401
+    _hat_ifc = True
+except ImportError:
+    _hat_ifc = False
+if _hat_ifc:
+    sys.path.insert(0, os.path.join(os.getcwd(), "bau"))
+    import testmodell_ifc
+    from architools.modell import cad_lasercut as _CL, config as _MC
+    _ifc = testmodell_ifc.bauen(os.path.join(TMP, "testhaus.ifc"))
+    _cfg = _MC.default_config()
+    _cfg["laser"]["material"], _cfg["laser"]["staerke_mm"] = "Graukarton", 1.0
+    _w = dict(_CL.STANDARD, dateien=[_ifc], massstab=100, modus="flaeche", umwandlung="bauteile", ausgabe_ordner=os.path.join(TMP, "cadb"),
+              name="haus", materialien=[{"sorte": "Finnpappe", "staerke_mm": 1.5}],
+              gruppen_wahl={"wand": {"an": True, "material": 1}, "sonst": {"an": False}})
+    _L = []
+    _r = _CL.lasercut(_w, _cfg, _L.append)
+    _ids = {}
+    assert _r["teile"] > 20 and len(_r["materialien"]) == 2, (_r["teile"], _r.get("materialien"))
+    assert any("Wände: 9 Teile" in x for x in _L), [x for x in _L if "Wände" in x]           # 30 cm / 1,5 mm = 2 Lagen
+    assert any("27 Schichten" in x for x in _L), [x for x in _L if "Gelände" in x]
+    assert set(_r["vorschau_gruppen"]) >= {"wand", "decke", "dach", "gelaende"}, _r["vorschau_gruppen"]
+    print("CAD-BAUTEILE OK", _r["teile"], "Teile,", _r["material"])
+else:
+    print("CAD-BAUTEILE übersprungen (ifcopenshell fehlt)")

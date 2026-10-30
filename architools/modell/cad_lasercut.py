@@ -27,9 +27,10 @@ from . import gebaeude_laser as GL
 from . import kosten as KO
 from .geomutil import lines, polys
 
-STANDARD = {"dateien": [], "einheit": "m", "massstab": 200, "modus": "falt", "umwandlung": "massiv",
-            "winkel": 3.0, "ebenheit_mm": 0.3, "min_flaeche_mm2": 20.0, "lasche_mm": 4.0, "beschriften": True,
-            "anzahl": 1, "ausgabe_ordner": "", "name": "cad"}
+STANDARD = {"dateien": [], "einheit": "m", "massstab": 200, "modus": "flaeche", "umwandlung": "bauteile",
+            "winkel": 3.0, "ebenheit_mm": 0.3, "min_flaeche_mm2": 20.0, "min_breite_mm": 2.0, "lasche_mm": 4.0, "beschriften": True,
+            "anzahl": 1, "ausgabe_ordner": "", "name": "cad",
+            "materialien": [], "gruppen_wahl": {}, "muster": {}, "material_gravur": True}
 
 MAX_PLATTEN_3D = 4000            # darüber wird die 3D-Vorschau aus den Originalflächen statt aus Platten gebaut
 ART_NAME = {"W": "Wand", "D": "Dach/Decke", "B": "Boden", "S": "Schicht"}
@@ -203,6 +204,18 @@ def _tabs(stuecke_poly, segmente2d, breite):
     return max(ps, key=lambda p: p.area), ritz
 
 
+def _schmal(pg, min_b):
+    """Teil schmaler als min_b (kürzere Seite des kleinsten umschließenden Rechtecks): Fensterlaibung, Wandkante, Stirnseite …"""
+    if min_b <= 0:
+        return False
+    try:
+        r = pg.minimum_rotated_rectangle
+        c = np.asarray(r.exterior.coords)
+        return min(np.hypot(*(c[1] - c[0])), np.hypot(*(c[2] - c[1]))) < min_b
+    except Exception:
+        return False
+
+
 def flaechen(mesh, w, log=print, zaehler=None, praefix=""):
     """Ebene Teile (modus flaeche/falt) eines Körpers. Teil: id, poly, ritzen, gravieren, art, layer; dazu für die 3D-Vorschau
     o, u, v, n (Lage der Teilebene im Modell)."""
@@ -214,6 +227,7 @@ def flaechen(mesh, w, log=print, zaehler=None, praefix=""):
     falt = w.get("modus") == "falt"
     breite = float(w.get("lasche_mm") or 4.0)
     min_fl = float(w.get("min_flaeche_mm2") or 0)
+    min_b = float(w.get("min_breite_mm", 2.0) or 0)
     # Kanten zwischen verschiedenen Gebieten: die Lasche sitzt am Gebiet mit der kleineren Nummer
     kanten = {}
     if falt:
@@ -243,7 +257,7 @@ def flaechen(mesh, w, log=print, zaehler=None, praefix=""):
         g = shapely.union_all(pg).buffer(0.02, join_style=2).buffer(-0.02, join_style=2).simplify(0.02)
         art = _art(nm)
         for piece in polys(g):
-            if piece.area < min_fl:
+            if piece.area < min_fl or _schmal(piece, min_b):
                 klein += 1
                 continue
             segs = []
@@ -258,7 +272,7 @@ def flaechen(mesh, w, log=print, zaehler=None, praefix=""):
             teile.append({"id": f"{praefix}{art}{zaehler[art]:03d}", "poly": piece, "poly0": piece0, "ritzen": ritz, "gravieren": [],
                           "art": ART_NAME[art], "layer": -1, "o": o, "u": u, "v": v, "n": nm, "flaeche_3d": float(A[idx].sum())})
     if klein:
-        log(f"  {klein} Flächen unter {min_fl:g} mm² weggelassen")
+        log(f"  {klein} Flächen unter {min_fl:g} mm² oder schmaler als {min_b:g} mm weggelassen (Laibungen, Kanten, Splitter)")
     return teile
 
 
@@ -349,48 +363,64 @@ def vorschau(teile, dicke, ordner, name, log=print):
 
 
 # ------------------------------------------------------------------ Gesamtablauf
-def lasercut(w, cfg, log=print):
-    """w: siehe STANDARD. cfg: Projekt-Einstellungen (laser: Material/Platte). -> Ergebnis-dict wie die anderen Werkzeuge"""
+def materialien(w, cfg):
+    """Materialien des Werkzeugs: Nr. 0 = Material der Laser-Einstellungen, dann die selbst angelegten (w["materialien"]:
+    [{sorte, staerke_mm}]). -> [(cfg mit diesem Material, Sorte, Stärke, Hinweise)]"""
+    out = []
+    for i, m in enumerate([None] + list(w.get("materialien") or [])):
+        c = {**cfg, "laser": dict(cfg["laser"])}
+        if m:
+            c["laser"]["material"] = m.get("sorte") or c["laser"].get("material")
+            c["laser"]["staerke_mm"] = float(m.get("staerke_mm") or c["laser"].get("staerke_mm") or 2.0)
+        sorte, t, hinw = BIB.material(c)
+        out.append((c, sorte, t, hinw))
+    return out
+
+
+def _gruppen_je_material(w, n_mat):
+    """{Material-Nr: [Gruppen]} aus w["gruppen_wahl"] = {Gruppe: {an, material}} (fehlt: alle an, Material 0)"""
+    from .cad_bauteile import GRUPPEN
+    wahl = w.get("gruppen_wahl") or {}
+    alt = w.get("gruppen")                                        # ältere Form: Liste der Gruppen
+    out = {}
+    for g in GRUPPEN:
+        e = wahl.get(g) or {}
+        an = e.get("an", True) if alt is None else (g in alt)
+        if not an:
+            continue
+        k = int(e.get("material", 0) or 0)
+        out.setdefault(k if 0 <= k < n_mat else 0, []).append(g)
+    return out
+
+
+def _ausgeben(teile, cfg, sorte, t, w, out, name, log, bauteile):
+    """Beschriften, anordnen, PDFs/SVGs/DXF/Teileliste und Kosten für EIN Material -> dict"""
     from . import laser as LA
     from .pipeline import mm
-    if not w.get("dateien"):
-        raise ValueError("Keine Dateien angegeben")
-    cfg = {**cfg, "massstab": float(w.get("massstab") or 1)}
-    sorte, t, hinw = BIB.material(cfg)
-    for h in hinw:
-        log("  HINWEIS: " + h)
     formate = BIB.plattenformate(cfg)
     rand = float(cfg["laser"].get("rand_mm", BIB.WERKSTATT["rand_mm"]))
-    modus = w.get("modus", "falt")
-    # 1 Einlesen und Aussenform
-    koerper = vorbereiten(laden(w, log), w, log)
-    allm = trimesh.util.concatenate([m for _, m in koerper])
-    lo = allm.bounds[0].copy()
-    log(f"Entwurf im Modell: {allm.extents[0]:.0f} × {allm.extents[1]:.0f} × {allm.extents[2]:.0f} mm (1:{w.get('massstab'):g})")
-    # 2 Zerlegen
-    teile, zaehler = [], {}
-    for i, (n, m) in enumerate(koerper):
-        m = m.copy()
-        m.apply_translation(-lo)
-        pre = f"{i + 1}-" if len(koerper) > 1 else ""
-        if modus == "stapel":
-            teile += schichten(m, t, w, log, pre)
-        else:
-            teile += flaechen(m, w, log, zaehler, pre)
-    if not teile:
-        raise ValueError("Keine Laserteile entstanden - Entwurf leer oder alle Flächen kleiner als die Mindestfläche")
-    teile_roh = list(teile)
-    arten = {}
-    for tl in teile:
-        arten[tl["art"]] = arten.get(tl["art"], 0) + 1
-    log("Zerlegt in " + str(len(teile)) + " Teile: " + ", ".join(f"{v} {k}" for k, v in arten.items()))
-    if modus != "stapel":
-        tri = sum(tl["flaeche_3d"] for tl in teile)
-        log(f"  Flächen zusammen {tri / 1e6:.3f} m²" )
-    # 3 Beschriften, zu große Teile kacheln, auf Platten legen
     if w.get("beschriften", True):
+        n_ohne = 0
         for tl in teile:
-            GL._beschriften(tl)
+            if "verdeckt" in tl:                         # Gelände: Nummer dorthin, wo die nächste Schicht sie später verdeckt
+                ort = tl["verdeckt"]
+                gross = max(polys(ort.buffer(-0.8)), key=lambda q: q.area, default=None) if ort is not None and not ort.is_empty else None
+                if gross is None:
+                    n_ohne += 1
+                    continue
+                from .laser import _text
+                r_, g_ = _text(tl["id"], gross, 1.6, "gravieren")
+                tl["ritzen"] += r_
+                tl["gravieren"] += g_
+            elif bauteile and tl.get("aussen") and tl.get("gruppe") in ("wand", "decke", "dach", "sonst"):
+                n_ohne += 1                              # sichtbare Außenlage: keine Nummer auf die Ansichtsfläche
+            else:
+                GL._beschriften(tl)
+        if n_ohne:
+            log(f"  {n_ohne} sichtbare Teile ohne gravierte Nummer (Außenlagen, oberste Geländeschichten) - die Nummer steht in der Teileliste")
+    for tl in teile:                                     # Stand vor dem Anordnen für die 3D-Vorschau festhalten
+        tl["_grav0"], tl["_ritz0"] = list(tl.get("gravieren") or []), list(tl.get("ritzen") or [])
+    teile_roh = list(teile)
     teile = LA.tile_parts(teile, formate, rand, log, split_sparse=False)
     n = max(1, int(w.get("anzahl", 1) or 1))
     import copy
@@ -404,44 +434,206 @@ def lasercut(w, cfg, log=print):
         log(f"  HINWEIS: {len(alle)} Teile - das Anordnen auf den Platten dauert einige Minuten. Schneller: „Kleinste Fläche“ erhöhen, "
             "„Winkel“ vergrößern oder in den Einstellungen die Anordnung „schnell“ wählen.")
     platten, rest = BL.anordnen(alle, formate, cfg, log)
-    # 4 Ausgabe
-    out = os.path.abspath(w.get("ausgabe_ordner") or "ausgabe_cad")
-    os.makedirs(out, exist_ok=True)
-    name = re.sub(r"[^A-Za-z0-9_.-]+", "_", w.get("name") or "cad")
     basis = f"{name}_{re.sub(r'[^A-Za-z0-9_.-]+', '_', sorte)}_{mm(t)}mm"
     titel = f"{w.get('name') or 'CAD'} – {sorte} {mm(t)} mm"
     pdfs = BL.pdfs_schreiben(out, basis, platten, titel, log)
     svgs = []
     for i, pl in enumerate(platten, 1):
-        s = os.path.join(out, f"{name}_platte_{i:02d}.svg")
-        BL.svg_schreiben(s, pl, titel=f"Platte {i}")
-        svgs.append(s)
-    dxf = os.path.join(out, f"{name}_platten.dxf")
+        sp = os.path.join(out, f"{basis}_platte_{i:02d}.svg")
+        BL.svg_schreiben(sp, pl, titel=f"{sorte} {mm(t)} mm – Platte {i}")
+        svgs.append(sp)
+    dxf = os.path.join(out, f"{basis}_platten.dxf")
     BL.dxf_schreiben(dxf, platten)
-    with open(os.path.join(out, f"{name}_teileliste.csv"), "w", newline="", encoding="utf-8-sig") as fh:
-        cw = csv.writer(fh, delimiter=";")
-        cw.writerow(["ID", "Art", "Platte", "Fläche mm²", "Breite mm", "Höhe mm"])
-        for tl in alle:
-            b = tl["poly"].bounds
-            cw.writerow([tl["id"], tl.get("art", ""), tl.get("platte", "-"), f"{tl['poly'].area:.0f}",
-                         f"{b[2] - b[0]:.1f}", f"{b[3] - b[1]:.1f}"])
-    z_stat = vorschau(teile_roh, t, out, name, log)
-    # 5 Kosten
     fl = sum(tl["poly"].area for pl in platten for tl in pl["teile"])
     zeit, z_lo, z_hi, zt = BL.laserzeit(platten, sorte, t)
     pm, mw = BIB.WERKSTATT["preis_min_netto"], BIB.WERKSTATT["mwst"]
-    stats = {"modell_b": float(allm.extents[0]), "modell_h": float(allm.extents[1]), "teile_flaeche": fl,
-             "gebaeude_modus": "druck", "n_druck": 0,
-             "laser": {"s": zeit, "s_lo": z_lo, "s_hi": z_hi, "teile": zt, "netto": zeit / 60 * pm,
-                       "netto_lo": z_lo / 60 * pm, "netto_hi": z_hi / 60 * pm, "preis_min": pm, "mwst": mw}}
-    summe = {}
-    kost = os.path.join(out, f"{name}_zuschnitt_und_kosten.txt")
-    text = KO.schreiben(kost, cfg, stats, platten, [], [], summe=summe)
-    gesamt = sum(p["format"][0] * p["format"][1] for p in platten)
-    log(f"Fertig: {len(alle)} Teile auf {len(platten)} Platten, Ausnutzung {100 * fl / max(gesamt, 1):.0f} % · "
-        f"geschätzt ca. {summe.get('brutto', 0):,.0f} € brutto · {out}".replace(",", "."))
-    return {"ausgabe": out, "laser_ordner": out, "laser_pdfs": pdfs, "svgs": svgs, "platten": len(platten), "teile": len(alle),
-            "n_rest": len(rest), "dxf": dxf, "kostenliste": kost, "kosten_text": text, "kosten": summe,
-            "vorschau_laser": z_stat[0], "vorschau_explosion": z_stat[1], "material": f"{sorte} {mm(t)} mm",
-            "material_farbe": BIB.farbe(sorte), "modell_b": stats["modell_b"], "modell_h": stats["modell_h"],
-            "modell_z": float(allm.extents[2]), "laserzeit_min": zeit / 60}
+    return {"sorte": sorte, "t": t, "teile_roh": teile_roh, "alle": alle, "platten": platten, "rest": rest, "pdfs": pdfs, "svgs": svgs,
+            "dxf": dxf, "flaeche": fl, "zeit": (zeit, z_lo, z_hi, zt), "pm": pm, "mw": mw, "basis": basis}
+
+
+def lasercut(w, cfg, log=print):
+    """w: siehe STANDARD. cfg: Projekt-Einstellungen (laser: Material/Platte). -> Ergebnis-dict wie die anderen Werkzeuge
+    Bei „Bauteile aus IFC“ kann jede Bauteilgruppe ein eigenes Material haben (w["materialien"], w["gruppen_wahl"]): dann gibt es
+    je Material eigene Platten, PDFs und Kosten."""
+    if not w.get("dateien"):
+        raise ValueError("Keine Dateien angegeben")
+    cfg = {**cfg, "massstab": float(w.get("massstab") or 1)}
+    mats = materialien(w, cfg)
+    modus = w.get("modus", "falt")
+    from . import cad_bauteile as CB
+    ifc = [p for p in w["dateien"] if p.lower().endswith(".ifc")]
+    bauteile = w.get("umwandlung") == "bauteile" and modus != "stapel"
+    if w.get("umwandlung") == "bauteile" and not bauteile:
+        log("  HINWEIS: „Bauteile aus IFC“ gilt für Klebeflächen/Faltmodell - beim Schichtenmodell wird die Außenform geschichtet")
+        w = {**w, "umwandlung": "massiv"}
+    if bauteile and not ifc:
+        log("  HINWEIS: „Bauteile aus IFC“ braucht eine IFC-Datei - die Dateien werden als „Bauteile einzeln“ zerlegt")
+        bauteile, w = False, {**w, "umwandlung": "original"}
+    if bauteile and len(ifc) < len(w["dateien"]):
+        log("  HINWEIS: „Bauteile aus IFC“ braucht IFC-Dateien - die anderen Dateien werden ausgelassen")
+    posten = []                                         # [(Material-Nr, Teile)]
+    if bauteile:
+        # Bauteile aus dem IFC: Wände/Decken/Dach in echter Stärke geschichtet, Gelände in Höhenschichten - je Material
+        if not ifc:
+            raise ValueError("„Bauteile aus IFC“: keine IFC-Datei angegeben")
+        bt = CB.einlesen(ifc, float(w.get("massstab") or 1), log)
+        zus = bt[1]
+        gx, gy, gz = zus["groesse"]
+        allm = trimesh.creation.box(extents=(gx, gy, gz))
+        allm.apply_translation((gx / 2, gy / 2, gz / 2))
+        log(f"Entwurf im Modell: {gx:.0f} × {gy:.0f} × {gz:.0f} mm (1:{w.get('massstab'):g})")
+        if zus["materialien"]:
+            log("  Materialien im IFC: " + ", ".join(zus["materialien"]))
+        je = _gruppen_je_material(w, len(mats))
+        if not je:
+            raise ValueError("Keine Bauteilart ausgewählt")
+        for k, gruppen in sorted(je.items()):
+            c, sorte, t, hinw = mats[k]
+            for h in hinw:
+                log("  HINWEIS: " + h)
+            log(f"{sorte} {t:g} mm: " + ", ".join(CB.GRUPPEN[g] for g in gruppen))
+            tl = CB.zerlegen(ifc, float(w.get("massstab") or 1), t, log, gruppen, float(w.get("min_flaeche_mm2") or 2.0) / 4, bauteile=bt)[0]
+            if tl:
+                posten.append((k, tl))
+        aus = [CB.GRUPPEN[g] for g in CB.GRUPPEN if g in zus["gruppen"] and not any(g in v for v in je.values())]
+        if aus:
+            log("  Nicht gebaut (abgewählt): " + ", ".join(aus))
+        # Materialdarstellung (Rastergravur) aus dem Zusatzmodul
+        if w.get("material_gravur", True):
+            try:
+                from .. import zusatz as ZU
+                alle_t = [x for _, ts in posten for x in ts]
+                r = ZU.erstes("cad_material", alle_t, {"massstab": float(w.get("massstab") or 1), "dicke": None,
+                                                       "zuordnung": dict(w.get("muster") or {})}, log, log=log)
+                if r is None:
+                    log("  Materialdarstellung als Rastergravur: braucht das Zusatzmodul (Rasterlaser) - Flächen bleiben ungraviert")
+            except Exception as e:
+                log(f"  HINWEIS: Materialdarstellung nicht möglich ({str(e)[:80]})")
+    else:
+        c, sorte, t, hinw = mats[0]
+        for h in hinw:
+            log("  HINWEIS: " + h)
+        teile, zaehler = [], {}
+        # Einlesen und Aussenform; Gelände und andere Meshes (offen/uneben) gehen in Höhenschichten
+        roh = laden(w, log)
+        gel, rest = [], []
+        for n, m in roh:
+            kl = n.split("_", 1)[0] if n.startswith("Ifc") else ""
+            b = {"name": n, "klasse": kl, "typ": "", "material": "", "im_dach": False, "mesh": m}
+            (gel if modus != "stapel" and CB.einordnen(b) == "gelaende" else rest).append((n, m))
+        if gel:
+            log(f"  {len(gel)} Gelände-/Mesh-Fläche(n) werden in Höhenschichten zerlegt (statt in Dreiecke)")
+        koerper = vorbereiten(rest, w, log) if rest else []
+        allm = trimesh.util.concatenate([m for _, m in koerper] + [m for _, m in gel])
+        lo = allm.bounds[0].copy()
+        log(f"Entwurf im Modell: {allm.extents[0]:.0f} × {allm.extents[1]:.0f} × {allm.extents[2]:.0f} mm (1:{w.get('massstab'):g})")
+        for i, (n, m) in enumerate(koerper):
+            m = m.copy()
+            m.apply_translation(-lo)
+            pre = f"{i + 1}-" if len(koerper) > 1 else ""
+            if modus == "stapel":
+                teile += schichten(m, t, w, log, pre)
+            else:
+                teile += flaechen(m, w, log, zaehler, pre)
+        if gel:
+            gb = []
+            for n, m in gel:
+                m = m.copy()
+                m.apply_translation(-lo)
+                gb.append({"name": n, "material": "", "mesh": m})
+            gt = CB.gelaende(gb, t, [], log)
+            for k, tl in enumerate(gt, 1):
+                tl.update(id=f"G{k:02d}", art="Gelände", layer=-1, o=tl["n"] * (tl["s0"] + t))
+            teile += gt
+        posten = [(0, teile)]
+    if not any(ts for _, ts in posten):
+        raise ValueError("Keine Laserteile entstanden - Entwurf leer oder alle Flächen kleiner als die Mindestfläche")
+    alle_teile = [x for _, ts in posten for x in ts]
+    arten = {}
+    for tl in alle_teile:
+        arten[tl["art"]] = arten.get(tl["art"], 0) + 1
+    log("Zerlegt in " + str(len(alle_teile)) + " Teile: " + ", ".join(f"{v} {k}" for k, v in arten.items()))
+    if modus != "stapel":
+        tri = sum(tl.get("flaeche_3d", tl["poly"].area) for tl in alle_teile)
+        log(f"  Flächen zusammen {tri / 1e6:.3f} m²")
+    # Ausgabe je Material
+    out = os.path.abspath(w.get("ausgabe_ordner") or "ausgabe_cad")
+    os.makedirs(out, exist_ok=True)
+    name = re.sub(r"[^A-Za-z0-9_.-]+", "_", w.get("name") or "cad")
+    erg = []
+    for k, ts in posten:
+        c, sorte, t, _ = mats[k]
+        if len(posten) > 1:
+            log(f"— {sorte} {t:g} mm: {len(ts)} Teile")
+        e = _ausgeben(ts, c, sorte, t, w, out, name, log, bauteile)
+        e["cfg"] = c
+        erg.append(e)
+    with open(os.path.join(out, f"{name}_teileliste.csv"), "w", newline="", encoding="utf-8-sig") as fh:
+        cw = csv.writer(fh, delimiter=";")
+        cw.writerow(["ID", "Art", "Material", "Stärke mm", "Platte", "Fläche mm²", "Breite mm", "Höhe mm", "Bauteil", "IFC-Material", "Lage"])
+        for e in erg:
+            for tl in e["alle"]:
+                b = tl["poly"].bounds
+                cw.writerow([tl["id"], tl.get("art", ""), e["sorte"], f"{e['t']:g}", tl.get("platte", "-"), f"{tl['poly'].area:.0f}",
+                             f"{b[2] - b[0]:.1f}", f"{b[3] - b[1]:.1f}", tl.get("element", ""), tl.get("material", ""),
+                             f"{tl.get('lage', '')}/{tl.get('lagen', '')}" if tl.get("lagen") else ""])
+    # 3D-Vorschau (alle Materialien zusammen; Platten in ihrer Stärke)
+    z_stat = (None, None)
+    if len(erg) == 1:
+        z_stat = vorschau(erg[0]["teile_roh"], erg[0]["t"], out, name, log)
+    gruppen_glb = {}
+    try:
+        from . import cad_vorschau as CV
+        for e in erg:
+            gruppen_glb.update(CV.gruppen_glb(e["teile_roh"], e["t"], out, name, BIB.farbe(e["sorte"]), log))
+    except Exception as ex:
+        log(f"  HINWEIS: 3D-Vorschau je Bauteilgruppe nicht erzeugt ({str(ex)[:100]})")
+    if z_stat[0] is None and len(erg) > 1:
+        try:
+            ms = []
+            for e in erg:
+                for tl in e["teile_roh"]:
+                    m = _platte_3d(tl, e["t"])
+                    if m is not None:
+                        ms.append(m)
+            if ms:
+                p1 = os.path.join(out, f"{name}_vorschau_laser.stl")
+                trimesh.util.concatenate(ms).export(p1)
+                z_stat = (p1, None)
+        except Exception:
+            pass
+    # Kosten (je Material, zusammengezählt)
+    texte, summe_ges = [], {}
+    zeit_ges = 0.0
+    for e in erg:
+        zeit, z_lo, z_hi, zt = e["zeit"]
+        pm, mw = e["pm"], e["mw"]
+        stats = {"modell_b": float(allm.extents[0]), "modell_h": float(allm.extents[1]), "teile_flaeche": e["flaeche"],
+                 "gebaeude_modus": "druck", "n_druck": 0,
+                 "laser": {"s": zeit, "s_lo": z_lo, "s_hi": z_hi, "teile": zt, "netto": zeit / 60 * pm,
+                           "netto_lo": z_lo / 60 * pm, "netto_hi": z_hi / 60 * pm, "preis_min": pm, "mwst": mw}}
+        summe = {}
+        kost = os.path.join(out, f"{e['basis']}_zuschnitt_und_kosten.txt")
+        texte.append(KO.schreiben(kost, e["cfg"], stats, e["platten"], [], [], summe=summe))
+        e["kost"] = kost
+        for kk, v in summe.items():
+            if isinstance(v, (int, float)):
+                summe_ges[kk] = summe_ges.get(kk, 0) + v
+        zeit_ges += zeit
+    platten_n = sum(len(e["platten"]) for e in erg)
+    teile_n = sum(len(e["alle"]) for e in erg)
+    fl = sum(e["flaeche"] for e in erg)
+    gesamt = sum(p["format"][0] * p["format"][1] for e in erg for p in e["platten"])
+    log(f"Fertig: {teile_n} Teile auf {platten_n} Platten" + (f" in {len(erg)} Materialien" if len(erg) > 1 else "")
+        + f", Ausnutzung {100 * fl / max(gesamt, 1):.0f} % · geschätzt ca. {summe_ges.get('brutto', 0):,.0f} € brutto · {out}".replace(",", "."))
+    from .pipeline import mm
+    mat_txt = " + ".join(f"{e['sorte']} {mm(e['t'])} mm" for e in erg)
+    return {"ausgabe": out, "laser_ordner": out, "laser_pdfs": [p for e in erg for p in e["pdfs"]], "svgs": [p for e in erg for p in e["svgs"]],
+            "platten": platten_n, "teile": teile_n, "n_rest": sum(len(e["rest"]) for e in erg), "dxf": erg[0]["dxf"],
+            "dxfs": [e["dxf"] for e in erg], "kostenliste": erg[0]["kost"], "kostenlisten": [e["kost"] for e in erg],
+            "kosten_text": ("\n\n" + "=" * 60 + "\n\n").join(texte), "kosten": summe_ges,
+            "vorschau_laser": z_stat[0], "vorschau_explosion": z_stat[1], "vorschau_gruppen": gruppen_glb, "material": mat_txt,
+            "material_farbe": BIB.farbe(erg[0]["sorte"]), "modell_b": float(allm.extents[0]), "modell_h": float(allm.extents[1]),
+            "modell_z": float(allm.extents[2]), "laserzeit_min": zeit_ges / 60,
+            "materialien": [{"sorte": e["sorte"], "t": e["t"], "teile": len(e["alle"]), "platten": len(e["platten"]),
+                             "farbe": BIB.farbe(e["sorte"])} for e in erg]}

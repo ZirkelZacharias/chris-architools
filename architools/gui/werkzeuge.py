@@ -15,9 +15,10 @@ WERKZEUG_STANDARD = {
                "ausgabe_ordner": "", "name": "layout"},
     "druck3d": {"dateien": [], "einheit": "m", "massstab": 500, "modus": "massiv", "zusammenfassen": False,
                 "min_wand_mm": 1.2, "ausgabe_ordner": "", "name": "druck"},
-    "cadlaser": {"dateien": [], "einheit": "m", "massstab": 200, "modus": "falt", "umwandlung": "massiv",
-                 "winkel": 3.0, "ebenheit_mm": 0.3, "min_flaeche_mm2": 20.0, "lasche_mm": 4.0, "beschriften": True,
-                 "anzahl": 1, "ausgabe_ordner": "", "name": "cad"},       # Standard: modell/cad_lasercut.STANDARD
+    "cadlaser": {"dateien": [], "einheit": "m", "massstab": 200, "modus": "flaeche", "umwandlung": "bauteile",
+                 "winkel": 3.0, "ebenheit_mm": 0.3, "min_flaeche_mm2": 20.0, "min_breite_mm": 2.0, "lasche_mm": 4.0, "beschriften": True,
+                 "anzahl": 1, "ausgabe_ordner": "", "name": "cad",
+                 "materialien": [], "gruppen_wahl": {}, "muster": {}, "material_gravur": True},   # Standard: modell/cad_lasercut.STANDARD
 }
 
 
@@ -113,9 +114,15 @@ class Werkzeuge:
                         ui.select(MASSSTAEBE, label="Maßstab", new_value_mode="add-unique", with_input=True) \
                             .bind_value(w, "massstab").classes("w-32")
                         ui.number("Exemplare", min=1, step=1).bind_value(w, "anzahl").classes("w-28")
-                    ui.select({"massiv": "Außenform – Hülle mit Dach, ohne Innenräume (empfohlen für Massenmodelle)",
-                               "original": "Bauteile einzeln – jedes Bauteil für sich, auch innen"},
-                              label="Umwandlung").bind_value(w, "umwandlung").classes("w-full")
+                    ui.select({"bauteile": "Bauteile aus IFC – Wände, Decken, Dach in echter Stärke (empfohlen)",
+                               "massiv": "Außenform – Hülle mit Dach, ohne Innenräume (empfohlen für Massenmodelle)",
+                               "original": "Bauteile einzeln – jede Fläche für sich (viele kleine Teile)"},
+                              label="Umwandlung").bind_value(w, "umwandlung").classes("w-full") \
+                        .tooltip("Bei allen Umwandlungen werden Gelände und andere unebene Flächen (Meshes) in Höhenschichten zerlegt.")
+                bt_karte = ui.column().classes("w-full gap-3")
+                bt_karte.bind_visibility_from(w, "umwandlung", value="bauteile")
+                with bt_karte:
+                    self._cad_bauteile_karten(w)
                 with karte("Zerlegung in Laserteile", TERRA):
                     ui.select({"falt": "Faltmodell – Flächen mit Klebelaschen und Ritzlinien an den Kanten",
                                "flaeche": "Klebeflächen – jede Fläche einzeln, ohne Laschen (auf Stoß kleben)",
@@ -152,6 +159,117 @@ class Werkzeuge:
                 fs.set_visibility(False)
         self.lauf_c = Lauf(logel, [knopf], fs)
 
+    # ------------------------------------------------------------------ CAD zu Lasercut: Bauteile aus IFC
+    def _cad_bauteile_karten(self, w):
+        """Materialien anlegen, je Bauteilart an/aus und Material, Materialdarstellung (Rastergravur aus dem Zusatzmodul)"""
+        from ..modell.cad_bauteile import GRUPPEN
+        mats_bib = BIB.alle("materialien")
+        w.setdefault("materialien", [])
+        w.setdefault("gruppen_wahl", {})
+        w.setdefault("muster", {})
+        for g in GRUPPEN:
+            w["gruppen_wahl"].setdefault(g, {"an": True, "material": 0})
+
+        def mat_namen():
+            lc = self.cfg["laser"]
+            out = {0: f"1 · {lc.get('material', '')} {mm_text(float(lc.get('staerke_mm') or 2))} mm (wie unten)"}
+            for i, m in enumerate(w["materialien"], 1):
+                out[i] = f"{i + 1} · {m.get('sorte')} {mm_text(float(m.get('staerke_mm') or 1))} mm"
+            return out
+
+        with karte("Materialien", OCKER):
+            hinweis("Material 1 ist das Material unter „Material und Platte“. Weitere hier anlegen – dann bekommt jede Bauteilart "
+                    "ihr eigenes Material (eigene Platten, PDFs und Kosten; die Lagenzahl richtet sich nach dessen Stärke).")
+
+            @ui.refreshable
+            def liste():
+                for i, m in enumerate(w["materialien"]):
+                    with ui.row().classes("w-full items-end gap-2 no-wrap"):
+                        ui.label(f"{i + 2}").classes("text-subtitle2").style("width:14px")
+                        ui.select(list(mats_bib), label="Material").bind_value(m, "sorte").style("min-width:0; flex:1 1 0") \
+                            .on_value_change(lambda e: (gruppen.refresh()))
+                        ui.number("Stärke mm", min=0.1, max=10, step=0.1).bind_value(m, "staerke_mm").classes("w-28") \
+                            .on_value_change(lambda e: (gruppen.refresh()))
+                        ui.button(icon="delete", on_click=lambda i=i: (w["materialien"].pop(i), _nachher_loeschen(i))) \
+                            .props("flat dense round").tooltip("Material entfernen")
+
+            def _nachher_loeschen(i):
+                for e in w["gruppen_wahl"].values():           # Bauteile mit diesem Material zurück auf Material 1
+                    k = int(e.get("material", 0) or 0)
+                    if k == i + 1:
+                        e["material"] = 0
+                    elif k > i + 1:
+                        e["material"] = k - 1
+                liste.refresh()
+                gruppen.refresh()
+
+            def neu():
+                w["materialien"].append({"sorte": next(iter(mats_bib), "Graupappe"), "staerke_mm": 1.0})
+                liste.refresh()
+                gruppen.refresh()
+            liste()
+            ui.button("Material hinzufügen", icon="add", on_click=neu).props("outline dense no-caps")
+        with karte("Bauteile: welche und aus welchem Material", TERRA):
+            @ui.refreshable
+            def gruppen():
+                opts = mat_namen()
+                for g, titel in GRUPPEN.items():
+                    e = w["gruppen_wahl"][g]
+                    if int(e.get("material", 0) or 0) not in opts:
+                        e["material"] = 0
+                    with ui.row().classes("w-full items-center gap-2 no-wrap"):
+                        ui.checkbox(titel).bind_value(e, "an").style("width:190px; flex:0 0 190px")
+                        ui.select(opts, label="Material").bind_value(e, "material").style("min-width:0; flex:1 1 0") \
+                            .bind_enabled_from(e, "an")
+            gruppen()
+            hinweis("Wände, Decken, Dachflächen: echte Stärke ÷ Materialstärke = Lagen (gerundet, mind. 1); jede Lage ist ein Schnitt "
+                    "durch das Bauteil, Öffnungen und Ecken stimmen. Das Dach ist abnehmbar (nicht festkleben). Gelände und Freiflächen "
+                    "(Meshes) werden in Höhenschichten der Materialstärke zerlegt, unter Gebäuden ausgespart. Sichtbare Außenlagen "
+                    "bekommen keine gravierte Teilenummer.")
+        with karte("Materialdarstellung als Rastergravur", SALBEI):
+            from .. import zusatz as ZU
+            info = ZU.erstes("cad_muster") if ZU.hat("cad_muster") else None
+            if not info:
+                hinweis("Braucht das Zusatzmodul mit der Rastergravur (Fassadenmodul ab 1.10). Ohne Modul bleiben die Flächen ungraviert.")
+                return
+            ui.checkbox("Material aus dem IFC als Muster gravieren") \
+                .bind_value(w, "material_gravur")
+            hinweis("Maße aus echten Größen ÷ Maßstab (Ziegel 24 × 7,1 cm, Schalung 2,5 × 1,25 m …), zu feine Muster werden vergröbert. "
+                    "Graviert wird nur Sichtbares: Außenlage von Wänden, Decken und Dach, beim Gelände der Ring, den die nächste "
+                    "Schicht frei lässt.")
+            tab = ui.column().classes("w-full gap-1")
+
+            def zeigen(namen):
+                tab.clear()
+                with tab:
+                    for n in namen:
+                        w["muster"].setdefault(n, info["vorschlag"](n, None))
+                        with ui.row().classes("w-full items-center gap-2 no-wrap"):
+                            ui.label(n).classes("text-body2").style("width:190px; flex:0 0 190px; overflow:hidden; text-overflow:ellipsis")
+                            ui.select(info["muster"], label="Muster").bind_value(w["muster"], n).style("min-width:0; flex:1 1 0")
+
+            async def lesen():
+                ifc = [p for p in (w.get("dateien") or []) if str(p).lower().endswith(".ifc")]
+                if not ifc:
+                    ui.notify("Erst eine IFC-Datei angeben", type="warning")
+                    return
+                from nicegui import run
+
+                def namen():
+                    import ifcopenshell
+                    out = set()
+                    for p in ifc:
+                        f = ifcopenshell.open(p)
+                        out |= {m.Name for m in f.by_type("IfcMaterial") if m.Name}
+                    return sorted(out)
+                try:
+                    zeigen(await run.io_bound(namen))
+                except Exception as e:
+                    ui.notify(f"IFC nicht lesbar: {str(e)[:80]}", type="negative")
+            ui.button("Materialien aus dem IFC lesen", icon="palette", on_click=lesen).props("outline dense no-caps")
+            if w["muster"]:
+                zeigen(sorted(w["muster"]))
+
     async def _cad_start(self):
         from ..modell import cad_lasercut as C
         w = copy.deepcopy(self.cfg["werkzeuge"]["cadlaser"])
@@ -187,7 +305,14 @@ class Werkzeuge:
                         ui.label(wert).classes("text-subtitle1 text-weight-medium")
                         ui.label(txt).classes("text-caption").style(f"color:{GRAU}")
             hinweis("Nur geschätzt: Richtwerte aus der Bibliothek, keine Kalkulation und kein Angebot (Einzelheiten in der Kostenliste unten).")
-            if r.get("vorschau_laser"):
+            if len(r.get("materialien") or []) > 1:
+                with ui.row().classes("items-center gap-3"):
+                    for m in r["materialien"]:
+                        ui.html(f'<span style="display:inline-block;width:12px;height:12px;background:{m["farbe"]};border:1px solid #999">'
+                                f'</span> {m["sorte"]} {mm_text(m["t"])} mm: {m["teile"]} Teile, {m["platten"]} Platten')
+            if r.get("vorschau_gruppen"):
+                self._cad_vorschau_gruppen(r)
+            elif r.get("vorschau_laser"):
                 b, h, z = r["modell_b"], r["modell_h"], r.get("modell_z", 0)
                 zeigen = {"zus": (r["vorschau_laser"], "Zusammengebaut"), "expl": (r.get("vorschau_explosion"), "Auseinandergezogen")}
                 halter = {}
@@ -211,6 +336,32 @@ class Werkzeuge:
             unten = ui.column().classes("w-full")
         rest = {kk: v for kk, v in r.items() if not kk.startswith("vorschau")}
         ergebnis_zeigen(unten, rest, "Teile und Platten")
+
+    def _cad_vorschau_gruppen(self, r):
+        """3D-Vorschau je Bauteilgruppe: Gruppen ein/aus, Dach anheben, Platten mit ihrer Gravur"""
+        from ..modell.cad_bauteile import GRUPPEN
+        from .stil import url
+        gl = {g: p for g, p in r["vorschau_gruppen"].items() if p and os.path.exists(p)}
+        b, h, z = r["modell_b"], r["modell_h"], r.get("modell_z", 0)
+        L_ = max(b, h, z, 50.0)
+        objekte = {}
+        with ui.row().classes("items-center gap-3 mt-2 w-full"):
+            ui.label("3D-Vorschau").classes("text-subtitle2")
+            for g in gl:
+                ui.checkbox(GRUPPEN[g].split(" (")[0], value=True,
+                            on_change=lambda e, g=g: objekte[g].visible(e.value) if g in objekte else None).props("dense")
+            if "dach" in gl:
+                ui.label("Dach anheben").classes("text-caption").style(f"color:{GRAU}")
+                ui.slider(min=0, max=round(max(z, 40.0) * 1.2), value=0,
+                          on_change=lambda e: objekte["dach"].move(0, 0, float(e.value)) if "dach" in objekte else None) \
+                    .classes("w-40").props("dense label")
+        hinweis("Platten in echter Materialstärke, Oberseite mit ihrer Gravur. Maus: drehen · rechte Taste: verschieben · Rad: zoomen")
+        cam = ui.scene.perspective_camera(fov=45, near=max(0.05, L_ / 400), far=L_ * 40)
+        with ui.scene(height=520, grid=False, background_color="#eef1f3", camera=cam).classes("w-full") as sc:
+            sc.spot_light(distance=L_ * 20, intensity=0.15).move(L_, -L_, L_ * 2)
+            for g, p in gl.items():
+                objekte[g] = sc.gltf(url(p))
+        sc.move_camera(x=b / 2 + L_ * 0.2, y=h / 2 - L_ * 1.0, z=L_ * 0.9, look_at_x=b / 2, look_at_y=h / 2, look_at_z=z / 3, duration=0)
 
     def seite_druck(self):
         w = self.cfg["werkzeuge"]["druck3d"]

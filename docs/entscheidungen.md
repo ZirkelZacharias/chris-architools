@@ -210,3 +210,24 @@ Jede Zeile: Datum · Entscheidung · warum · wie man es ändert.
 - Modellbau, Schnitt und Höhenlinien bekommen ohne Geländemodell jetzt auch den Copernicus-Notbehelf (bisher nur die Umgebungs-IFC).
 - Höhenbezüge bleiben im Landesbezug (LN02/LHN95, NAP).
 - Getestet mit nachgebauten Diensten (`architools/kern/tests_ausland/`): Umrechnung < 5 cm, Gebäude lagegenau, Gesamtlauf Amsterdam (IFC, Lageplan, Lasercut) und Paris (Lasercut mit Copernicus). **Gegen die echten Dienste ungetestet** – der Dienste-Echtlauf in GitHub Actions fährt dafür Zürich, Amsterdam und Paris.
+
+## Nach Build 10: CAD zu Lasercut – „Bauteile aus IFC“ (kein Release)
+- Neue Umwandlung `bauteile` (Standard für neue Projekte): IFC-Klassen statt Dreiecksnetz (`modell/cad_bauteile.py`).
+  Wände/Decken/Dachflächen = ebene Platten: Hauptfläche + parallele Gegenfläche ergeben die echte Stärke, Lagen =
+  round(Stärke / Materialstärke), jede Lage ist ein Schnitt des Bauteilkörpers parallel zur Hauptfläche (Öffnungen, Gehrungen
+  und Stöße wie modelliert). Ein Flächenpaar gilt nur als Platte, wenn es dünn ist (Abstand ≤ 0,35·√Fläche) – sonst würden
+  Ober- und Unterkante einer Wand zu 28 waagerechten Streifen. Außenseite: Wände weg von der Gebäudemitte, sonst oben.
+- Gelände/Freiflächen (IfcSite, IfcGeographicElement, offene oder unebene Meshes) in allen Umwandlungen als Höhenschichten
+  (Schicht k = Bereich mit z ≥ z0 + k·t, Dreiecke an der Höhe geschnitten), unter Gebäuden ab deren Unterkante ausgespart;
+  Ritzlinie = Umriss der nächsten Schicht. Vorher wurde ein Gelände-Mesh in je ein Teil pro Dreieck zerlegt (Mikroteile).
+  „Eben“ wird flächengewichtet geprüft (90 % der Oberseite in einer Ebene), sonst galten geneigte Dachplatten wegen ihrer
+  Stirnfläche als Gelände.
+- Mehrere Materialien (`materialien`), je Bauteilgruppe an/aus und Material (`gruppen_wahl`): je Material eigene Platten,
+  PDFs, SVGs, DXF und Kosten; eine gemeinsame Teileliste.
+- Dach: Gruppe „abnehmbar“; Vorschau mit Regler zum Anheben. Vorschau je Gruppe als GLB (`cad_vorschau.py`): Platten in
+  Materialstärke, Oberseite mit Gravur als Bild; ausdrückliches PBR-Material (Eckfarben ohne Material wurden fast schwarz).
+- Sichtbare Außenlagen bekommen keine gravierte Teilenummer (die Gravur läge auf der Fassade); Geländeschichten werden dort
+  beschriftet, wo die nächste Schicht sie verdeckt.
+- Materialdarstellung als Rastergravur gehört zum Zusatzmodul (Haken `cad_material`, `cad_muster`); ohne Modul Hinweis im Protokoll.
+- Alte Umwandlungen: zusätzlich Teile schmaler als 2 mm weglassen (`min_breite_mm`, Laibungen/Kanten).
+- Testmodell `bau/testmodell_ifc.py` (Archicad-ähnlich, mm), im Smoke-Test.
